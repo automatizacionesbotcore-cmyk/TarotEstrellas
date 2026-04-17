@@ -1,21 +1,21 @@
 /**
  * Landing — "Cielo Estrellado" (spec 6.6.2)
  * Fondo 3D decorativo: estrellas titilando + constelaciones doradas + rotación imperceptible.
- * No interactivo (pointerEvents: none).
+ * Solo modo oscuro — en modo claro las estrellas blancas son invisibles.
  */
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Stars, Line } from '@react-three/drei';
 import { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { hasWebGL, isMobileDevice, prefersReducedMotion } from './webgl';
+import { useThemeStore } from '../../stores/themeStore';
 
-// Dos constelaciones en coordenadas 3D (apariencia de cielo nocturno)
 const CONSTELLATION_A: THREE.Vector3[] = [
   new THREE.Vector3(-10, 4,  -30),
   new THREE.Vector3(-7,  7,  -28),
   new THREE.Vector3(-5,  5,  -32),
   new THREE.Vector3(-3,  8,  -29),
-  new THREE.Vector3(-7,  7,  -28), // vuelve al centro
+  new THREE.Vector3(-7,  7,  -28),
   new THREE.Vector3(-8,  2,  -31),
 ];
 
@@ -25,7 +25,7 @@ const CONSTELLATION_B: THREE.Vector3[] = [
   new THREE.Vector3(12,  0, -36),
   new THREE.Vector3(11, -4, -34),
   new THREE.Vector3(8,  -5, -32),
-  new THREE.Vector3(6,  -3, -35), // cierra la figura
+  new THREE.Vector3(6,  -3, -35),
 ];
 
 function Scene({ mobile }: { mobile: boolean }) {
@@ -33,7 +33,7 @@ function Scene({ mobile }: { mobile: boolean }) {
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += 0.0005; // spec: 0.0005 rad/frame
+      groupRef.current.rotation.y += 0.0005;
     }
   });
 
@@ -48,7 +48,6 @@ function Scene({ mobile }: { mobile: boolean }) {
         fade
         speed={0.4}
       />
-      {/* Constelaciones con líneas doradas tenues */}
       <Line points={CONSTELLATION_A} color="#C9A84C" lineWidth={1} transparent opacity={0.22} />
       <Line points={CONSTELLATION_B} color="#C9A84C" lineWidth={1} transparent opacity={0.22} />
     </group>
@@ -56,7 +55,10 @@ function Scene({ mobile }: { mobile: boolean }) {
 }
 
 export default function StarField() {
-  if (!hasWebGL() || prefersReducedMotion()) return null;
+  const { theme } = useThemeStore();
+
+  // Estrellas blancas son invisibles en modo claro — el hero tiene su propio fondo CSS
+  if (theme === 'light' || !hasWebGL() || prefersReducedMotion()) return null;
 
   const mobile = isMobileDevice();
 
