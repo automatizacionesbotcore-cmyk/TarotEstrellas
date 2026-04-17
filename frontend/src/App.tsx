@@ -14,6 +14,7 @@ import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { useAuthStore } from './stores/authStore';
+import { AuthCardModal } from './components/ui/AuthCardModal';
 
 function AuthOnly({ children }: { children: React.ReactElement }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -29,6 +30,8 @@ function GuestOnly({ children }: { children: React.ReactElement }) {
 
 export function App() {
   return (
+    <>
+    <AuthCardModal />
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
@@ -65,5 +68,6 @@ export function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

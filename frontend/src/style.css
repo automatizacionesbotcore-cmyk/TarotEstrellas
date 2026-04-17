@@ -948,3 +948,139 @@ p               { text-wrap: pretty; }
 	background: color-mix(in srgb, var(--accent) 8%, transparent);
 	animation: pulseGlow 2s ease-in-out infinite;
 }
+
+/* ── AUTH CARD MODAL ────────────────────────────────────────────────────── */
+.auth-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 300;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background: rgba(0, 0, 0, 0.62);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+}
+
+.auth-modal-perspective {
+	width: min(480px, 96vw);
+	/* Permite que el 3D del hijo sea visible */
+	perspective: 1100px;
+}
+
+.auth-modal-card {
+	background: var(--card);
+	border: 1px solid var(--border-active);
+	border-radius: 18px;
+	box-shadow:
+		0 0 0 1px var(--border-subtle),
+		0 24px 64px rgba(0, 0, 0, 0.55),
+		0 0 80px color-mix(in srgb, var(--accent) 18%, transparent);
+	max-height: 90vh;
+	overflow-y: auto;
+	overflow-x: hidden;
+	outline: none;
+	/* scrollbar sutil */
+	scrollbar-width: thin;
+	scrollbar-color: var(--accent) transparent;
+}
+
+/* ── Encabezado dorso de carta ── */
+.auth-modal-header {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.6rem 1rem 1.2rem;
+	background:
+		radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%),
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--secondary) 28%, var(--bg)) 0%,
+			var(--card) 100%);
+	border-bottom: 1px solid var(--border-subtle);
+	border-radius: 18px 18px 0 0;
+}
+
+.auth-modal-dorso {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.auth-modal-dorso-star {
+	width: 38px;
+	height: 38px;
+	color: var(--accent);
+	filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 70%, transparent));
+	animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.auth-modal-dorso-ring {
+	width: 52px;
+	height: 4px;
+	border-radius: 2px;
+	background: linear-gradient(90deg, transparent, var(--accent), transparent);
+	opacity: 0.55;
+}
+
+.auth-modal-close {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.auth-modal-close:hover {
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+/* ── Cuerpo del modal — formulario ── */
+.auth-modal-body {
+	padding: 1.8rem 2rem 1.5rem;
+}
+
+/* Títulos propios del formulario dentro del modal */
+.auth-form-title {
+	font-family: 'Italiana', serif;
+	font-size: 1.6rem;
+	font-weight: 400;
+	color: var(--accent);
+	margin: 0 0 0.3rem;
+	letter-spacing: 0.01em;
+}
+
+.auth-form-subtitle {
+	color: var(--text-muted);
+	font-size: 0.88rem;
+	margin: 0 0 1.4rem;
+}
+
+/* Cuando el auth-card se renderiza como página (ruta directa) — sin cambios */
+/* Dentro del modal no necesita fondo propio */
+.auth-modal-body .auth-card {
+	background: none;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+	border-radius: 0;
+}
+
+@media (max-width: 480px) {
+	.auth-modal-body { padding: 1.4rem 1.2rem 1.2rem; }
+	.auth-modal-header { padding: 1.2rem 1rem 1rem; }
+}
