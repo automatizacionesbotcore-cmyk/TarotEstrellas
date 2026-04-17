@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
@@ -32,9 +33,18 @@ type CitasResponse = {
   };
 };
 
+const ESTADO_LABELS: Record<string, string> = {
+  pendiente_abono: 'Pendiente de abono',
+  reservada:       'Reservada',
+  confirmada:      'Confirmada',
+  completada:      'Completada',
+  cancelada:       'Cancelada',
+  expirada:        'Expirada',
+};
+
 function formatMoney(valueInCents: number, currency: string) {
   return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
+    style:                'currency',
     currency,
     maximumFractionDigits: currency === 'CLP' ? 0 : 2,
   }).format(valueInCents / 100);
@@ -44,84 +54,114 @@ function formatDate(value: string, timezone: string) {
   return new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: timezone || undefined,
+    timeZone:  timezone || undefined,
   }).format(new Date(value));
 }
 
-function normalizeEstado(estado: string) {
-  const labels: Record<string, string> = {
-    pendiente_abono: 'Pendiente de abono',
-    reservada: 'Reservada',
-    confirmada: 'Confirmada',
-    completada: 'Completada',
-    cancelada: 'Cancelada',
-    expirada: 'Expirada',
-  };
-
-  return labels[estado] ?? estado;
-}
-
 async function fetchMisConsultas(): Promise<CitasResponse> {
-  const response = await api.get('/citas', {
-    params: {
-      per_page: 20,
-    },
-  });
-
+  const response = await api.get('/citas', { params: { per_page: 20 } });
   return response.data as CitasResponse;
 }
+
+const stagger = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.09 } },
+};
+
+const fadeUp = {
+  hidden:  { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0  },
+};
 
 export function MisConsultasPage() {
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: ['mis-consultas'],
-    queryFn: fetchMisConsultas,
+    queryFn:  fetchMisConsultas,
   });
 
-  const backendMessage = ((error as AxiosError<{ message?: string }>)?.response?.data?.message as string | undefined) ??
-    null;
+  const backendMessage =
+    ((error as AxiosError<{ message?: string }>)?.response?.data?.message as string | undefined) ?? null;
 
   return (
     <main className="page-content">
-      <h1>Mis consultas</h1>
-      <p>Aqui puedes ver tus reservas recientes y su estado.</p>
+      <motion.div initial="hidden" animate="visible" variants={stagger}>
 
-      {isFetching ? <p>Actualizando consultas...</p> : null}
-      {isLoading ? <p>Cargando consultas...</p> : null}
-      {isError ? <p className="form-error">{backendMessage ?? 'No se pudieron cargar tus consultas.'}</p> : null}
+        <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
+          <p className="dash-eyebrow">✦ Tu historial espiritual</p>
+          <h1 className="dash-title">Mis consultas</h1>
+          <p className="dash-subtitle">
+            {isFetching && !isLoading ? 'Actualizando…' : 'Todas tus reservas y su estado actual.'}
+          </p>
+        </motion.div>
 
-      {!isLoading && !isError && data?.data.length === 0 ? (
-        <div className="auth-card">
-          <p>Aun no tienes consultas agendadas.</p>
-          <Link className="btn-primary" to="/servicios">
-            Explorar servicios
-          </Link>
-        </div>
-      ) : null}
+        {isLoading ? (
+          <motion.div className="cards-grid" variants={stagger}>
+            {[1, 2, 3].map((n) => (
+              <motion.div key={n} className="service-card skeleton-card" variants={fadeUp} transition={{ duration: 0.4 }}>
+                <div className="skeleton-line skeleton-title" />
+                <div className="skeleton-line skeleton-pill" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line skeleton-short" />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : isError ? (
+          <motion.p className="form-error" variants={fadeUp} transition={{ duration: 0.4 }}>
+            {backendMessage ?? 'No se pudieron cargar tus consultas.'}
+          </motion.p>
+        ) : data?.data.length === 0 ? (
+          <motion.div className="dash-empty" variants={fadeUp} transition={{ duration: 0.45 }}>
+            <span className="dash-empty-icon">🌙</span>
+            <p>Aún no tienes consultas agendadas.</p>
+            <Link className="btn-primary" to="/servicios">Explorar servicios</Link>
+          </motion.div>
+        ) : (
+          <motion.section
+            className="cards-grid"
+            variants={stagger}
+            style={{ marginTop: '1.2rem' }}
+          >
+            {data?.data.map((cita) => (
+              <motion.article
+                key={cita.id}
+                className="service-card"
+                variants={fadeUp}
+                transition={{ duration: 0.4 }}
+              >
+                <h3>{cita.tipo_consulta?.nombre ?? 'Consulta'}</h3>
 
-      <section className="cards-grid">
-        {data?.data.map((cita) => (
-          <article key={cita.id} className="service-card">
-            <h3>{cita.tipo_consulta?.nombre ?? 'Consulta'}</h3>
-            <span className="service-pill">{normalizeEstado(cita.estado)}</span>
-            <p>
-              Inicio: {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.timezone_cliente) : 'Sin fecha'}
-            </p>
-            <p>
-              Duracion: {cita.tipo_consulta?.duracion_minutos ?? 0} min
-            </p>
-            <p>
-              Abono: {formatMoney(cita.precio_final_centavos, cita.moneda)}
-            </p>
-            <p>
-              Total: {formatMoney(cita.precio_total_centavos, cita.moneda)}
-            </p>
-            {cita.tema_principal ? <p>Tema: {cita.tema_principal}</p> : null}
-            <Link to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}>
-              Ver servicio
-            </Link>
-          </article>
-        ))}
-      </section>
+                <span className={`service-pill estado-${cita.estado}`}>
+                  {ESTADO_LABELS[cita.estado] ?? cita.estado}
+                </span>
+
+                <p className="card-detail">
+                  📅 {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.timezone_cliente) : 'Sin fecha'}
+                </p>
+
+                {cita.tipo_consulta?.duracion_minutos ? (
+                  <p className="card-detail">⏱ {cita.tipo_consulta.duracion_minutos} min</p>
+                ) : null}
+
+                <div className="cita-money">
+                  <span>Abono: <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong></span>
+                  <span>Total: <strong>{formatMoney(cita.precio_total_centavos, cita.moneda)}</strong></span>
+                </div>
+
+                {cita.tema_principal ? (
+                  <p className="card-detail cita-tema">✨ {cita.tema_principal}</p>
+                ) : null}
+
+                <Link
+                  to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}
+                  className="card-link"
+                >
+                  Ver servicio →
+                </Link>
+              </motion.article>
+            ))}
+          </motion.section>
+        )}
+      </motion.div>
     </main>
   );
 }

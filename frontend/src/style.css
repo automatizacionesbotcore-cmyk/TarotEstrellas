@@ -891,6 +891,182 @@ a {
 	animation: pulseGlow 2.1s ease-in-out infinite;
 }
 
+/* ── DASHBOARD ──────────────────────────────────────────────────────────── */
+.dash-greeting {
+	margin-bottom: 1.8rem;
+}
+
+.dash-eyebrow {
+	font-size: 0.82rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--accent);
+	margin: 0 0 0.4rem;
+}
+
+.dash-title {
+	font-size: clamp(1.8rem, 5vw, 2.5rem);
+	font-weight: 700;
+	margin: 0 0 0.35rem;
+	line-height: 1.15;
+}
+
+.dash-name {
+	color: var(--accent);
+}
+
+.dash-subtitle {
+	color: var(--text-muted);
+	font-size: 1rem;
+	margin: 0;
+}
+
+.dash-section-title {
+	font-size: 1.05rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	margin: 1.6rem 0 0.85rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.dash-stats {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 1.4rem;
+	flex-wrap: wrap;
+}
+
+.stat-card {
+	flex: 1;
+	min-width: 120px;
+	background: var(--card);
+	border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+	border-radius: 14px;
+	padding: 1rem 1.2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.stat-value {
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--accent);
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+	font-size: 0.78rem;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.dash-actions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.4rem;
+}
+
+.dash-empty {
+	margin-top: 1.8rem;
+	text-align: center;
+	padding: 2.5rem 1.5rem;
+	background: var(--card);
+	border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+	border-radius: 16px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+.dash-empty-icon {
+	font-size: 2.8rem;
+	line-height: 1;
+}
+
+/* Estado pill color overrides */
+.estado-reservada        { background: color-mix(in srgb, #4a9eff 22%, transparent); border-color: color-mix(in srgb, #4a9eff 50%, transparent); color: #4a9eff; }
+.estado-confirmada       { background: color-mix(in srgb, #4caf6e 22%, transparent); border-color: color-mix(in srgb, #4caf6e 50%, transparent); color: #4caf6e; }
+.estado-completada       { background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); }
+.estado-cancelada        { background: color-mix(in srgb, #e05555 22%, transparent); border-color: color-mix(in srgb, #e05555 50%, transparent); color: #e05555; }
+.estado-expirada         { background: color-mix(in srgb, #888 22%, transparent); border-color: color-mix(in srgb, #888 50%, transparent); color: #888; }
+.estado-pendiente_abono  { background: color-mix(in srgb, #e09944 22%, transparent); border-color: color-mix(in srgb, #e09944 50%, transparent); color: #e09944; }
+
+/* Cita card extras */
+.card-detail {
+	font-size: 0.88rem;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.card-link {
+	font-size: 0.88rem;
+	color: var(--accent);
+	text-decoration: none;
+	margin-top: auto;
+	transition-property: opacity;
+	transition-duration: 0.2s;
+}
+
+.card-link:hover { opacity: 0.75; }
+
+.cita-money {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	font-size: 0.88rem;
+	color: var(--text-muted);
+}
+
+.cita-tema {
+	font-style: italic;
+}
+
+/* Loading skeleton */
+.skeleton-card {
+	pointer-events: none;
+}
+
+.skeleton-line {
+	height: 0.85rem;
+	border-radius: 6px;
+	background: color-mix(in srgb, var(--text) 10%, transparent);
+	animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-title  { height: 1.1rem; width: 70%; }
+.skeleton-pill   { height: 1.3rem; width: 40%; border-radius: 999px; }
+.skeleton-short  { width: 55%; }
+
+@keyframes skeletonPulse {
+	0%, 100% { opacity: 0.5; }
+	50%       { opacity: 1;   }
+}
+
+/* ── MI CUENTA ──────────────────────────────────────────────────────────── */
+.cuenta-section {
+	margin-bottom: 1.6rem;
+}
+
+.cuenta-form {
+	max-width: 480px;
+}
+
+.cuenta-coming-soon {
+	font-size: 0.95rem;
+	color: var(--text-muted);
+	background: var(--card);
+	border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+	border-radius: 12px;
+	padding: 1rem 1.2rem;
+	margin: 0;
+}
+
 /* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
 	.hero-full { min-height: 70vh; padding: 2rem 1.4rem; }
