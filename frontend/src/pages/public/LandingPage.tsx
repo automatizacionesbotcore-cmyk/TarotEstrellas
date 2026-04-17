@@ -5,6 +5,20 @@ import { useAuthModalStore } from '../../stores/authModalStore';
 
 const StarField = lazy(() => import('../../components/3d/StarField'));
 
+// Estrellas CSS — más grandes, posiciones fijas para evitar hidratación
+const STARS = [
+  { left: '6%',  top: '12%', size: 14, delay: 0,    dur: 3.2 },
+  { left: '91%', top: '8%',  size: 11, delay: 0.8,  dur: 4.1 },
+  { left: '76%', top: '60%', size: 13, delay: 1.5,  dur: 3.7 },
+  { left: '4%',  top: '72%', size: 9,  delay: 0.3,  dur: 4.5 },
+  { left: '54%', top: '5%',  size: 12, delay: 2.0,  dur: 3.0 },
+  { left: '94%', top: '42%', size: 8,  delay: 1.2,  dur: 4.8 },
+  { left: '28%', top: '88%', size: 12, delay: 0.6,  dur: 3.4 },
+  { left: '66%', top: '26%', size: 9,  delay: 1.8,  dur: 5.0 },
+  { left: '42%', top: '70%', size: 10, delay: 2.4,  dur: 3.8 },
+  { left: '18%', top: '46%', size: 7,  delay: 0.9,  dur: 4.2 },
+];
+
 const INFO_CARDS = [
   {
     icon: '🌙',
@@ -54,9 +68,22 @@ export function LandingPage() {
     <main>
       {/* ── HERO con cielo estrellado 3D ── */}
       <section className="hero hero-full" aria-label="Hero TarotEstrellas">
+
+        {/* Fondo 3D — solo modo oscuro (stars blancas invisibles en claro) */}
         <Suspense fallback={null}>
           <StarField />
         </Suspense>
+
+        {/* Estrellas CSS — visibles en ambos modos (usan --accent) */}
+        {STARS.map((s, i) => (
+          <motion.span
+            key={i}
+            className="hero-star"
+            style={{ left: s.left, top: s.top, width: s.size, height: s.size }}
+            animate={{ opacity: [0.15, 1, 0.15], scale: [1, 1.55, 1] }}
+            transition={{ duration: s.dur, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ))}
 
         <motion.div
           className="hero-content"
@@ -82,7 +109,7 @@ export function LandingPage() {
             <Link className="btn-primary btn-shimmer" to="/servicios">
               Ver servicios
             </Link>
-            <button type="button" className="btn-secondary" onClick={openRegister}>
+            <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
               Crear cuenta gratis
             </button>
           </motion.div>

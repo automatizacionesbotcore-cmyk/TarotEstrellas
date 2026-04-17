@@ -42,8 +42,8 @@ function Scene({ mobile }: { mobile: boolean }) {
       <Stars
         radius={120}
         depth={55}
-        count={mobile ? 200 : 1000}
-        factor={4}
+        count={mobile ? 300 : 1400}
+        factor={7}
         saturation={0}
         fade
         speed={0.4}

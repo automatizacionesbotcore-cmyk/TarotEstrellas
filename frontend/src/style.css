@@ -23,7 +23,7 @@
 	--bg: #faf6f0;
 	--bg-secondary: #e8dcf0;
 	--text: #3a5a80;
-	--text-muted: rgba(58, 90, 128, 0.65);
+	--text-muted: rgba(80, 80, 95, 0.72);
 	--accent: #b85c78;
 	--accent-light: #d4a0b0;
 	--secondary: #7a57a0;
@@ -196,6 +196,11 @@ a {
 	pointer-events: none;
 	z-index: 1;
 	will-change: opacity, transform;
+	filter: blur(0.4px);
+	box-shadow:
+		0 0 6px  color-mix(in srgb, var(--accent) 90%, transparent),
+		0 0 18px color-mix(in srgb, var(--accent) 55%, transparent),
+		0 0 36px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .hero h1 {
