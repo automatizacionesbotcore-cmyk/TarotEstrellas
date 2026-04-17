@@ -36,8 +36,8 @@
 	--glow: rgba(184, 92, 120, 0.22);
 	--gradient-gold: linear-gradient(135deg, #b85c78 0%, #d4a0b0 50%, #b85c78 100%);
 	--gradient-shimmer:     linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
-	--gradient-shimmer-alt: linear-gradient(90deg, #2e2e3a 0%, #3d3a4e 40%, #2e2e3a 70%, #222230 100%);
-	--btn-shimmer-text:     #504850;
+	--gradient-shimmer-alt: linear-gradient(90deg, #625e70 0%, #7a7688 40%, #625e70 70%, #524e60 100%);
+	--btn-shimmer-text:     #f5eeec;
 	--btn-shimmer-alt-text: #b85c78;
 	color-scheme: light;
 }
@@ -283,6 +283,14 @@ a {
 	box-shadow: 0 0 32px color-mix(in srgb, var(--btn-shimmer-alt-text) 50%, transparent), 0 4px 14px rgba(0, 0, 0, 0.3);
 	transform: translateY(-2px);
 	animation-play-state: paused;
+}
+
+/* Modo claro: tipografía serif + negrita para el efecto de título */
+:root[data-theme='light'] .btn-shimmer-alt {
+	font-family: 'Cormorant Garamond', serif;
+	font-weight: 700;
+	font-size: 1rem;
+	letter-spacing: 0.05em;
 }
 
 .btn-secondary,
