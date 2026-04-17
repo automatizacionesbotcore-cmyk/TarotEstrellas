@@ -24,15 +24,15 @@
 	--bg-secondary: #e8dcf0;
 	--text: #3a5a80;
 	--text-muted: rgba(58, 90, 128, 0.65);
-	--accent: #d4a0b0;
-	--accent-light: #e8c0d0;
-	--secondary: #8b6bae;
+	--accent: #b85c78;
+	--accent-light: #d4a0b0;
+	--secondary: #7a57a0;
 	--card: rgba(255, 255, 255, 0.85);
 	--border-subtle: rgba(168, 200, 232, 0.3);
 	--border-active: rgba(139, 107, 174, 0.45);
-	--glow: rgba(212, 160, 176, 0.2);
-	--gradient-gold: linear-gradient(135deg, #d4a0b0 0%, #e8c0d0 50%, #d4a0b0 100%);
-	--gradient-shimmer: linear-gradient(90deg, #d4a0b0 0%, #e8c0d0 35%, #d4a0b0 65%, #c07088 100%);
+	--glow: rgba(184, 92, 120, 0.22);
+	--gradient-gold: linear-gradient(135deg, #b85c78 0%, #d4a0b0 50%, #b85c78 100%);
+	--gradient-shimmer: linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
 	color-scheme: light;
 }
 
@@ -887,8 +887,8 @@ a {
 }
 
 @keyframes logo-glow-light {
-	0%, 100% { filter: drop-shadow(0 0 2px rgba(212, 160, 176, 0.35)); }
-	50%       { filter: drop-shadow(0 0 8px rgba(212, 160, 176, 0.75)); }
+	0%, 100% { filter: drop-shadow(0 0 2px rgba(184, 92, 120, 0.4)); }
+	50%       { filter: drop-shadow(0 0 8px rgba(184, 92, 120, 0.8)); }
 }
 
 .logo-text {
@@ -906,7 +906,7 @@ a {
 }
 
 .logo-text--light {
-	background: linear-gradient(135deg, #d4a0b0, #8b6bae);
+	background: linear-gradient(135deg, #b85c78, #7a57a0);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
