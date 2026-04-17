@@ -933,3 +933,18 @@ p               { text-wrap: pretty; }
 	transition-duration: 0.1s;
 	animation-play-state: paused;
 }
+
+/* ── 3D CANVAS CONTAINERS ───────────────────────────────────────────────── */
+.floating-card-canvas {
+	height: 280px;
+	margin: 0.5rem auto 2rem;
+	max-width: 200px;
+	position: relative;
+}
+
+.canvas-loading {
+	height: 100%;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+	animation: pulseGlow 2s ease-in-out infinite;
+}

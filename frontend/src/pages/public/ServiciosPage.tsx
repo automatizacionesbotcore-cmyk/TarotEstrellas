@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+
+const FloatingCard = lazy(() => import('../../components/3d/FloatingCard'));
 import type { AxiosError } from 'axios';
 import { api } from '../../lib/api';
 
@@ -118,6 +120,10 @@ export function ServiciosPage() {
   return (
     <main className="page-content">
       <h1>Catálogo de Servicios</h1>
+
+      <Suspense fallback={<div className="canvas-loading" aria-hidden="true" />}>
+        <FloatingCard />
+      </Suspense>
 
       <section className="filters-card" aria-label="Filtros del catálogo">
         <div className="filters-grid">
