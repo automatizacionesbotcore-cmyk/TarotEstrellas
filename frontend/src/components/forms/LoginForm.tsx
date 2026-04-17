@@ -19,9 +19,10 @@ type LoginResponse = {
 type Props = {
   onSuccess?: () => void;
   onSwitchMode?: () => void;
+  onForgotPassword?: () => void;
 };
 
-export function LoginForm({ onSuccess, onSwitchMode }: Props) {
+export function LoginForm({ onSuccess, onSwitchMode, onForgotPassword }: Props) {
   const navigate   = useNavigate();
   const location   = useLocation();
   const setSession = useAuthStore((state) => state.setSession);
@@ -93,9 +94,15 @@ export function LoginForm({ onSuccess, onSwitchMode }: Props) {
           {submitting ? 'Ingresando...' : 'Ingresar'}
         </button>
 
-        <Link to="/auth/forgot-password" className="auth-link-inline">
-          Olvidé mi contraseña
-        </Link>
+        {onForgotPassword ? (
+          <button type="button" className="auth-link-inline" onClick={onForgotPassword}>
+            Olvidé mi contraseña
+          </button>
+        ) : (
+          <Link to="/auth/forgot-password" className="auth-link-inline">
+            Olvidé mi contraseña
+          </Link>
+        )}
       </form>
 
       <p className="auth-footer-action">

@@ -11,6 +11,7 @@ import { useAuthModalStore } from '../../stores/authModalStore';
 import { useAuthStore } from '../../stores/authStore';
 import { LoginForm } from '../forms/LoginForm';
 import { RegisterForm } from '../forms/RegisterForm';
+import { ForgotPasswordForm } from '../forms/ForgotPasswordForm';
 
 // Dorso decorativo de la carta — aparece en el header del modal
 function CardDorso() {
@@ -54,7 +55,7 @@ const flipVariants = {
 };
 
 export function AuthCardModal() {
-  const { isOpen, mode, switchMode, close } = useAuthModalStore();
+  const { isOpen, mode, switchMode, setMode, close } = useAuthModalStore();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // Cierra el modal al autenticarse
@@ -82,12 +83,14 @@ export function AuthCardModal() {
     if (isOpen) setTimeout(() => cardRef.current?.focus(), 60);
   }, [isOpen]);
 
-  // Dirección del flip: login→register = +1, register→login = -1
+  // Dirección del flip según transición entre modos
   const flipDir = useRef(1);
   const handleSwitch = () => {
     flipDir.current = mode === 'login' ? 1 : -1;
     switchMode();
   };
+  const goToForgot = () => { flipDir.current = 1; setMode('forgot'); };
+  const backToLogin = () => { flipDir.current = -1; setMode('login'); };
 
   return createPortal(
     <AnimatePresence>
@@ -144,9 +147,11 @@ export function AuthCardModal() {
                     style={{ transformPerspective: 900 }}
                   >
                     {mode === 'login' ? (
-                      <LoginForm onSwitchMode={handleSwitch} />
-                    ) : (
+                      <LoginForm onSwitchMode={handleSwitch} onForgotPassword={goToForgot} />
+                    ) : mode === 'register' ? (
                       <RegisterForm onSwitchMode={handleSwitch} onSuccess={handleSwitch} />
+                    ) : (
+                      <ForgotPasswordForm onBackToLogin={backToLogin} />
                     )}
                   </motion.div>
                 </AnimatePresence>
