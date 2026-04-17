@@ -10,6 +10,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
@@ -66,6 +67,7 @@ export function App() {
         <Route path="mi-cuenta" element={<MiCuentaPage />} />
       </Route>
 
+      <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>

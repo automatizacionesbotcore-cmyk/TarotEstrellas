@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from '../components/ui/Logo';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useAuthModalStore } from '../stores/authModalStore';
@@ -21,7 +21,7 @@ export function PublicLayout() {
           <Logo />
         </Link>
         <nav aria-label="Navegación principal">
-          <Link to="/servicios">Servicios</Link>
+          <NavLink to="/servicios" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Servicios</NavLink>
           <button type="button" className="btn-secondary" style={{ padding: '0.45rem 1rem' }} onClick={openLogin}>
             Ingresar
           </button>

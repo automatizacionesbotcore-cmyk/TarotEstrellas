@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
@@ -58,8 +59,8 @@ function formatDate(value: string, timezone: string) {
   }).format(new Date(value));
 }
 
-async function fetchMisConsultas(): Promise<CitasResponse> {
-  const response = await api.get('/citas', { params: { per_page: 20 } });
+async function fetchMisConsultas(page: number): Promise<CitasResponse> {
+  const response = await api.get('/citas', { params: { per_page: 9, page } });
   return response.data as CitasResponse;
 }
 
@@ -74,10 +75,15 @@ const fadeUp = {
 };
 
 export function MisConsultasPage() {
+  const [page, setPage] = useState(1);
+
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['mis-consultas'],
-    queryFn:  fetchMisConsultas,
+    queryKey: ['mis-consultas', page],
+    queryFn:  () => fetchMisConsultas(page),
   });
+
+  const lastPage  = data?.meta.last_page ?? 1;
+  const totalItems = data?.meta.total ?? 0;
 
   const backendMessage =
     ((error as AxiosError<{ message?: string }>)?.response?.data?.message as string | undefined) ?? null;
@@ -161,6 +167,37 @@ export function MisConsultasPage() {
             ))}
           </motion.section>
         )}
+
+        {/* Paginación */}
+        {!isLoading && !isError && lastPage > 1 ? (
+          <motion.div
+            className="pagination"
+            variants={fadeUp}
+            transition={{ duration: 0.4 }}
+          >
+            <button
+              className="btn-secondary page-btn"
+              type="button"
+              disabled={page <= 1 || isFetching}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              ← Anterior
+            </button>
+            <span className="page-info">
+              {page} / {lastPage}
+              {totalItems > 0 ? <span className="page-total"> ({totalItems} consultas)</span> : null}
+            </span>
+            <button
+              className="btn-secondary page-btn"
+              type="button"
+              disabled={page >= lastPage || isFetching}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Siguiente →
+            </button>
+          </motion.div>
+        ) : null}
+
       </motion.div>
     </main>
   );

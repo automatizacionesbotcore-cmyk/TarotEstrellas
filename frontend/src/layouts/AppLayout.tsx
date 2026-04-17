@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from '../components/ui/Logo';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useAuthStore } from '../stores/authStore';
@@ -21,9 +21,9 @@ export function AppLayout() {
           <Logo />
         </Link>
         <nav aria-label="Navegación de la app">
-          <Link to="/app">Dashboard</Link>
-          <Link to="/app/mis-consultas">Mis consultas</Link>
-          <Link to="/app/mi-cuenta">Mi cuenta</Link>
+          <NavLink to="/app" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
+          <NavLink to="/app/mis-consultas" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Mis consultas</NavLink>
+          <NavLink to="/app/mi-cuenta" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Mi cuenta</NavLink>
           <ThemeToggle />
         </nav>
       </header>

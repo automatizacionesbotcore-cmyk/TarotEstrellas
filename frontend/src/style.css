@@ -117,6 +117,25 @@ a {
 	flex-wrap: wrap;
 }
 
+.nav-link {
+	color: var(--text-muted);
+	text-decoration: none;
+	font-size: 0.95rem;
+	padding-bottom: 2px;
+	border-bottom: 2px solid transparent;
+	transition-property: color, border-color;
+	transition-duration: 0.2s;
+}
+
+.nav-link:hover {
+	color: var(--text);
+}
+
+.nav-link.active {
+	color: var(--accent);
+	border-bottom-color: var(--accent);
+}
+
 .brand {
 	font-family: 'Italiana', serif;
 	font-size: 1.55rem;
@@ -1065,6 +1084,49 @@ a {
 	border-radius: 12px;
 	padding: 1rem 1.2rem;
 	margin: 0;
+}
+
+/* ── VERIFY EMAIL ────────────────────────────────────────────────────────── */
+.verify-email-card {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 2.5rem 1.5rem;
+}
+
+.verify-email-icon {
+	font-size: 3rem;
+	line-height: 1;
+	margin: 0;
+}
+
+/* ── PAGINATION ──────────────────────────────────────────────────────────── */
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	margin-top: 1.8rem;
+	flex-wrap: wrap;
+}
+
+.page-btn {
+	padding: 0.45rem 1.1rem;
+	font-size: 0.9rem;
+}
+
+.page-info {
+	font-size: 0.9rem;
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.page-total {
+	font-size: 0.82rem;
+	opacity: 0.75;
 }
 
 /* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
