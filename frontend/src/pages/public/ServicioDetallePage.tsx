@@ -1,0 +1,581 @@
+import { motion } from 'framer-motion';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { api } from '../../lib/api';
+import { useAuthStore } from '../../stores/authStore';
+
+type ServicioDetalle = {
+  id: number;
+  slug: string;
+  nombre: string;
+  descripcion: string;
+  categoria: string;
+  requiere_datos_natales: boolean;
+  duracion_minutos: number;
+  precio_centavos: number | null;
+  moneda: string;
+};
+
+type ServicioResponse = {
+  currency: string;
+  data: ServicioDetalle;
+};
+
+type QuickAvailabilityResponse = {
+  data: {
+    timezone_especialista: string;
+    slots: Array<{ inicio_utc: string; fin_utc: string }>;
+  };
+};
+
+type AvailabilityResponse = {
+  data: Array<{
+    inicio_utc: string;
+    fin_utc: string;
+    inicio_cliente: string;
+    fin_cliente: string;
+  }>;
+};
+
+type CitaResponse = {
+  data: {
+    id: number;
+    estado: string;
+    inicio_utc: string;
+    fin_utc: string;
+    reservada_hasta: string;
+    precio_total_centavos: number;
+    precio_final_centavos: number;
+    moneda: string;
+  };
+};
+
+async function fetchDetalle(slug: string): Promise<ServicioResponse> {
+  const response = await api.get(`/public/tipos-consulta/${slug}`);
+  return response.data as ServicioResponse;
+}
+
+async function fetchQuickAvailability(slug: string): Promise<QuickAvailabilityResponse> {
+  const response = await api.get(`/public/tipos-consulta/${slug}/disponibilidad-rapida`);
+  return response.data as QuickAvailabilityResponse;
+}
+
+async function fetchAvailability(tipoConsultaId: number, date: string, tzCliente: string): Promise<AvailabilityResponse> {
+  const response = await api.get('/public/disponibilidad', {
+    params: {
+      tipo_consulta_id: tipoConsultaId,
+      fecha: date,
+      tz_cliente: tzCliente,
+    },
+  });
+
+  return response.data as AvailabilityResponse;
+}
+
+async function reservarCita(payload: {
+  tipo_consulta_id: number;
+  inicio_utc: string;
+  timezone_cliente: string;
+  tema_principal?: string;
+  pregunta_especifica?: string;
+}): Promise<CitaResponse> {
+  const response = await api.post('/citas', payload);
+  return response.data as CitaResponse;
+}
+
+function getLocalDateYmd() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function formatPrice(value: number | null, currency: string) {
+  if (value === null) {
+    return 'Consultar precio';
+  }
+
+  const amount = value / 100;
+
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: currency === 'CLP' ? 0 : 2,
+  }).format(amount);
+}
+
+function getRemainingSeconds(expiresAtIso: string | undefined, nowMs: number) {
+  if (!expiresAtIso) {
+    return null;
+  }
+
+  const expiresAtMs = new Date(expiresAtIso).getTime();
+  if (!Number.isFinite(expiresAtMs)) {
+    return null;
+  }
+
+  return Math.max(0, Math.floor((expiresAtMs - nowMs) / 1000));
+}
+
+function formatCountdown(totalSeconds: number | null) {
+  if (totalSeconds === null) {
+    return '--:--';
+  }
+
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+export function ServicioDetallePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const detectedTimezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', []);
+
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [selectedTimezone, setSelectedTimezone] = useState(detectedTimezone);
+  const [agendaDate, setAgendaDate] = useState(getLocalDateYmd());
+  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [temaPrincipal, setTemaPrincipal] = useState('');
+  const [pregunta, setPregunta] = useState('');
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+
+  const { slug = '' } = useParams();
+  const { data, isLoading } = useQuery({
+    queryKey: ['tipo-consulta', slug],
+    queryFn: () => fetchDetalle(slug),
+    enabled: Boolean(slug),
+  });
+  const { data: quickAvailability } = useQuery({
+    queryKey: ['tipo-consulta-disponibilidad-rapida', slug],
+    queryFn: () => fetchQuickAvailability(slug),
+    enabled: Boolean(slug),
+  });
+
+  const servicio = data?.data;
+
+  const timezoneOptions = useMemo(() => {
+    const commonTimezones = [
+      'America/Santiago',
+      'America/Bogota',
+      'America/Lima',
+      'America/Buenos_Aires',
+      'America/Mexico_City',
+      'America/New_York',
+      'Europe/Madrid',
+      'UTC',
+    ];
+
+    return Array.from(new Set([detectedTimezone, ...commonTimezones]));
+  }, [detectedTimezone]);
+
+  const availabilityQuery = useQuery({
+    queryKey: ['disponibilidad-dia', servicio?.id, agendaDate, selectedTimezone],
+    queryFn: () => fetchAvailability(servicio!.id, agendaDate, selectedTimezone),
+    enabled: Boolean(servicio?.id) && Boolean(agendaDate),
+  });
+
+  const bookingMutation = useMutation({
+    mutationFn: reservarCita,
+    onSuccess: () => {
+      setCurrentStep(4);
+    },
+  });
+
+  useEffect(() => {
+    if (!servicio) {
+      return;
+    }
+
+    const title = `${servicio.nombre} | TarotEstrellas`;
+    const description = `${servicio.descripcion} Agenda tu sesion de ${servicio.duracion_minutos} minutos en TarotEstrellas.`;
+
+    document.title = title;
+
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', description);
+
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta');
+      ogTitle.setAttribute('property', 'og:title');
+      document.head.appendChild(ogTitle);
+    }
+    ogTitle.setAttribute('content', title);
+
+    let ogDescription = document.querySelector('meta[property="og:description"]');
+    if (!ogDescription) {
+      ogDescription = document.createElement('meta');
+      ogDescription.setAttribute('property', 'og:description');
+      document.head.appendChild(ogDescription);
+    }
+    ogDescription.setAttribute('content', description);
+  }, [servicio]);
+
+  const quickSlots = quickAvailability?.data.slots ?? [];
+
+  const slots = availabilityQuery.data?.data ?? [];
+
+  useEffect(() => {
+    setSelectedSlot('');
+    if (currentStep < 4) {
+      setCurrentStep(1);
+    }
+  }, [agendaDate, servicio?.id, selectedTimezone]);
+
+  useEffect(() => {
+    if (!selectedTimezone) {
+      setSelectedTimezone(detectedTimezone);
+    }
+  }, [detectedTimezone, selectedTimezone]);
+
+  const selectedSlotData = useMemo(
+    () => slots.find((slot) => slot.inicio_utc === selectedSlot) ?? null,
+    [selectedSlot, slots],
+  );
+
+  const reservadaHasta = bookingMutation.data?.data.reservada_hasta;
+
+  const countdownLabel = useMemo(() => formatCountdown(remainingSeconds), [remainingSeconds]);
+
+  const isCountdownExpired = remainingSeconds !== null && remainingSeconds <= 0;
+
+  const stepHint = useMemo(() => {
+    if (currentStep === 1) {
+      return 'Paso 1 de 4: elige fecha y horario';
+    }
+
+    if (currentStep === 2) {
+      return 'Paso 2 de 4: cuentanos sobre tu consulta';
+    }
+
+    if (currentStep === 3) {
+      return 'Paso 3 de 4: revisa el resumen antes de reservar';
+    }
+
+    return 'Paso 4 de 4: reserva creada';
+  }, [currentStep]);
+
+  const goNext = () => {
+    if (currentStep === 1 && !selectedSlot) {
+      return;
+    }
+
+    if (currentStep === 2 || currentStep === 1) {
+      setCurrentStep((prev) => (prev === 1 ? 2 : 3));
+    }
+  };
+
+  const goBack = () => {
+    if (currentStep === 2) {
+      setCurrentStep(1);
+      return;
+    }
+
+    if (currentStep === 3) {
+      setCurrentStep(2);
+    }
+  };
+
+  const handleReservar = async () => {
+    if (!servicio || !selectedSlot) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate('/auth/login', {
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    await bookingMutation.mutateAsync({
+      tipo_consulta_id: servicio.id,
+      inicio_utc: selectedSlot,
+      timezone_cliente: selectedTimezone || detectedTimezone,
+      tema_principal: temaPrincipal || undefined,
+      pregunta_especifica: pregunta || undefined,
+    });
+  };
+
+  useEffect(() => {
+    if (!bookingMutation.isSuccess || currentStep !== 4) {
+      setRemainingSeconds(null);
+      return;
+    }
+
+    const initialSeconds = getRemainingSeconds(reservadaHasta, Date.now());
+    setRemainingSeconds(initialSeconds);
+
+    if (initialSeconds === null || initialSeconds <= 0) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setRemainingSeconds((prev) => {
+        const next = getRemainingSeconds(reservadaHasta, Date.now());
+        if (next === null) {
+          return prev;
+        }
+
+        if (next <= 0) {
+          window.clearInterval(intervalId);
+          return 0;
+        }
+
+        return next;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [bookingMutation.isSuccess, currentStep, reservadaHasta]);
+
+  return (
+    <main className="page-content">
+      {isLoading ? <p>Cargando detalle...</p> : null}
+      {servicio ? (
+        <motion.section className="detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+          <div className="detail-hero">
+            <div>
+              <span className="service-pill">{servicio.categoria}</span>
+              <h1>{servicio.nombre}</h1>
+              <p>{servicio.descripcion}</p>
+              <div className="detail-meta-row">
+                <span>Duracion: {servicio.duracion_minutos} minutos</span>
+                <span>Precio: {formatPrice(servicio.precio_centavos, servicio.moneda)}</span>
+                <span>{servicio.requiere_datos_natales ? 'Requiere datos natales' : 'No requiere datos natales'}</span>
+              </div>
+            </div>
+
+            <aside className="quick-availability">
+              <h2>Proximos horarios</h2>
+              {quickSlots.length === 0 ? (
+                <p>Sin horarios visibles por ahora.</p>
+              ) : (
+                <ul>
+                  {quickSlots.map((slot) => (
+                    <li key={slot.inicio_utc}>
+                      {new Date(slot.inicio_utc).toLocaleString('es-CL', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </aside>
+          </div>
+
+          <div className="cta-row">
+            <Link className="btn-primary" to="/auth/register">
+              Reservar este servicio
+            </Link>
+            <Link className="btn-secondary" to="/servicios">
+              Volver al catalogo
+            </Link>
+          </div>
+
+          <section className="booking-panel" aria-label="Panel de agendamiento">
+            <h2>Agendar esta consulta</h2>
+            <p className="wizard-step-hint">{stepHint}</p>
+
+            <ol className="wizard-steps" aria-label="Progreso de agendamiento">
+              <li className={currentStep >= 1 ? 'active' : ''}>Fecha y hora</li>
+              <li className={currentStep >= 2 ? 'active' : ''}>Informacion</li>
+              <li className={currentStep >= 3 ? 'active' : ''}>Resumen</li>
+              <li className={currentStep >= 4 ? 'active' : ''}>Confirmacion</li>
+            </ol>
+
+            {currentStep === 1 ? (
+              <>
+                <label>
+                  Fecha
+                  <input
+                    type="date"
+                    min={getLocalDateYmd()}
+                    value={agendaDate}
+                    onChange={(event) => setAgendaDate(event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  Zona horaria
+                  <select
+                    value={selectedTimezone}
+                    onChange={(event) => setSelectedTimezone(event.target.value || detectedTimezone)}
+                  >
+                    {timezoneOptions.map((timezone) => (
+                      <option key={timezone} value={timezone}>
+                        {timezone}
+                        {timezone === detectedTimezone ? ' (detectada)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="slots-grid">
+                  {availabilityQuery.isLoading ? <p>Cargando horarios del dia...</p> : null}
+                  {!availabilityQuery.isLoading && slots.length === 0 ? (
+                    <p>No hay horarios disponibles para la fecha seleccionada.</p>
+                  ) : null}
+
+                  {slots.map((slot) => {
+                    const isSelected = selectedSlot === slot.inicio_utc;
+                    return (
+                      <button
+                        key={slot.inicio_utc}
+                        type="button"
+                        className={isSelected ? 'slot-chip selected' : 'slot-chip'}
+                        onClick={() => setSelectedSlot(slot.inicio_utc)}
+                      >
+                        {new Date(slot.inicio_cliente).toLocaleTimeString('es-CL', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="wizard-actions">
+                  <button className="btn-primary" type="button" disabled={!selectedSlot} onClick={goNext}>
+                    Continuar
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {currentStep === 2 ? (
+              <>
+                <label>
+                  Tema principal (opcional)
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={temaPrincipal}
+                    onChange={(event) => setTemaPrincipal(event.target.value)}
+                    placeholder="Amor, trabajo, familia..."
+                  />
+                </label>
+
+                <label>
+                  Pregunta especifica (opcional)
+                  <textarea
+                    rows={4}
+                    maxLength={1000}
+                    value={pregunta}
+                    onChange={(event) => setPregunta(event.target.value)}
+                    placeholder="Describe tu consulta para preparar la sesion"
+                  />
+                </label>
+
+                <div className="wizard-actions">
+                  <button className="btn-secondary" type="button" onClick={goBack}>
+                    Volver
+                  </button>
+                  <button className="btn-primary" type="button" onClick={goNext}>
+                    Revisar resumen
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {currentStep === 3 ? (
+              <>
+                <div className="booking-summary">
+                  <p>
+                    <strong>Servicio:</strong> {servicio?.nombre}
+                  </p>
+                  <p>
+                    <strong>Fecha:</strong>{' '}
+                    {selectedSlotData
+                      ? new Date(selectedSlotData.inicio_cliente).toLocaleString('es-CL', {
+                          dateStyle: 'full',
+                          timeStyle: 'short',
+                        })
+                      : 'Sin seleccionar'}
+                  </p>
+                  <p>
+                    <strong>Zona horaria:</strong> {selectedTimezone || detectedTimezone}
+                  </p>
+                  <p>
+                    <strong>Duracion:</strong> {servicio?.duracion_minutos} minutos
+                  </p>
+                  <p>
+                    <strong>Precio total:</strong> {formatPrice(servicio?.precio_centavos ?? null, servicio?.moneda ?? 'USD')}
+                  </p>
+                  <p>
+                    <strong>Tema:</strong> {temaPrincipal || 'No indicado'}
+                  </p>
+                  <p>
+                    <strong>Pregunta:</strong> {pregunta || 'No indicada'}
+                  </p>
+                </div>
+
+                {!isAuthenticated ? (
+                  <p className="form-warning">Debes iniciar sesion para confirmar la reserva.</p>
+                ) : null}
+
+                {bookingMutation.isError ? (
+                  <p className="form-error">No se pudo reservar el horario. Intenta con otro slot.</p>
+                ) : null}
+
+                <div className="wizard-actions">
+                  <button className="btn-secondary" type="button" onClick={goBack}>
+                    Volver
+                  </button>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    disabled={!selectedSlot || bookingMutation.isPending}
+                    onClick={handleReservar}
+                  >
+                    {bookingMutation.isPending ? 'Reservando...' : 'Confirmar reserva'}
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {currentStep === 4 && bookingMutation.isSuccess ? (
+              <div className="booking-success">
+                <h3>Reserva creada</h3>
+                <p>
+                  Estado: {bookingMutation.data.data.estado}. Tu ventana de pago/confirmacion vence el{' '}
+                  {new Date(bookingMutation.data.data.reservada_hasta).toLocaleString('es-CL', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}.
+                </p>
+                <div className="countdown-box" role="status" aria-live="polite">
+                  <span className="countdown-label">Tiempo restante</span>
+                  <strong className={isCountdownExpired ? 'countdown-time expired' : 'countdown-time'}>{countdownLabel}</strong>
+                  {isCountdownExpired ? <p className="countdown-expired">Tu ventana de reserva ha vencido.</p> : null}
+                </div>
+                <div className="wizard-actions">
+                  <Link className="btn-secondary" to="/app/mis-consultas">
+                    Ver mis consultas
+                  </Link>
+                  {!isCountdownExpired ? (
+                    <Link className="btn-primary" to="/servicios">
+                      Agendar otra
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </section>
+        </motion.section>
+      ) : null}
+    </main>
+  );
+}
