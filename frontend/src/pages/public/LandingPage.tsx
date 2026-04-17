@@ -109,7 +109,7 @@ export function LandingPage() {
             <Link className="btn-primary btn-shimmer" to="/servicios">
               Ver servicios
             </Link>
-            <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
+            <button type="button" className="btn-primary btn-shimmer-alt" onClick={openRegister}>
               Crear cuenta gratis
             </button>
           </motion.div>

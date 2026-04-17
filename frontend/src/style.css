@@ -16,6 +16,7 @@
 	--glow: rgba(201, 168, 76, 0.2);
 	--gradient-gold: linear-gradient(135deg, #c9a84c 0%, #e8d48b 50%, #c9a84c 100%);
 	--gradient-shimmer: linear-gradient(90deg, #c9a84c 0%, #e8d48b 35%, #c9a84c 65%, #b8922e 100%);
+	--gradient-shimmer-alt: linear-gradient(90deg, #6b3fa0 0%, #9b6fd0 35%, #6b3fa0 65%, #4a2070 100%);
 	color-scheme: dark;
 }
 
@@ -33,6 +34,7 @@
 	--glow: rgba(184, 92, 120, 0.22);
 	--gradient-gold: linear-gradient(135deg, #b85c78 0%, #d4a0b0 50%, #b85c78 100%);
 	--gradient-shimmer: linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
+	--gradient-shimmer-alt: linear-gradient(90deg, #7a57a0 0%, #b090d0 35%, #7a57a0 65%, #5a3a80 100%);
 	color-scheme: light;
 }
 
@@ -260,6 +262,21 @@ a {
 
 .btn-shimmer:hover {
 	box-shadow: 0 0 32px color-mix(in srgb, var(--accent) 55%, transparent), 0 4px 14px rgba(0, 0, 0, 0.25);
+	transform: translateY(-2px);
+	animation-play-state: paused;
+}
+
+/* Variante violeta/púrpura — desfasada -1.8s para no sincronizar con la dorada */
+.btn-shimmer-alt {
+	background: var(--gradient-shimmer-alt);
+	background-size: 200% auto;
+	color: #f5e6d3;
+	animation: shimmer-sweep 3.4s linear infinite;
+	animation-delay: -1.8s;
+}
+
+.btn-shimmer-alt:hover {
+	box-shadow: 0 0 32px color-mix(in srgb, var(--secondary) 60%, transparent), 0 4px 14px rgba(0, 0, 0, 0.25);
 	transform: translateY(-2px);
 	animation-play-state: paused;
 }
@@ -933,7 +950,8 @@ p               { text-wrap: pretty; }
 	transition-duration: 0.1s;
 }
 
-.btn-shimmer:active {
+.btn-shimmer:active,
+.btn-shimmer-alt:active {
 	transform: scale(0.96);
 	transition-duration: 0.1s;
 	animation-play-state: paused;
