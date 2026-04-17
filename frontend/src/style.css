@@ -36,9 +36,9 @@
 	--glow: rgba(184, 92, 120, 0.22);
 	--gradient-gold: linear-gradient(135deg, #b85c78 0%, #d4a0b0 50%, #b85c78 100%);
 	--gradient-shimmer:     linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
-	--gradient-shimmer-alt: linear-gradient(90deg, #ede8f5 0%, #ffffff 35%, #e8eef8 65%, #ede8f5 100%);
+	--gradient-shimmer-alt: linear-gradient(90deg, #3a5a80 0%, #4e72a0 35%, #3a5a80 65%, #2e4a6e 100%);
 	--btn-shimmer-text:     #f5eeec;
-	--btn-shimmer-alt-text: #3a5a80;
+	--btn-shimmer-alt-text: #ffffff;
 	color-scheme: light;
 }
 
@@ -285,9 +285,9 @@ a {
 	animation-play-state: paused;
 }
 
-/* Modo claro: borde sutil + glow suave como btn-secondary original */
+/* Modo claro: sin borde visible sobre fondo azul */
 :root[data-theme='light'] .btn-shimmer-alt {
-	border-color: color-mix(in srgb, var(--text) 20%, transparent);
+	border-color: transparent;
 }
 
 .btn-secondary,
