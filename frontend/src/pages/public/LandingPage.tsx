@@ -80,7 +80,7 @@ export function LandingPage() {
             key={i}
             className="hero-star"
             style={{ left: s.left, top: s.top, width: s.size, height: s.size }}
-            animate={{ opacity: [0.15, 1, 0.15], scale: [1, 1.55, 1] }}
+            animate={{ opacity: [0.45, 1, 0.45], scale: [1, 1.55, 1] }}
             transition={{ duration: s.dur, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
           />
         ))}

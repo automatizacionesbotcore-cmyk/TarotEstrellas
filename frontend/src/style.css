@@ -209,6 +209,15 @@ a {
 		0 0 36px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
+/* Modo claro: púrpura contrasta mejor sobre el fondo crema que el rosa */
+:root[data-theme='light'] .hero-star {
+	background: var(--secondary);
+	box-shadow:
+		0 0 6px  color-mix(in srgb, var(--secondary) 90%, transparent),
+		0 0 18px color-mix(in srgb, var(--secondary) 55%, transparent),
+		0 0 36px color-mix(in srgb, var(--secondary) 25%, transparent);
+}
+
 .hero h1 {
 	font-size: clamp(2rem, 3.5vw, 3.2rem);
 	margin: 0;
