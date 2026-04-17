@@ -15,8 +15,10 @@
 	--border-active: rgba(201, 168, 76, 0.45);
 	--glow: rgba(201, 168, 76, 0.2);
 	--gradient-gold: linear-gradient(135deg, #c9a84c 0%, #e8d48b 50%, #c9a84c 100%);
-	--gradient-shimmer: linear-gradient(90deg, #c9a84c 0%, #e8d48b 35%, #c9a84c 65%, #b8922e 100%);
-	--gradient-shimmer-alt: linear-gradient(90deg, #6b3fa0 0%, #9b6fd0 35%, #6b3fa0 65%, #4a2070 100%);
+	--gradient-shimmer:     linear-gradient(90deg, #c9a84c 0%, #e8d48b 35%, #c9a84c 65%, #b8922e 100%);
+	--gradient-shimmer-alt: linear-gradient(90deg, #0d0b1e 0%, #1e1048 40%, #0d0b1e 70%, #0a0820 100%);
+	--btn-shimmer-text:     #ffffff;
+	--btn-shimmer-alt-text: #c9a84c;
 	color-scheme: dark;
 }
 
@@ -33,8 +35,10 @@
 	--border-active: rgba(139, 107, 174, 0.45);
 	--glow: rgba(184, 92, 120, 0.22);
 	--gradient-gold: linear-gradient(135deg, #b85c78 0%, #d4a0b0 50%, #b85c78 100%);
-	--gradient-shimmer: linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
-	--gradient-shimmer-alt: linear-gradient(90deg, #7a57a0 0%, #b090d0 35%, #7a57a0 65%, #5a3a80 100%);
+	--gradient-shimmer:     linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
+	--gradient-shimmer-alt: linear-gradient(90deg, #2e2e3a 0%, #3d3a4e 40%, #2e2e3a 70%, #222230 100%);
+	--btn-shimmer-text:     #504850;
+	--btn-shimmer-alt-text: #b85c78;
 	color-scheme: light;
 }
 
@@ -256,7 +260,7 @@ a {
 .btn-shimmer {
 	background: var(--gradient-shimmer);
 	background-size: 200% auto;
-	color: #0d0b1e;
+	color: var(--btn-shimmer-text);
 	animation: shimmer-sweep 3s linear infinite;
 }
 
@@ -266,17 +270,17 @@ a {
 	animation-play-state: paused;
 }
 
-/* Variante violeta/púrpura — desfasada -1.8s para no sincronizar con la dorada */
+/* Variante noche/gris — desfasada -1.8s para no sincronizar con la principal */
 .btn-shimmer-alt {
 	background: var(--gradient-shimmer-alt);
 	background-size: 200% auto;
-	color: #f5e6d3;
+	color: var(--btn-shimmer-alt-text);
 	animation: shimmer-sweep 3.4s linear infinite;
 	animation-delay: -1.8s;
 }
 
 .btn-shimmer-alt:hover {
-	box-shadow: 0 0 32px color-mix(in srgb, var(--secondary) 60%, transparent), 0 4px 14px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 0 32px color-mix(in srgb, var(--btn-shimmer-alt-text) 50%, transparent), 0 4px 14px rgba(0, 0, 0, 0.3);
 	transform: translateY(-2px);
 	animation-play-state: paused;
 }
