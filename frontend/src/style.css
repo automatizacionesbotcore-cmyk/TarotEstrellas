@@ -38,7 +38,7 @@
 	--gradient-shimmer:     linear-gradient(90deg, #b85c78 0%, #d4a0b0 35%, #b85c78 65%, #963058 100%);
 	--gradient-shimmer-alt: linear-gradient(90deg, #c9a84c 0%, #e8d48b 40%, #c9a84c 70%, #b8922e 100%);
 	--btn-shimmer-text:     #f5eeec;
-	--btn-shimmer-alt-text: #7a1e38;
+	--btn-shimmer-alt-text: #ffffff;
 	color-scheme: light;
 }
 
@@ -1113,6 +1113,11 @@ p               { text-wrap: pretty; }
 	box-shadow: none;
 	padding: 0;
 	border-radius: 0;
+}
+
+/* Texto blanco en botones primarios del modal (modo claro) */
+:root[data-theme='light'] .auth-modal-body .btn-primary {
+	color: #ffffff;
 }
 
 @media (max-width: 480px) {
