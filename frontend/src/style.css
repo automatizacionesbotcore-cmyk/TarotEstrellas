@@ -721,6 +721,9 @@ a {
 .field-error { color: #ffb3b3; }
 .field-success { color: #b8f4ca; }
 
+:root[data-theme='light'] .field-error   { color: #b82020; }
+:root[data-theme='light'] .field-success { color: #1a7a40; }
+
 .password-rules {
 	margin: 0;
 	padding-left: 1rem;
@@ -732,8 +735,14 @@ a {
 .password-rule-ok { color: #b8f4ca; }
 .password-rule-ko { color: #ffcf8a; }
 
+:root[data-theme='light'] .password-rule-ok { color: #1a7a40; font-weight: 600; }
+:root[data-theme='light'] .password-rule-ko { color: #b05800; font-weight: 600; }
+
 .form-error   { margin: 0; color: #ffb3b3; font-size: 0.9rem; }
 .form-success { margin: 0; color: #b8f4ca;  font-size: 0.9rem; }
+
+:root[data-theme='light'] .form-error   { color: #b82020; }
+:root[data-theme='light'] .form-success { color: #1a7a40; }
 .form-warning { margin: 0; color: #ffe39d;  font-size: 0.9rem; }
 
 /* ── BOOKING WIZARD ─────────────────────────────────────────────────────── */
