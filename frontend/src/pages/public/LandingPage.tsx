@@ -22,7 +22,7 @@ const STARS = [
 const INFO_CARDS = [
   {
     icon: '🌙',
-    title: 'Sobre Chachita',
+    title: 'Sobre nuestra especialista',
     body: 'Más de 20 años guiando procesos personales con enfoque humano y práctico. Especialista en tarot, astrología natal y lectura de runas.',
   },
   {
@@ -60,7 +60,7 @@ export function LandingPage() {
     }
     meta.setAttribute(
       'content',
-      'Tarot, astrología y guía espiritual en videollamada con Chachita. Agendamiento simple, recordatorios y seguimiento personalizado.',
+      'Tarot, astrología y guía espiritual en videollamada con nuestra especialista. Agendamiento simple, recordatorios y seguimiento personalizado.',
     );
   }, []);
 
@@ -102,7 +102,7 @@ export function LandingPage() {
 
           <motion.p className="hero-tagline" variants={fadeUp} transition={{ duration: 0.65 }}>
             Tarot, astrología y carta astral en videollamada.<br />
-            Historial personal, recordatorios y guía continua con Chachita.
+            Historial personal, recordatorios y guía continua con nuestra especialista.
           </motion.p>
 
           <motion.div className="cta-row" variants={fadeUp} transition={{ duration: 0.6 }}>
