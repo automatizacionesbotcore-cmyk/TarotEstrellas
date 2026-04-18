@@ -119,7 +119,16 @@ export function ServiciosPage() {
 
   return (
     <main className="page-content">
-      <h1>Catálogo de Servicios</h1>
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{ marginBottom: '1.4rem' }}
+      >
+        <p className="dash-eyebrow">✦ Lecturas y guía espiritual</p>
+        <h1 className="dash-title">Catálogo de Servicios</h1>
+        <p className="dash-subtitle">Elige el servicio que mejor resuene con tu momento.</p>
+      </motion.div>
 
       <Suspense fallback={<div className="canvas-loading" aria-hidden="true" />}>
         <FloatingCard />

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
+import { toast } from '../../stores/toastStore';
 
 const stagger = {
   hidden:  {},
@@ -19,19 +20,15 @@ export function MiCuentaPage() {
 
   const [nombre,     setNombre]     = useState(user?.nombre ?? '');
   const [submitting, setSubmitting] = useState(false);
-  const [success,    setSuccess]    = useState(false);
-  const [error,      setError]      = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
-    setSuccess(false);
     try {
       await api.put('/account/profile', { nombre });
-      setSuccess(true);
+      toast.success('¡Perfil actualizado correctamente!');
     } catch {
-      setError('No se pudo guardar el perfil. Intenta de nuevo.');
+      toast.error('No se pudo guardar el perfil. Intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -64,9 +61,6 @@ export function MiCuentaPage() {
               Correo
               <input type="email" value={user?.email ?? ''} disabled />
             </label>
-
-            {error   ? <p className="form-error">{error}</p>            : null}
-            {success ? <p className="form-success">¡Perfil actualizado!</p> : null}
 
             <button className="btn-primary" type="submit" disabled={submitting}>
               {submitting ? 'Guardando…' : 'Guardar cambios'}

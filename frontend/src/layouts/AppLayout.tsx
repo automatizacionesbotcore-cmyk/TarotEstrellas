@@ -1,18 +1,50 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/ui/Logo';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
+import { toast } from '../stores/toastStore';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
+  animate: { opacity: 1, y: 0  },
   exit:    { opacity: 0, y: -10 },
 };
 
 export function AppLayout() {
-  const user = useAuthStore((state) => state.user);
-  const location = useLocation();
+  const user         = useAuthStore((s) => s.user);
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const location     = useLocation();
+  const navigate     = useNavigate();
+
+  const [loggingOut,  setLoggingOut]  = useState(false);
+  const [resending,   setResending]   = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // token inválido — limpiar de todas formas
+    }
+    clearSession();
+    navigate('/', { replace: true });
+    toast.info('Sesión cerrada.');
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await api.post('/auth/email/resend');
+      toast.success('Enlace de verificación enviado. Revisa tu correo.');
+    } catch {
+      toast.error('No se pudo enviar el enlace. Intenta más tarde.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
     <div className="page-shell">
@@ -21,16 +53,38 @@ export function AppLayout() {
           <Logo />
         </Link>
         <nav aria-label="Navegación de la app">
-          <NavLink to="/app" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
-          <NavLink to="/app/mis-consultas" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Mis consultas</NavLink>
-          <NavLink to="/app/mi-cuenta" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Mi cuenta</NavLink>
+          <NavLink to="/app" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Dashboard
+          </NavLink>
+          <NavLink to="/app/mis-consultas" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Mis consultas
+          </NavLink>
+          <NavLink to="/app/mi-cuenta" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Mi cuenta
+          </NavLink>
           <ThemeToggle />
+          <button
+            type="button"
+            className="btn-secondary nav-logout"
+            onClick={handleLogout}
+            disabled={loggingOut}
+          >
+            {loggingOut ? 'Saliendo…' : 'Salir'}
+          </button>
         </nav>
       </header>
 
       {user && !user.email_verified_at ? (
         <div className="verify-banner">
-          Tu correo aún no está verificado. Revisa tu bandeja para continuar.
+          <span>Tu correo aún no está verificado. Revisa tu bandeja para continuar.</span>
+          <button
+            type="button"
+            className="verify-resend-btn"
+            onClick={handleResend}
+            disabled={resending}
+          >
+            {resending ? 'Enviando…' : 'Reenviar enlace'}
+          </button>
         </div>
       ) : null}
 

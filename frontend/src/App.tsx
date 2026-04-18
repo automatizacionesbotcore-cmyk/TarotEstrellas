@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { Toaster } from './components/ui/Toaster';
 import { PublicLayout } from './layouts/PublicLayout';
 import { AuthLayout } from './layouts/AuthLayout';
 import { AppLayout } from './layouts/AppLayout';
@@ -11,6 +12,7 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
+import { NotFoundPage } from './pages/public/NotFoundPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
@@ -33,6 +35,7 @@ export function App() {
   return (
     <>
     <AuthCardModal />
+    <Toaster />
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
@@ -68,7 +71,7 @@ export function App() {
       </Route>
 
       <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </>
   );

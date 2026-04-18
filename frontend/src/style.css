@@ -1086,6 +1086,78 @@ a {
 	margin: 0;
 }
 
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+.toaster {
+	position: fixed;
+	bottom: 1.5rem;
+	right: 1.5rem;
+	z-index: 9999;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	pointer-events: none;
+}
+
+.toast {
+	pointer-events: all;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.7rem 1rem;
+	border-radius: 12px;
+	border: 1px solid transparent;
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	max-width: 340px;
+	font-size: 0.9rem;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.toast-success {
+	background: color-mix(in srgb, #2e7d4f 85%, transparent);
+	border-color: color-mix(in srgb, #4caf6e 50%, transparent);
+	color: #d4f7e0;
+}
+
+.toast-error {
+	background: color-mix(in srgb, #7d2e2e 85%, transparent);
+	border-color: color-mix(in srgb, #e05555 50%, transparent);
+	color: #fdd;
+}
+
+.toast-info {
+	background: color-mix(in srgb, var(--secondary) 70%, transparent);
+	border-color: color-mix(in srgb, var(--secondary) 55%, transparent);
+	color: var(--text);
+}
+
+.toast-icon {
+	font-size: 0.85rem;
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.toast-message {
+	flex: 1;
+	line-height: 1.35;
+}
+
+.toast-close {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: inherit;
+	opacity: 0.65;
+	font-size: 1.1rem;
+	line-height: 1;
+	padding: 0;
+	flex-shrink: 0;
+	transition-property: opacity;
+	transition-duration: 0.15s;
+}
+
+.toast-close:hover { opacity: 1; }
+
 /* ── VERIFY EMAIL ────────────────────────────────────────────────────────── */
 .verify-email-card {
 	text-align: center;
@@ -1129,6 +1201,82 @@ a {
 	opacity: 0.75;
 }
 
+/* ── 404 ─────────────────────────────────────────────────────────────────── */
+.not-found-page {
+	min-height: 60vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.not-found-content {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.85rem;
+}
+
+.not-found-code {
+	font-family: 'Italiana', serif;
+	font-size: clamp(5rem, 18vw, 9rem);
+	line-height: 1;
+	margin: 0;
+	background: var(--gradient-gold);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+.not-found-title {
+	font-size: clamp(1.4rem, 4vw, 2rem);
+	font-weight: 700;
+	margin: 0;
+}
+
+.not-found-sub {
+	color: var(--text-muted);
+	max-width: 360px;
+	margin: 0;
+	line-height: 1.55;
+}
+
+/* Logout + verify banner extras */
+.nav-logout {
+	padding: 0.38rem 0.85rem;
+	font-size: 0.88rem;
+}
+
+.verify-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.verify-resend-btn {
+	background: none;
+	border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+	border-radius: 8px;
+	padding: 0.25rem 0.7rem;
+	font-size: 0.82rem;
+	color: var(--accent);
+	cursor: pointer;
+	white-space: nowrap;
+	transition-property: background-color, color;
+	transition-duration: 0.2s;
+}
+
+.verify-resend-btn:hover {
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.verify-resend-btn:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
 /* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
 	.hero-full { min-height: 70vh; padding: 2rem 1.4rem; }
@@ -1145,6 +1293,39 @@ a {
 	.auth-span-2          { grid-column: span 1; }
 
 	.wizard-steps { grid-template-columns: 1fr 1fr; }
+
+	/* Header responsive */
+	.main-header {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.main-header nav {
+		width: 100%;
+		gap: 0.6rem;
+		justify-content: flex-start;
+		overflow-x: auto;
+		padding-bottom: 0.25rem;
+	}
+
+	/* Dashboard */
+	.dash-title  { font-size: 1.7rem; }
+	.dash-stats  { flex-direction: column; }
+	.stat-card   { min-width: unset; }
+	.dash-actions { flex-direction: column; }
+	.dash-actions .btn-primary,
+	.dash-actions .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+
+	/* Pagination */
+	.pagination  { gap: 0.6rem; }
+	.page-btn    { padding: 0.4rem 0.75rem; font-size: 0.85rem; }
+
+	/* Toast */
+	.toaster { right: 0.75rem; left: 0.75rem; bottom: 1rem; }
+	.toast   { max-width: 100%; }
+
+	/* 404 */
+	.not-found-code { font-size: 5rem; }
 }
 
 /* ── LOGO ───────────────────────────────────────────────────────────────── */

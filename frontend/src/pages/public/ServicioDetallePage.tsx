@@ -344,11 +344,21 @@ export function ServicioDetallePage() {
     <main className="page-content">
       {isLoading ? <p>Cargando detalle...</p> : null}
       {servicio ? (
-        <motion.section className="detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ marginBottom: '1.2rem' }}
+          >
+            <p className="dash-eyebrow">✦ {servicio.categoria}</p>
+            <h1 className="dash-title">{servicio.nombre}</h1>
+          </motion.div>
+
+          <motion.section className="detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
           <div className="detail-hero">
             <div>
               <span className="service-pill">{servicio.categoria}</span>
-              <h1>{servicio.nombre}</h1>
               <p>{servicio.descripcion}</p>
               <div className="detail-meta-row">
                 <span>Duracion: {servicio.duracion_minutos} minutos</span>
@@ -575,6 +585,7 @@ export function ServicioDetallePage() {
             ) : null}
           </section>
         </motion.section>
+        </>
       ) : null}
     </main>
   );
