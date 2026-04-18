@@ -157,7 +157,7 @@ export function MisConsultasPage() {
                   <p className="card-detail cita-tema">✨ {cita.tema_principal}</p>
                 ) : null}
 
-                {cita.estado === 'pendiente_abono' ? (
+                {cita.estado === 'pendiente_abono' && (
                   <Link
                     to={`/app/citas/${cita.id}/pagar`}
                     className="btn-primary btn-shimmer"
@@ -165,7 +165,17 @@ export function MisConsultasPage() {
                   >
                     💳 Pagar ahora
                   </Link>
-                ) : (
+                )}
+                {cita.estado === 'confirmada' && (
+                  <Link
+                    to={`/app/sala/${cita.id}`}
+                    className="btn-primary btn-shimmer"
+                    style={{ textAlign: 'center', justifyContent: 'center' }}
+                  >
+                    🎥 Entrar a sala
+                  </Link>
+                )}
+                {cita.estado !== 'pendiente_abono' && cita.estado !== 'confirmada' && (
                   <Link
                     to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}
                     className="card-link"

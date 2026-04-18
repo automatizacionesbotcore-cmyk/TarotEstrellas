@@ -2015,3 +2015,237 @@ p               { text-wrap: pretty; }
 	.pay-method-grid { grid-template-columns: 1fr; }
 	.pay-wrapper { max-width: 100%; }
 }
+
+/* ── SALA DE VIDEO ───────────────────────────────────────────────────────── */
+.sala-page {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg);
+}
+
+.sala-gate {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	text-align: center;
+	max-width: 480px;
+	padding: 2.5rem;
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	margin: 2rem auto;
+}
+
+.sala-gate-icon { font-size: 3rem; display: block; }
+
+.sala-gate h2 {
+	font-family: 'Cormorant Garamond', serif;
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: var(--accent);
+	margin: 0;
+}
+
+.sala-gate-body {
+	color: var(--text-muted);
+	font-size: 0.92rem;
+	line-height: 1.7;
+	margin: 0;
+}
+
+.consent-check {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	font-size: 0.9rem;
+	color: var(--text);
+	cursor: pointer;
+	text-align: left;
+}
+
+.consent-check input { margin-top: 3px; accent-color: var(--accent); }
+
+/* Pre-sala */
+.sala-presala {
+	max-width: 560px;
+	margin: 2rem auto;
+	padding: 2rem;
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+}
+
+.sala-presala-title {
+	font-family: 'Cormorant Garamond', serif;
+	font-size: 1.4rem;
+	color: var(--accent);
+	margin: 0;
+}
+
+.presala-preview {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 1rem;
+	align-items: center;
+}
+
+.presala-video {
+	width: 100%;
+	aspect-ratio: 16/9;
+	border-radius: 10px;
+	background: #000;
+	object-fit: cover;
+}
+
+.presala-checks {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+}
+
+.presala-check {
+	padding: 0.4rem 0.8rem;
+	border-radius: 8px;
+	font-size: 0.85rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	white-space: nowrap;
+}
+
+.presala-check.ok  { border-color: #4caf6e; color: #4caf6e; }
+.presala-check.fail { border-color: #e05555; color: #e05555; }
+
+.presala-enter { width: 100%; justify-content: center; }
+
+/* Call room */
+.call-wrapper {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	background: #060412;
+	z-index: 100;
+}
+
+.call-room {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.call-statusbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.6rem 1.2rem;
+	background: rgba(6,4,18,0.9);
+	border-bottom: 1px solid rgba(201,168,76,0.15);
+	flex-shrink: 0;
+}
+
+.call-status-left { display: flex; align-items: center; gap: 0.8rem; }
+
+.rec-badge {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.78rem;
+	color: #ff4444;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+}
+
+.rec-dot {
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	background: #ff4444;
+	animation: recPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recPulse {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.3; }
+}
+
+.call-timer { font-size: 0.85rem; color: var(--text-muted); font-family: monospace; }
+
+.call-service { font-size: 0.85rem; color: var(--accent); }
+
+.call-remaining {
+	font-size: 0.82rem;
+	color: var(--text-muted);
+	font-family: monospace;
+}
+
+.call-remaining.urgent { color: #ffb347; font-weight: 600; }
+
+.call-frame { flex: 1; overflow: hidden; }
+
+.call-error {
+	background: rgba(224,85,85,0.15);
+	border-top: 1px solid rgba(224,85,85,0.4);
+	padding: 0.6rem 1.2rem;
+	font-size: 0.85rem;
+	color: #ffb3b3;
+	text-align: center;
+}
+
+.call-controls {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1.2rem;
+	padding: 0.9rem 1.5rem;
+	background: rgba(6,4,18,0.95);
+	border-top: 1px solid rgba(201,168,76,0.12);
+	flex-shrink: 0;
+}
+
+.ctrl-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	background: rgba(255,255,255,0.07);
+	border: 1px solid rgba(255,255,255,0.12);
+	border-radius: 12px;
+	padding: 0.65rem 1.1rem;
+	color: var(--text);
+	font-size: 1.4rem;
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s;
+	min-width: 72px;
+}
+
+.ctrl-btn span { font-size: 0.7rem; color: var(--text-muted); }
+
+.ctrl-btn:hover { background: rgba(255,255,255,0.13); border-color: var(--accent); }
+
+.ctrl-btn.ctrl-off {
+	background: rgba(224,85,85,0.18);
+	border-color: rgba(224,85,85,0.5);
+}
+
+.ctrl-btn.ctrl-leave {
+	background: rgba(224,85,85,0.15);
+	border-color: rgba(224,85,85,0.4);
+}
+
+.ctrl-btn.ctrl-leave:hover {
+	background: rgba(224,85,85,0.3);
+	border-color: #e05555;
+}
+
+@media (max-width: 640px) {
+	.presala-preview { grid-template-columns: 1fr; }
+	.presala-checks { flex-direction: row; }
+	.call-statusbar { padding: 0.4rem 0.8rem; font-size: 0.78rem; }
+	.ctrl-btn { padding: 0.5rem 0.8rem; min-width: 58px; font-size: 1.2rem; }
+}
