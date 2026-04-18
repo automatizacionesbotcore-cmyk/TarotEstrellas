@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { loadStripe, type StripeCardElement } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { api } from '../../lib/api';
@@ -22,6 +22,8 @@ type Cita = {
   precio_final_centavos: number;
   moneda: string;
   codigo_referencia: string;
+  primera_consulta: boolean;
+  cupon_aplicado: string | null;
   tipo_consulta: { nombre: string; duracion_minutos: number } | null;
 };
 
@@ -36,11 +38,24 @@ type MetodoPago = {
   email?: string;
 };
 
+type CuponValidacion = {
+  valido: boolean;
+  descripcion: string;
+  descuento_centavos: number;
+};
+
+type Membresia = {
+  activa: boolean;
+  nombre: string | null;
+  consultas_restantes: number;
+  fecha_vencimiento: string | null;
+};
+
 type PaymentIntentResponse = { client_secret: string };
-type MetodosPagoResponse = { data: MetodoPago[] };
+type MetodosPagoResponse  = { data: MetodoPago[] };
 
 // ── API helpers ──────────────────────────────────────────────────────────────
-const fetchCita = (id: string) =>
+const fetchCita       = (id: string) =>
   api.get(`/citas/${id}`).then((r) => (r.data as { data: Cita }).data);
 
 const fetchMetodosPago = () =>
@@ -60,6 +75,20 @@ const uploadComprobante = (citaId: string, file: File) => {
 const extenderReserva = (citaId: string) =>
   api.post(`/citas/${citaId}/extender`).then((r) => r.data as { reservada_hasta: string });
 
+const validarCupon = (codigo: string, citaId: string) =>
+  api.post('/cupones/validar', { codigo, cita_id: Number(citaId) })
+     .then((r) => r.data as CuponValidacion);
+
+const aplicarCupon = (citaId: string, codigo: string) =>
+  api.post(`/citas/${citaId}/aplicar-cupon`, { codigo })
+     .then((r) => (r.data as { data: Cita }).data);
+
+const fetchMembresia = () =>
+  api.get('/membresia').then((r) => (r.data as { data: Membresia }).data);
+
+const aplicarMembresia = (citaId: string) =>
+  api.post(`/citas/${citaId}/aplicar-membresia`);
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatMoney(cents: number, currency: string) {
   return new Intl.NumberFormat('es-CL', {
@@ -74,9 +103,138 @@ function getRemainingSeconds(iso: string) {
 }
 
 function fmtCountdown(s: number) {
-  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const m   = Math.floor(s / 60).toString().padStart(2, '0');
   const sec = (s % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
+}
+
+// ── Cupón section ────────────────────────────────────────────────────────────
+function CuponSection({
+  citaId,
+  applied,
+  onApplied,
+}: {
+  citaId: string;
+  applied: string | null;
+  onApplied: (cita: Cita) => void;
+}) {
+  const [codigo, setCodigo]   = useState(applied ?? '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
+  const [ok, setOk]           = useState<CuponValidacion | null>(null);
+
+  if (applied && !ok) {
+    return (
+      <div className="cupon-applied">
+        <span className="cupon-check">✓</span>
+        <span>Cupón <strong>{applied}</strong> aplicado</span>
+      </div>
+    );
+  }
+
+  if (ok) {
+    return (
+      <div className="cupon-applied">
+        <span className="cupon-check">✓</span>
+        <span>Cupón <strong>{codigo}</strong>: {ok.descripcion}</span>
+      </div>
+    );
+  }
+
+  const handleApply = async () => {
+    const trimmed = codigo.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setError('');
+    try {
+      const validation = await validarCupon(trimmed, citaId);
+      if (!validation.valido) {
+        setError('El código no es válido o no aplica para esta consulta.');
+        return;
+      }
+      const updatedCita = await aplicarCupon(citaId, trimmed);
+      setOk(validation);
+      onApplied(updatedCita);
+    } catch {
+      setError('No se pudo aplicar el cupón. Verifica el código e intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="cupon-section">
+      <p className="pay-section-label">¿Tienes un cupón?</p>
+      <div className="cupon-input-row">
+        <input
+          type="text"
+          value={codigo}
+          onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+          onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+          placeholder="CÓDIGO"
+          className="cupon-input"
+          maxLength={24}
+        />
+        <button
+          type="button"
+          className="btn-secondary cupon-btn"
+          onClick={handleApply}
+          disabled={loading || !codigo.trim()}
+        >
+          {loading ? '…' : 'Aplicar'}
+        </button>
+      </div>
+      {error && <p className="form-error cupon-error">{error}</p>}
+    </div>
+  );
+}
+
+// ── Membresía section (checkout) ─────────────────────────────────────────────
+function MembresiaCheckout({
+  citaId,
+  onUsed,
+}: {
+  citaId: string;
+  onUsed: () => void;
+}) {
+  const { data, isLoading } = useQuery<Membresia>({
+    queryKey: ['membresia'],
+    queryFn:  fetchMembresia,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => aplicarMembresia(citaId),
+    onSuccess:  onUsed,
+  });
+
+  if (isLoading || !data?.activa || data.consultas_restantes <= 0) return null;
+
+  return (
+    <motion.div
+      className="membresia-checkout"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="membresia-checkout-info">
+        <span className="membresia-star">✦</span>
+        <div>
+          <p className="membresia-nombre">{data.nombre ?? 'Membresía activa'}</p>
+          <p className="membresia-restantes">{data.consultas_restantes} consulta{data.consultas_restantes !== 1 ? 's' : ''} restante{data.consultas_restantes !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="btn-primary btn-shimmer"
+        onClick={() => mutation.mutate()}
+        disabled={mutation.isPending}
+      >
+        {mutation.isPending ? 'Aplicando…' : 'Usar membresía'}
+      </button>
+      {mutation.isError && (
+        <p className="form-error">No se pudo aplicar la membresía. Intenta de nuevo.</p>
+      )}
+    </motion.div>
+  );
 }
 
 // ── Stripe card form ─────────────────────────────────────────────────────────
@@ -89,9 +247,9 @@ function StripeForm({
   cita: Cita;
   onSuccess: () => void;
 }) {
-  const stripe = useStripe();
+  const stripe   = useStripe();
   const elements = useElements();
-  const [error, setError] = useState('');
+  const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,11 +306,11 @@ function StripeForm({
 
 // ── Transfer panel ───────────────────────────────────────────────────────────
 function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] }) {
-  const [seconds, setSeconds] = useState(() => getRemainingSeconds(cita.reservada_hasta));
-  const [extended, setExtended] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [seconds, setSeconds]     = useState(() => getRemainingSeconds(cita.reservada_hasta));
+  const [extended, setExtended]   = useState(false);
+  const [file, setFile]           = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState(false);
+  const [uploaded, setUploaded]   = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -167,9 +325,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
       const res = await extenderReserva(String(cita.id));
       setSeconds(getRemainingSeconds(res.reservada_hasta));
       setExtended(true);
-    } catch {
-      /* silencioso */
-    }
+    } catch { /* silencioso */ }
   };
 
   const handleUpload = async () => {
@@ -190,7 +346,6 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
 
   return (
     <div className="transfer-panel">
-      {/* Countdown */}
       <div className="countdown-box" role="status" aria-live="polite">
         <span className="countdown-label">Tiempo para transferir</span>
         <strong className={seconds <= 0 ? 'countdown-time expired' : 'countdown-time'}>
@@ -206,13 +361,11 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
         ) : null}
       </div>
 
-      {/* Referencia */}
       <div className="ref-code-box">
         <span className="pay-section-label">Código de referencia (incluirlo en la transferencia)</span>
         <strong className="ref-code">{cita.codigo_referencia}</strong>
       </div>
 
-      {/* Datos bancarios */}
       {banco ? (
         <div className="bank-details">
           <p className="pay-section-label">Datos para transferir</p>
@@ -221,7 +374,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
             <dt>Titular</dt><dd>{banco.titular}</dd>
             <dt>N° de cuenta</dt><dd>{banco.numero_cuenta}</dd>
             <dt>Tipo de cuenta</dt><dd>{banco.tipo_cuenta}</dd>
-            {banco.rut  ? <><dt>RUT</dt><dd>{banco.rut}</dd></>   : null}
+            {banco.rut   ? <><dt>RUT</dt><dd>{banco.rut}</dd></>    : null}
             {banco.email ? <><dt>Email</dt><dd>{banco.email}</dd></> : null}
           </dl>
           <p className="pay-abono-note">
@@ -232,7 +385,6 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
         <p className="pay-section-label">Cargando datos bancarios…</p>
       )}
 
-      {/* Upload comprobante */}
       {!uploaded ? (
         <div className="comprobante-upload">
           <p className="pay-section-label">Sube tu comprobante de transferencia</p>
@@ -251,12 +403,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
             {file ? `📎 ${file.name}` : 'Seleccionar archivo'}
           </button>
           {file ? (
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={uploading}
-              onClick={handleUpload}
-            >
+            <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
               {uploading ? 'Subiendo…' : 'Enviar comprobante'}
             </button>
           ) : null}
@@ -277,7 +424,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
 }
 
 // ── Success screen ───────────────────────────────────────────────────────────
-function SuccessScreen({ cita }: { cita: Cita }) {
+function SuccessScreen({ cita, usedMembresia = false }: { cita: Cita; usedMembresia?: boolean }) {
   const STARS = [
     [20, 15], [80, 10], [50, 30], [10, 60], [90, 55],
     [35, 80], [65, 25], [15, 40], [75, 70], [45, 90],
@@ -307,7 +454,7 @@ function SuccessScreen({ cita }: { cita: Cita }) {
         >
           ✦
         </motion.span>
-        <h2>¡Pago confirmado!</h2>
+        <h2>{usedMembresia ? '¡Membresía aplicada!' : '¡Pago confirmado!'}</h2>
         <p>Tu cita de <strong>{cita.tipo_consulta?.nombre}</strong> está reservada.</p>
         <div className="wizard-actions">
           <button
@@ -317,7 +464,7 @@ function SuccessScreen({ cita }: { cita: Cita }) {
               generateIcs({
                 title: `Consulta: ${cita.tipo_consulta?.nombre ?? 'TarotEstrellas'}`,
                 startUtc: cita.inicio_utc,
-                endUtc: cita.fin_utc,
+                endUtc:   cita.fin_utc,
                 description: 'Consulta espiritual en TarotEstrellas',
               })
             }
@@ -336,24 +483,28 @@ function SuccessScreen({ cita }: { cita: Cita }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 export function PagarCitaPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const [method, setMethod] = useState<'stripe' | 'transfer' | null>(null);
-  const [paid, setPaid] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
+  const qc = useQueryClient();
 
-  const { data: cita, isLoading, isError } = useQuery({
+  const [method, setMethod]             = useState<'stripe' | 'transfer' | null>(null);
+  const [paid, setPaid]                 = useState(false);
+  const [usedMembresia, setUsedMembresia] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [citaOverride, setCitaOverride] = useState<Cita | null>(null);
+
+  const { data: citaRaw, isLoading, isError } = useQuery({
     queryKey: ['cita', id],
-    queryFn: () => fetchCita(id),
-    enabled: Boolean(id),
+    queryFn:  () => fetchCita(id),
+    enabled:  Boolean(id),
   });
 
   const { data: metodos = [] } = useQuery({
     queryKey: ['metodos-pago'],
-    queryFn: fetchMetodosPago,
+    queryFn:  fetchMetodosPago,
   });
 
   const intentMutation = useMutation({
     mutationFn: () => createPaymentIntent(id),
-    onSuccess: (data) => setClientSecret(data.client_secret),
+    onSuccess:  (data) => setClientSecret(data.client_secret),
   });
 
   const handleSelectMethod = (m: 'stripe' | 'transfer') => {
@@ -361,12 +512,25 @@ export function PagarCitaPage() {
     if (m === 'stripe' && !clientSecret) intentMutation.mutate();
   };
 
-  useEffect(() => {
-    document.title = 'Pagar cita | TarotEstrellas';
-  }, []);
+  const handleCuponApplied = (updatedCita: Cita) => {
+    setCitaOverride(updatedCita);
+    qc.setQueryData(['cita', id], updatedCita);
+    // Reset intent so new price is used
+    setClientSecret('');
+    setMethod(null);
+  };
+
+  const handleMembresiaUsed = () => {
+    setUsedMembresia(true);
+    setPaid(true);
+  };
+
+  useEffect(() => { document.title = 'Pagar cita | TarotEstrellas'; }, []);
 
   if (isLoading) return <main className="page-content"><p>Cargando…</p></main>;
-  if (isError || !cita) return <main className="page-content"><p className="form-error">No se encontró la cita.</p></main>;
+  if (isError || !citaRaw) return <main className="page-content"><p className="form-error">No se encontró la cita.</p></main>;
+
+  const cita = citaOverride ?? citaRaw;
 
   if (cita.estado !== 'pendiente_abono') {
     return (
@@ -390,7 +554,7 @@ export function PagarCitaPage() {
 
       <AnimatePresence mode="wait">
         {paid ? (
-          <SuccessScreen key="success" cita={cita} />
+          <SuccessScreen key="success" cita={cita} usedMembresia={usedMembresia} />
         ) : (
           <motion.div
             key="payment"
@@ -401,6 +565,11 @@ export function PagarCitaPage() {
           >
             {/* Resumen */}
             <div className="pay-summary-card">
+              {cita.primera_consulta && (
+                <div className="primera-consulta-badge">
+                  🎉 10% de descuento — ¡primera consulta!
+                </div>
+              )}
               <div className="pay-summary-row">
                 <span>Servicio</span>
                 <strong>{cita.tipo_consulta?.nombre}</strong>
@@ -418,6 +587,16 @@ export function PagarCitaPage() {
                 <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
               </div>
             </div>
+
+            {/* Membresía */}
+            <MembresiaCheckout citaId={id} onUsed={handleMembresiaUsed} />
+
+            {/* Cupón */}
+            <CuponSection
+              citaId={id}
+              applied={cita.cupon_aplicado}
+              onApplied={handleCuponApplied}
+            />
 
             {/* Selector de método */}
             {!method ? (

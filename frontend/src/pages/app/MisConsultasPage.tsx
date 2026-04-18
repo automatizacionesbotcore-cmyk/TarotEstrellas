@@ -166,6 +166,15 @@ export function MisConsultasPage() {
                     💳 Pagar ahora
                   </Link>
                 )}
+                {cita.estado === 'reservada' && (
+                  <Link
+                    to={`/app/citas/${cita.id}/pagar-saldo`}
+                    className="btn-primary btn-shimmer"
+                    style={{ textAlign: 'center', justifyContent: 'center' }}
+                  >
+                    💰 Pagar saldo
+                  </Link>
+                )}
                 {cita.estado === 'confirmada' && (
                   <Link
                     to={`/app/sala/${cita.id}`}
@@ -175,7 +184,7 @@ export function MisConsultasPage() {
                     🎥 Entrar a sala
                   </Link>
                 )}
-                {cita.estado !== 'pendiente_abono' && cita.estado !== 'confirmada' && (
+                {cita.estado !== 'pendiente_abono' && cita.estado !== 'reservada' && cita.estado !== 'confirmada' && (
                   <Link to={`/app/citas/${cita.id}`} className="card-link">
                     Ver detalle →
                   </Link>

@@ -17,6 +17,8 @@ import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { PagarCitaPage } from './pages/app/PagarCitaPage';
+import { PagarSaldoPage } from './pages/app/PagarSaldoPage';
+import { MembresiaPage } from './pages/app/MembresiaPage';
 import { SalaVideoPage } from './pages/app/SalaVideoPage';
 import { DetalleCitaPage } from './pages/app/DetalleCitaPage';
 import { useAuthStore } from './stores/authStore';
@@ -71,6 +73,8 @@ export function App() {
         <Route index element={<DashboardPage />} />
         <Route path="mis-consultas" element={<MisConsultasPage />} />
         <Route path="citas/:id/pagar" element={<PagarCitaPage />} />
+        <Route path="citas/:id/pagar-saldo" element={<PagarSaldoPage />} />
+        <Route path="membresia" element={<MembresiaPage />} />
         <Route path="sala/:uuid" element={<SalaVideoPage />} />
         <Route path="citas/:id" element={<DetalleCitaPage />} />
         <Route path="mi-cuenta" element={<MiCuentaPage />} />

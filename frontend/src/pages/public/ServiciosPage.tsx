@@ -232,7 +232,10 @@ export function ServiciosPage() {
           >
             <h3>{tipo.nombre}</h3>
             <p>{tipo.descripcion}</p>
-            <span className="service-pill">{tipo.categoria}</span>
+            <div className="service-card-pills">
+              <span className="service-pill">{tipo.categoria}</span>
+              <span className="service-pill primera-consulta-pill">🎉 10% primera consulta</span>
+            </div>
             <strong>{formatPrice(tipo.precio_centavos, tipo.moneda)}</strong>
             <span>{tipo.duracion_minutos} min</span>
             <Link to={`/servicios/${tipo.slug}`} className="btn-secondary" style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}>

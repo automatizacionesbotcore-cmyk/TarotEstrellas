@@ -59,6 +59,9 @@ export function AppLayout() {
           <NavLink to="/app/mis-consultas" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Mis consultas
           </NavLink>
+          <NavLink to="/app/membresia" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Membresía
+          </NavLink>
           <NavLink to="/app/mi-cuenta" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Mi cuenta
           </NavLink>
