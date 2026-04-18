@@ -16,6 +16,7 @@ import { NotFoundPage } from './pages/public/NotFoundPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
+import { PagarCitaPage } from './pages/app/PagarCitaPage';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
 
@@ -67,6 +68,7 @@ export function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="mis-consultas" element={<MisConsultasPage />} />
+        <Route path="citas/:id/pagar" element={<PagarCitaPage />} />
         <Route path="mi-cuenta" element={<MiCuentaPage />} />
       </Route>
 

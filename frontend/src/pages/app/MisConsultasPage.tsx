@@ -157,12 +157,22 @@ export function MisConsultasPage() {
                   <p className="card-detail cita-tema">✨ {cita.tema_principal}</p>
                 ) : null}
 
-                <Link
-                  to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}
-                  className="card-link"
-                >
-                  Ver servicio →
-                </Link>
+                {cita.estado === 'pendiente_abono' ? (
+                  <Link
+                    to={`/app/citas/${cita.id}/pagar`}
+                    className="btn-primary btn-shimmer"
+                    style={{ textAlign: 'center', justifyContent: 'center' }}
+                  >
+                    💳 Pagar ahora
+                  </Link>
+                ) : (
+                  <Link
+                    to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}
+                    className="card-link"
+                  >
+                    Ver servicio →
+                  </Link>
+                )}
               </motion.article>
             ))}
           </motion.section>
