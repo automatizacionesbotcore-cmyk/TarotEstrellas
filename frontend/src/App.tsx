@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from './components/ui/Toaster';
 import { PublicLayout } from './layouts/PublicLayout';
@@ -16,23 +16,32 @@ import { NotFoundPage } from './pages/public/NotFoundPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
-import { PagarCitaPage } from './pages/app/PagarCitaPage';
-import { PagarSaldoPage } from './pages/app/PagarSaldoPage';
 import { MembresiaPage } from './pages/app/MembresiaPage';
-import { SalaVideoPage } from './pages/app/SalaVideoPage';
-import { DetalleCitaPage } from './pages/app/DetalleCitaPage';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
 
+// Lazy-load heavy pages (Stripe, Daily.co, R3F) para reducir el bundle inicial
+const PagarCitaPage  = lazy(() => import('./pages/app/PagarCitaPage').then((m) => ({ default: m.PagarCitaPage })));
+const PagarSaldoPage = lazy(() => import('./pages/app/PagarSaldoPage').then((m) => ({ default: m.PagarSaldoPage })));
+const SalaVideoPage  = lazy(() => import('./pages/app/SalaVideoPage').then((m) => ({ default: m.SalaVideoPage })));
+const DetalleCitaPage = lazy(() => import('./pages/app/DetalleCitaPage').then((m) => ({ default: m.DetalleCitaPage })));
+const LegalPage      = lazy(() => import('./pages/public/LegalPage').then((m) => ({ default: m.LegalPage })));
+
+function PageLoader() {
+  return (
+    <main className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <p style={{ color: 'var(--text-muted)' }}>Cargando…</p>
+    </main>
+  );
+}
+
 function AuthOnly({ children }: { children: React.ReactElement }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
   return isAuthenticated ? children : <Navigate to="/auth/login" replace />;
 }
 
 function GuestOnly({ children }: { children: React.ReactElement }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
   return isAuthenticated ? <Navigate to="/app" replace /> : children;
 }
 
@@ -46,6 +55,14 @@ export function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/servicios" element={<ServiciosPage />} />
         <Route path="/servicios/:slug" element={<ServicioDetallePage />} />
+        <Route
+          path="/legal/:slug"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <LegalPage />
+            </Suspense>
+          }
+        />
       </Route>
 
       <Route
@@ -72,11 +89,23 @@ export function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="mis-consultas" element={<MisConsultasPage />} />
-        <Route path="citas/:id/pagar" element={<PagarCitaPage />} />
-        <Route path="citas/:id/pagar-saldo" element={<PagarSaldoPage />} />
+        <Route
+          path="citas/:id/pagar"
+          element={<Suspense fallback={<PageLoader />}><PagarCitaPage /></Suspense>}
+        />
+        <Route
+          path="citas/:id/pagar-saldo"
+          element={<Suspense fallback={<PageLoader />}><PagarSaldoPage /></Suspense>}
+        />
         <Route path="membresia" element={<MembresiaPage />} />
-        <Route path="sala/:uuid" element={<SalaVideoPage />} />
-        <Route path="citas/:id" element={<DetalleCitaPage />} />
+        <Route
+          path="sala/:uuid"
+          element={<Suspense fallback={<PageLoader />}><SalaVideoPage /></Suspense>}
+        />
+        <Route
+          path="citas/:id"
+          element={<Suspense fallback={<PageLoader />}><DetalleCitaPage /></Suspense>}
+        />
         <Route path="mi-cuenta" element={<MiCuentaPage />} />
       </Route>
 

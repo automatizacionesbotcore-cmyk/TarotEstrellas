@@ -2713,3 +2713,119 @@ p               { text-wrap: pretty; }
 	.cupon-btn { width: 100%; }
 	.membresia-card { padding: 1.25rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   SPRINT 8 — Legal pages, pulido, performance
+   ═══════════════════════════════════════════════════════════ */
+
+/* Legal page ----------------------------------------------- */
+.legal-page {
+	min-height: 80vh;
+	padding: 2rem 1rem 4rem;
+}
+
+.legal-page-inner {
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.legal-back {
+	display: inline-block;
+	margin-bottom: 1.5rem;
+	font-size: 0.88rem;
+	color: var(--text-muted);
+	text-decoration: none;
+	transition: color 0.2s;
+}
+
+.legal-back:hover { color: var(--accent); }
+
+.legal-version {
+	font-size: 0.82rem;
+	color: var(--text-muted);
+	margin-bottom: 1.75rem;
+	letter-spacing: 0.04em;
+}
+
+.legal-loading {
+	color: var(--text-muted);
+	margin-top: 2rem;
+}
+
+.legal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 1.1rem;
+}
+
+.legal-content p {
+	line-height: 1.75;
+	font-size: 0.96rem;
+	color: var(--text-muted);
+}
+
+.legal-footer-nav {
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--border);
+}
+
+.legal-also {
+	font-size: 0.85rem;
+	color: var(--text-muted);
+	margin-bottom: 0.6rem;
+}
+
+.legal-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.legal-link {
+	font-size: 0.83rem;
+	color: var(--accent);
+	text-decoration: none;
+	padding: 0.25rem 0.65rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+	border-radius: 6px;
+	transition: background 0.2s;
+}
+
+.legal-link:hover {
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Footer — legal column ------------------------------------ */
+.footer-links { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+
+/* Page loader (Suspense fallback) -------------------------- */
+.page-loader-fallback {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 60vh;
+	color: var(--text-muted);
+	font-size: 0.92rem;
+}
+
+/* Mobile UX polish ----------------------------------------- */
+@media (max-width: 640px) {
+	.pay-wrapper        { gap: 1rem; }
+	.pay-summary-card   { padding: 1rem; }
+	.pay-method-grid    { grid-template-columns: 1fr; }
+	.call-statusbar     { font-size: 0.78rem; flex-wrap: wrap; gap: 0.4rem; }
+	.call-controls      { gap: 0.75rem; }
+	.ctrl-btn           { min-width: 56px; padding: 0.6rem 0.5rem; }
+	.detalle-dl dt      { font-size: 0.82rem; }
+	.membresia-card     { padding: 1rem; }
+	.legal-page         { padding: 1.5rem 1rem 3rem; }
+	.legal-links        { gap: 0.4rem; }
+	.legal-link         { font-size: 0.78rem; }
+}
+
+@media (max-width: 480px) {
+	.dash-title         { font-size: 1.6rem; }
+	.cards-grid         { grid-template-columns: 1fr; }
+	.footer-links       { grid-template-columns: 1fr 1fr; }
+}

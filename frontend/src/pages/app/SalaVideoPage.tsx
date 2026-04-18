@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import { api } from '../../lib/api';
+
+const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type SalaInfo = {
@@ -383,7 +385,9 @@ export function SalaVideoPage() {
       <AnimatePresence mode="wait">
         {phase === 'loading' && (
           <motion.div key="loading" className="sala-gate" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <span className="sala-gate-icon">🔮</span>
+            <Suspense fallback={<span className="sala-gate-icon">🔮</span>}>
+              <ConstellationPortal />
+            </Suspense>
             <p>Preparando tu sala…</p>
           </motion.div>
         )}

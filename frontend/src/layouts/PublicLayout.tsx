@@ -60,6 +60,13 @@ export function PublicLayout() {
               <h4>Cuenta</h4>
               <button type="button" onClick={openLogin}>Iniciar sesión</button>
             </div>
+            <div>
+              <h4>Legal</h4>
+              <Link to="/legal/terminos">Términos y condiciones</Link>
+              <Link to="/legal/privacidad">Política de privacidad</Link>
+              <Link to="/legal/cookies">Política de cookies</Link>
+              <Link to="/legal/reembolsos">Política de reembolsos</Link>
+            </div>
           </nav>
         </div>
 
