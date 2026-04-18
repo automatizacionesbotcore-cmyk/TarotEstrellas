@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { lazy, Suspense, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthModalStore } from '../../stores/authModalStore';
 
@@ -37,6 +37,54 @@ const INFO_CARDS = [
   },
 ];
 
+// Servicios destacados — reemplazar con API cuando esté disponible
+const FEATURED_SERVICES = [
+  {
+    slug: 'tarot-general',
+    nombre: 'Tarot General',
+    descripcion: 'Una lectura completa para obtener claridad sobre tu situación actual y los caminos que se abren ante ti.',
+    categoria: 'tarot',
+    duracion_minutos: 60,
+  },
+  {
+    slug: 'carta-astral',
+    nombre: 'Carta Astral',
+    descripcion: 'Análisis profundo de tu carta natal: planetas, casas y aspectos que definen tu esencia y propósito de vida.',
+    categoria: 'astrologia',
+    duracion_minutos: 90,
+  },
+  {
+    slug: 'tarot-amor',
+    nombre: 'Tarot Amor y Relaciones',
+    descripcion: 'Lectura enfocada en tu vida afectiva, vínculos presentes y patrones emocionales que buscan sanar.',
+    categoria: 'tarot',
+    duracion_minutos: 45,
+  },
+];
+
+const FAQS = [
+  {
+    q: '¿Cómo funciona una consulta por videollamada?',
+    a: 'Eliges el servicio, agendas una fecha disponible y realizas tu consulta desde cualquier lugar con conexión a internet. La sesión queda grabada y puedes revisarla cuando quieras.',
+  },
+  {
+    q: '¿Necesito experiencia previa con el tarot o la astrología?',
+    a: 'No. Las lecturas están diseñadas para cualquier persona, sin importar su nivel de conocimiento. Nuestra especialista guía la sesión de forma clara y accesible.',
+  },
+  {
+    q: '¿Mis datos y lecturas son privados?',
+    a: 'Sí. Toda la información que compartes es estrictamente confidencial. Las grabaciones solo son accesibles para ti y se eliminan automáticamente a los 90 días.',
+  },
+  {
+    q: '¿Cómo se realiza el pago?',
+    a: 'Aceptamos tarjeta de crédito/débito (Stripe) y transferencia bancaria para clientes en Chile. Al reservar se cobra un abono del 20% para asegurar tu hora, y el saldo restante antes de la sesión.',
+  },
+  {
+    q: '¿Puedo reagendar o cancelar mi cita?',
+    a: 'Sí, puedes reagendar hasta 24 horas antes sin costo. Las cancelaciones dentro de las 24 horas tienen una política de reembolso parcial. Consulta nuestra política completa para más detalles.',
+  },
+];
+
 const fadeUp = {
   hidden:  { opacity: 0, y: 36 },
   visible: { opacity: 1, y: 0  },
@@ -49,19 +97,27 @@ const stagger = {
 
 export function LandingPage() {
   const openRegister = useAuthModalStore((s) => s.openRegister);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     document.title = 'TarotEstrellas | Lecturas espirituales online';
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.setAttribute('name', 'description');
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute(
-      'content',
-      'Tarot, astrología y guía espiritual en videollamada con nuestra especialista. Agendamiento simple, recordatorios y seguimiento personalizado.',
-    );
+
+    const setMeta = (name: string, content: string, prop = false) => {
+      const attr = prop ? 'property' : 'name';
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+
+    const desc = 'Tarot, astrología y guía espiritual en videollamada con nuestra especialista. Agendamiento simple, recordatorios y seguimiento personalizado.';
+    setMeta('description', desc);
+    setMeta('og:title', 'TarotEstrellas | Lecturas espirituales online', true);
+    setMeta('og:description', desc, true);
+    setMeta('og:type', 'website', true);
+    setMeta('og:url', window.location.href, true);
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:title', 'TarotEstrellas | Lecturas espirituales online');
+    setMeta('twitter:description', desc);
   }, []);
 
   return (
@@ -139,6 +195,130 @@ export function LandingPage() {
             <p>{card.body}</p>
           </motion.article>
         ))}
+      </motion.section>
+
+      <p className="section-ornament" aria-hidden="true">——✦——</p>
+
+      {/* ── SERVICIOS DESTACADOS ── */}
+      <section className="landing-section" aria-label="Servicios destacados">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={stagger}
+        >
+          <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
+            Servicios más consultados
+          </motion.h2>
+          <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
+            Elige el que mejor resuene con tu momento actual.
+          </motion.p>
+
+          <motion.div className="cards-grid" variants={stagger}>
+            {FEATURED_SERVICES.map((s, i) => (
+              <motion.article
+                key={s.slug}
+                className="service-card"
+                variants={fadeUp}
+                custom={i}
+                transition={{ duration: 0.5 }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
+              >
+                <span className="service-pill">{s.categoria}</span>
+                <h3>{s.nombre}</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1 }}>{s.descripcion}</p>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>⏱ {s.duracion_minutos} min</span>
+                <Link
+                  to={`/servicios/${s.slug}`}
+                  className="btn-secondary"
+                  style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  Ver detalle
+                </Link>
+              </motion.article>
+            ))}
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.5 }}
+            style={{ textAlign: 'center', marginTop: '1.8rem' }}
+          >
+            <Link to="/servicios" className="btn-primary btn-shimmer">
+              Ver todos los servicios
+            </Link>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <p className="section-ornament" aria-hidden="true">——✦——</p>
+
+      {/* ── FAQs ── */}
+      <section className="landing-section" aria-label="Preguntas frecuentes">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={stagger}
+        >
+          <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
+            Preguntas frecuentes
+          </motion.h2>
+          <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
+            Todo lo que necesitas saber antes de tu primera consulta.
+          </motion.p>
+
+          <motion.div className="faq-list" variants={stagger}>
+            {FAQS.map((faq, i) => (
+              <motion.div key={i} className="faq-item" variants={fadeUp} transition={{ duration: 0.45 }}>
+                <button
+                  className="faq-trigger"
+                  aria-expanded={openFaq === i}
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                >
+                  <span>{faq.q}</span>
+                  <span className={`faq-chevron${openFaq === i ? ' open' : ''}`} aria-hidden="true">▾</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {openFaq === i && (
+                    <motion.div
+                      className="faq-body"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: 'easeInOut' }}
+                    >
+                      <p>{faq.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <p className="section-ornament" aria-hidden="true">——✦——</p>
+
+      {/* ── CTA FINAL ── */}
+      <motion.section
+        className="landing-section landing-cta"
+        aria-label="Llamada a la acción"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="section-heading">¿Lista para tu primera lectura?</h2>
+        <p className="section-sub">Crea tu cuenta gratis y agenda cuando quieras.</p>
+        <div className="cta-row" style={{ justifyContent: 'center' }}>
+          <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
+            Comenzar ahora
+          </button>
+          <Link to="/servicios" className="btn-secondary">
+            Explorar servicios
+          </Link>
+        </div>
       </motion.section>
     </main>
   );

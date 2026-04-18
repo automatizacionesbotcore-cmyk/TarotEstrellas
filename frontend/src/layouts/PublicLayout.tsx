@@ -41,6 +41,32 @@ export function PublicLayout() {
           <Outlet />
         </motion.div>
       </AnimatePresence>
+
+      <footer className="site-footer" role="contentinfo">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <Logo />
+            <p>Lecturas espirituales online con acompañamiento personalizado.</p>
+          </div>
+
+          <nav className="footer-links" aria-label="Enlaces del sitio">
+            <div>
+              <h4>Servicios</h4>
+              <Link to="/servicios">Ver catálogo</Link>
+              <Link to="/servicios?categoria=tarot">Tarot</Link>
+              <Link to="/servicios?categoria=astrologia">Astrología</Link>
+            </div>
+            <div>
+              <h4>Cuenta</h4>
+              <button type="button" onClick={openLogin}>Iniciar sesión</button>
+            </div>
+          </nav>
+        </div>
+
+        <div className="footer-bottom">
+          <p>© {new Date().getFullYear()} TarotEstrellas · Todos los derechos reservados</p>
+        </div>
+      </footer>
     </div>
   );
 }
