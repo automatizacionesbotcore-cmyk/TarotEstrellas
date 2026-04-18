@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuthModalStore } from '../../stores/authModalStore';
+import { MonthCalendar } from '../../components/ui/MonthCalendar';
 
 type ServicioDetalle = {
   id: number;
@@ -435,15 +436,11 @@ export function ServicioDetallePage() {
                 exit="exit"
                 transition={{ duration: 0.25 }}
               >
-                <label>
-                  Fecha
-                  <input
-                    type="date"
-                    min={getLocalDateYmd()}
-                    value={agendaDate}
-                    onChange={(event) => setAgendaDate(event.target.value)}
-                  />
-                </label>
+                <MonthCalendar
+                  value={agendaDate}
+                  min={getLocalDateYmd()}
+                  onChange={setAgendaDate}
+                />
 
                 <label>
                   Zona horaria
