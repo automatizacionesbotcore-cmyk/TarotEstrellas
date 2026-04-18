@@ -1,9 +1,10 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
+import { useAuthModalStore } from '../../stores/authModalStore';
 
 type ServicioDetalle = {
   id: number;
@@ -129,10 +130,18 @@ function formatCountdown(totalSeconds: number | null) {
   return `${minutes}:${seconds}`;
 }
 
+const stepVariants = {
+  enter: { opacity: 0, x: 24 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -24 },
+};
+
 export function ServicioDetallePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const openRegister = useAuthModalStore((s) => s.openRegister);
+  const bookingRef = useRef<HTMLElement>(null);
   const detectedTimezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', []);
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -254,7 +263,7 @@ export function ServicioDetallePage() {
     }
 
     if (currentStep === 2) {
-      return 'Paso 2 de 4: cuentanos sobre tu consulta';
+      return 'Paso 2 de 4: cuéntanos sobre tu consulta';
     }
 
     if (currentStep === 3) {
@@ -368,7 +377,7 @@ export function ServicioDetallePage() {
             </div>
 
             <aside className="quick-availability">
-              <h2>Proximos horarios</h2>
+              <h2>Próximos horarios</h2>
               {quickSlots.length === 0 ? (
                 <p>Sin horarios visibles por ahora.</p>
               ) : (
@@ -387,27 +396,45 @@ export function ServicioDetallePage() {
           </div>
 
           <div className="cta-row">
-            <Link className="btn-primary" to="/auth/register">
-              Reservar este servicio
-            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                className="btn-primary btn-shimmer"
+                onClick={() => bookingRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Agendar ahora
+              </button>
+            ) : (
+              <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
+                Crear cuenta y agendar
+              </button>
+            )}
             <Link className="btn-secondary" to="/servicios">
-              Volver al catalogo
+              Volver al catálogo
             </Link>
           </div>
 
-          <section className="booking-panel" aria-label="Panel de agendamiento">
+          <section className="booking-panel" aria-label="Panel de agendamiento" ref={bookingRef}>
             <h2>Agendar esta consulta</h2>
             <p className="wizard-step-hint">{stepHint}</p>
 
             <ol className="wizard-steps" aria-label="Progreso de agendamiento">
               <li className={currentStep >= 1 ? 'active' : ''}>Fecha y hora</li>
-              <li className={currentStep >= 2 ? 'active' : ''}>Informacion</li>
+              <li className={currentStep >= 2 ? 'active' : ''}>Información</li>
               <li className={currentStep >= 3 ? 'active' : ''}>Resumen</li>
-              <li className={currentStep >= 4 ? 'active' : ''}>Confirmacion</li>
+              <li className={currentStep >= 4 ? 'active' : ''}>Confirmación</li>
             </ol>
 
+            <AnimatePresence mode="wait" initial={false}>
             {currentStep === 1 ? (
-              <>
+              <motion.div
+                key="step-1"
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25 }}
+              >
                 <label>
                   Fecha
                   <input
@@ -434,7 +461,7 @@ export function ServicioDetallePage() {
                 </label>
 
                 <div className="slots-grid">
-                  {availabilityQuery.isLoading ? <p>Cargando horarios del dia...</p> : null}
+                  {availabilityQuery.isLoading ? <p>Cargando horarios del día...</p> : null}
                   {!availabilityQuery.isLoading && slots.length === 0 ? (
                     <p>No hay horarios disponibles para la fecha seleccionada.</p>
                   ) : null}
@@ -462,11 +489,18 @@ export function ServicioDetallePage() {
                     Continuar
                   </button>
                 </div>
-              </>
+              </motion.div>
             ) : null}
 
             {currentStep === 2 ? (
-              <>
+              <motion.div
+                key="step-2"
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25 }}
+              >
                 <label>
                   Tema principal (opcional)
                   <input
@@ -479,13 +513,13 @@ export function ServicioDetallePage() {
                 </label>
 
                 <label>
-                  Pregunta especifica (opcional)
+                  Pregunta específica (opcional)
                   <textarea
                     rows={4}
                     maxLength={1000}
                     value={pregunta}
                     onChange={(event) => setPregunta(event.target.value)}
-                    placeholder="Describe tu consulta para preparar la sesion"
+                    placeholder="Cuéntanos sobre tu consulta para preparar mejor la sesión"
                   />
                 </label>
 
@@ -497,15 +531,20 @@ export function ServicioDetallePage() {
                     Revisar resumen
                   </button>
                 </div>
-              </>
+              </motion.div>
             ) : null}
 
             {currentStep === 3 ? (
-              <>
+              <motion.div
+                key="step-3"
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25 }}
+              >
                 <div className="booking-summary">
-                  <p>
-                    <strong>Servicio:</strong> {servicio?.nombre}
-                  </p>
+                  <p><strong>Servicio:</strong> {servicio?.nombre}</p>
                   <p>
                     <strong>Fecha:</strong>{' '}
                     {selectedSlotData
@@ -515,25 +554,15 @@ export function ServicioDetallePage() {
                         })
                       : 'Sin seleccionar'}
                   </p>
-                  <p>
-                    <strong>Zona horaria:</strong> {selectedTimezone || detectedTimezone}
-                  </p>
-                  <p>
-                    <strong>Duracion:</strong> {servicio?.duracion_minutos} minutos
-                  </p>
-                  <p>
-                    <strong>Precio total:</strong> {formatPrice(servicio?.precio_centavos ?? null, servicio?.moneda ?? 'USD')}
-                  </p>
-                  <p>
-                    <strong>Tema:</strong> {temaPrincipal || 'No indicado'}
-                  </p>
-                  <p>
-                    <strong>Pregunta:</strong> {pregunta || 'No indicada'}
-                  </p>
+                  <p><strong>Zona horaria:</strong> {selectedTimezone || detectedTimezone}</p>
+                  <p><strong>Duración:</strong> {servicio?.duracion_minutos} minutos</p>
+                  <p><strong>Precio total:</strong> {formatPrice(servicio?.precio_centavos ?? null, servicio?.moneda ?? 'USD')}</p>
+                  <p><strong>Tema:</strong> {temaPrincipal || 'No indicado'}</p>
+                  <p><strong>Pregunta:</strong> {pregunta || 'No indicada'}</p>
                 </div>
 
                 {!isAuthenticated ? (
-                  <p className="form-warning">Debes iniciar sesion para confirmar la reserva.</p>
+                  <p className="form-warning">Debes iniciar sesión para confirmar la reserva.</p>
                 ) : null}
 
                 {bookingMutation.isError ? (
@@ -541,9 +570,7 @@ export function ServicioDetallePage() {
                 ) : null}
 
                 <div className="wizard-actions">
-                  <button className="btn-secondary" type="button" onClick={goBack}>
-                    Volver
-                  </button>
+                  <button className="btn-secondary" type="button" onClick={goBack}>Volver</button>
                   <button
                     className="btn-primary"
                     type="button"
@@ -553,36 +580,53 @@ export function ServicioDetallePage() {
                     {bookingMutation.isPending ? 'Reservando...' : 'Confirmar reserva'}
                   </button>
                 </div>
-              </>
+              </motion.div>
             ) : null}
 
             {currentStep === 4 && bookingMutation.isSuccess ? (
-              <div className="booking-success">
-                <h3>Reserva creada</h3>
-                <p>
-                  Estado: {bookingMutation.data.data.estado}. Tu ventana de pago/confirmacion vence el{' '}
-                  {new Date(bookingMutation.data.data.reservada_hasta).toLocaleString('es-CL', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}.
-                </p>
-                <div className="countdown-box" role="status" aria-live="polite">
-                  <span className="countdown-label">Tiempo restante</span>
-                  <strong className={isCountdownExpired ? 'countdown-time expired' : 'countdown-time'}>{countdownLabel}</strong>
-                  {isCountdownExpired ? <p className="countdown-expired">Tu ventana de reserva ha vencido.</p> : null}
-                </div>
-                <div className="wizard-actions">
-                  <Link className="btn-secondary" to="/app/mis-consultas">
-                    Ver mis consultas
-                  </Link>
-                  {!isCountdownExpired ? (
-                    <Link className="btn-primary" to="/servicios">
-                      Agendar otra
+              <motion.div
+                key="step-4"
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25 }}
+              >
+                <div className="booking-success">
+                  <h3>✦ ¡Reserva creada!</h3>
+                  <p>
+                    Tu hora está reservada. Tienes hasta el{' '}
+                    <strong>
+                      {new Date(bookingMutation.data.data.reservada_hasta).toLocaleString('es-CL', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </strong>{' '}
+                    para completar el pago y confirmar tu cita.
+                  </p>
+                  <div className="countdown-box" role="status" aria-live="polite">
+                    <span className="countdown-label">Tiempo restante para pagar</span>
+                    <strong className={isCountdownExpired ? 'countdown-time expired' : 'countdown-time'}>
+                      {countdownLabel}
+                    </strong>
+                    {isCountdownExpired ? (
+                      <p className="countdown-expired">La ventana de reserva ha vencido. Puedes intentar con otro horario.</p>
+                    ) : null}
+                  </div>
+                  <div className="wizard-actions">
+                    <Link className="btn-secondary" to="/app/mis-consultas">
+                      Ver mis consultas
                     </Link>
-                  ) : null}
+                    {!isCountdownExpired ? (
+                      <Link className="btn-primary btn-shimmer" to="/app/mis-consultas">
+                        Ir a pagar →
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ) : null}
+            </AnimatePresence>
           </section>
         </motion.section>
         </>
