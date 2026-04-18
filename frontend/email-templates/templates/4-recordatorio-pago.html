@@ -4,7 +4,7 @@
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>⏰ Tu reserva vence pronto — TarotEstrellas</title></head>
 <body style="margin:0;padding:0;background-color:#0d0b1e;font-family:Georgia,'Times New Roman',serif;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Actúa ahora para no perder tu lugar reservado con Chachita.</span>
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Actúa ahora para no perder tu lugar reservado con {{ $especialista_nombre }}.</span>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d0b1e;">
 <tr><td align="center" style="padding:32px 16px;">
 <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
@@ -35,7 +35,7 @@
 
   <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.1);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
     <p style="color:rgba(201,168,76,0.45);font-size:14px;margin:0 0 8px;">——✦——</p>
-    <p style="color:rgba(245,230,211,0.35);font-size:12px;line-height:1.7;margin:0;">© {{ date('Y') }} TarotEstrellas · Chachita</p>
+    <p style="color:rgba(245,230,211,0.35);font-size:12px;line-height:1.7;margin:0;">© {{ date('Y') }} TarotEstrellas · {{ $especialista_nombre }}</p>
   </td></tr>
 
 </table>
