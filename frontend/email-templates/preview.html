@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista Previa de Correos — TarotEstrellas</title>
+<style>
+:root {
+  --bg:        #080614;
+  --surface:   #120c28;
+  --card:      #1a1035;
+  --accent:    #c9a84c;
+  --accent-d:  rgba(201,168,76,0.18);
+  --secondary: #7a57a0;
+  --text:      #f5e6d3;
+  --muted:     rgba(245,230,211,0.55);
+  --border:    rgba(201,168,76,0.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;min-height:100vh;}
+a{color:var(--accent);text-decoration:none;}
+
+/* ── PAGE HEADER ── */
+.page-header{
+  background:linear-gradient(135deg,#160d2e,#0d0b1e);
+  border-bottom:1px solid var(--border);
+  padding:28px 40px;
+  display:flex;align-items:center;gap:16px;
+}
+.page-header-logo{font-size:2rem;color:var(--accent);}
+.page-header h1{font-size:1.5rem;font-weight:normal;color:var(--accent);}
+.page-header p{font-size:0.82rem;color:var(--muted);margin-top:3px;letter-spacing:0.06em;text-transform:uppercase;}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:calc(100vh - 100px);}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:270px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:20px 0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar-label{
+  font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);padding:8px 20px 6px;
+}
+.tab-btn{
+  display:block;width:100%;text-align:left;
+  background:none;border:none;cursor:pointer;
+  padding:11px 20px;
+  border-left:3px solid transparent;
+  transition:background 0.2s,border-color 0.2s;
+}
+.tab-btn:hover{background:var(--accent-d);}
+.tab-btn.active{
+  background:var(--accent-d);
+  border-left-color:var(--accent);
+}
+.tab-num{
+  display:inline-block;width:22px;height:22px;
+  background:var(--accent-d);border:1px solid var(--border);
+  border-radius:50%;font-size:0.7rem;text-align:center;line-height:22px;
+  color:var(--accent);margin-right:8px;flex-shrink:0;
+  font-family:Georgia,serif;
+}
+.tab-name{font-size:0.83rem;color:var(--text);}
+.tab-trigger{font-size:0.72rem;color:var(--muted);display:block;margin-top:2px;padding-left:30px;}
+
+/* ── MAIN ── */
+.main{flex:1;padding:32px 40px;overflow:auto;}
+.email-panel{display:none;}
+.email-panel.active{display:block;}
+
+/* ── META ── */
+.email-meta{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;margin-bottom:24px;
+  display:flex;gap:32px;flex-wrap:wrap;
+}
+.meta-item label{
+  display:block;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;
+}
+.meta-item span{font-size:0.88rem;color:var(--text);}
+.vars{display:flex;gap:6px;flex-wrap:wrap;}
+.var-chip{
+  background:color-mix(in srgb,var(--accent) 15%,transparent);
+  border:1px solid var(--border);
+  border-radius:6px;padding:2px 8px;
+  font-size:0.75rem;color:var(--accent);font-family:monospace;
+}
+
+/* ── EMAIL MOCK FRAME ── */
+.email-frame{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;max-width:680px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.5);
+}
+.email-toolbar{
+  background:#1e1638;border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;gap:10px;
+}
+.dot{width:11px;height:11px;border-radius:50%;}
+.dot-r{background:#e05555;}.dot-y{background:#e09944;}.dot-g{background:#4caf6e;}
+.toolbar-subject{
+  font-size:0.82rem;color:var(--muted);margin-left:8px;
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.email-headers{
+  background:#160d2e;border-bottom:1px solid rgba(201,168,76,0.1);
+  padding:12px 20px;font-size:0.8rem;color:var(--muted);line-height:1.8;
+}
+.email-headers span{color:var(--text);}
+.email-body{padding:0;}
+
+/* ── VAR HIGHLIGHT (solo en preview) ── */
+.v{color:#e8d48b;font-style:italic;background:rgba(201,168,76,0.1);padding:0 2px;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-logo">✦</div>
+  <div>
+    <h1>TarotEstrellas — Vista Previa de Correos</h1>
+    <p>8 plantillas · Variables resaltadas en dorado · Listas para invocar</p>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Correos transaccionales</div>
+
+    <button class="tab-btn active" onclick="show(1,this)">
+      <span class="tab-num">1</span><span class="tab-name">Bienvenida y verificación</span>
+      <span class="tab-trigger">Al registrarse</span>
+    </button>
+    <button class="tab-btn" onclick="show(2,this)">
+      <span class="tab-num">2</span><span class="tab-name">Recuperar contraseña</span>
+      <span class="tab-trigger">Al solicitar reset</span>
+    </button>
+    <button class="tab-btn" onclick="show(3,this)">
+      <span class="tab-num">3</span><span class="tab-name">Reserva creada</span>
+      <span class="tab-trigger">Cita pendiente de abono</span>
+    </button>
+    <button class="tab-btn" onclick="show(4,this)">
+      <span class="tab-num">4</span><span class="tab-name">Recordatorio de pago</span>
+      <span class="tab-trigger">Horas antes de expirar</span>
+    </button>
+    <button class="tab-btn" onclick="show(5,this)">
+      <span class="tab-num">5</span><span class="tab-name">Reserva expirada</span>
+      <span class="tab-trigger">ExpirarReservasJob</span>
+    </button>
+    <button class="tab-btn" onclick="show(6,this)">
+      <span class="tab-num">6</span><span class="tab-name">Cita confirmada</span>
+      <span class="tab-trigger">Pago recibido y validado</span>
+    </button>
+    <button class="tab-btn" onclick="show(7,this)">
+      <span class="tab-num">7</span><span class="tab-name">Recordatorio 24 h</span>
+      <span class="tab-trigger">Un día antes de la sesión</span>
+    </button>
+    <button class="tab-btn" onclick="show(8,this)">
+      <span class="tab-num">8</span><span class="tab-name">Consulta completada</span>
+      <span class="tab-trigger">Cita marcada completada</span>
+    </button>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 1 — BIENVENIDA Y VERIFICACIÓN
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel active" id="panel-1">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>¡Bienvenida a TarotEstrellas! Verifica tu correo ✦</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Registro de nuevo usuario</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ verification_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">¡Bienvenida a TarotEstrellas! Verifica tu correo ✦</div>
+        </div>
+        <div class="email-headers">
+          De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>
+          Para: <span class="v">{{ nombre }}</span> <span>&lt;<span class="v">{{ email }}</span>&gt;</span>
+        </div>
+        <div class="email-body">
+          <!-- EMAIL 1 BODY START -->
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <!-- HEADER -->
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">✦</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(201,168,76,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Lecturas espirituales online</div>
+              </td></tr>
+              <!-- BODY -->
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;letter-spacing:0.1em;font-size:0.75rem;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:20px;">Gracias por unirte a TarotEstrellas. Estamos emocionadas de acompañarte en este camino de claridad y autoconocimiento.</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;">Para activar tu cuenta y comenzar a explorar nuestros servicios, verifica tu correo haciendo clic en el botón:</p>
+                <!-- CTA -->
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 28px;">
+                  <a href="{{ verification_url }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Verificar mi correo →</a>
+                </td></tr></table>
+                <!-- NOTE -->
+                <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 18px;">
+                  <p style="color:rgba(245,230,211,0.65);font-size:0.82rem;line-height:1.65;">Este enlace expira en <strong style="color:#e8d48b;">60 minutos</strong>. Si no solicitaste esta cuenta, puedes ignorar este mensaje con total seguridad.</p>
+                </div>
+              </td></tr>
+              <!-- FOOTER -->
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:8px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita<br>Si no creaste esta cuenta, ignora este correo.</p>
+              </td></tr>
+            </table>
+          </div>
+          <!-- EMAIL 1 BODY END -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 2 — RECUPERAR CONTRASEÑA
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-2">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>Recupera tu contraseña — TarotEstrellas</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Solicitud de reset de contraseña</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ reset_url }}</span>
+            <span class="var-chip">{{ expira_en }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">Recupera tu contraseña — TarotEstrellas</div>
+        </div>
+        <div class="email-headers">
+          De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>
+          Para: <span class="v">{{ nombre }}</span>
+        </div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">✦</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(201,168,76,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Lecturas espirituales online</div>
+              </td></tr>
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;letter-spacing:0.1em;font-size:0.75rem;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:20px;">Recibimos una solicitud para restablecer la contraseña de tu cuenta en TarotEstrellas.</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;">Haz clic en el siguiente botón para crear una nueva contraseña:</p>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 28px;">
+                  <a href="{{ reset_url }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Restablecer contraseña →</a>
+                </td></tr></table>
+                <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 18px;">
+                  <p style="color:rgba(245,230,211,0.65);font-size:0.82rem;line-height:1.65;">Este enlace expira en <strong style="color:#e8d48b;"><span class="v">{{ expira_en }}</span></strong>. Si no solicitaste este cambio, ignora este correo — tu contraseña no será modificada.</p>
+                </div>
+              </td></tr>
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:8px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita<br>Si no solicitaste este correo, ignóralo con seguridad.</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 3 — RESERVA CREADA (PENDIENTE DE ABONO)
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-3">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>Tu consulta está reservada — Completa tu pago ✦</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Cita creada → estado: pendiente_abono</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ fecha_inicio }}</span>
+            <span class="var-chip">{{ duracion_minutos }}</span>
+            <span class="var-chip">{{ precio_total }}</span>
+            <span class="var-chip">{{ precio_abono }}</span>
+            <span class="var-chip">{{ reservada_hasta }}</span>
+            <span class="var-chip">{{ mis_consultas_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">Tu consulta está reservada — Completa tu pago ✦</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">✦</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(201,168,76,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Lecturas espirituales online</div>
+              </td></tr>
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:12px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:24px;">Tu consulta ha sido reservada exitosamente. Para confirmar tu lugar, completa el pago del abono antes de que expire tu reserva.</p>
+                <!-- INFO CARD -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.25);border-radius:12px;margin-bottom:28px;">
+                  <tr><td style="padding:20px 22px;">
+                    <p style="font-size:0.72rem;color:rgba(201,168,76,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Detalle de tu reserva</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;width:45%;">Servicio</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;"><strong class="v">{{ servicio_nombre }}</strong></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);">Fecha y hora</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);"><span class="v">{{ fecha_inicio }}</span></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);">Duración</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);"><span class="v">{{ duracion_minutos }}</span> minutos</td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);">Precio total</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);"><span class="v">{{ precio_total }}</span></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);">Abono requerido</td><td style="color:#e8d48b;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);font-weight:bold;"><span class="v">{{ precio_abono }}</span></td></tr>
+                    </table>
+                  </td></tr>
+                </table>
+                <!-- EXPIRY WARNING -->
+                <div style="background:rgba(224,153,68,0.1);border:1px solid rgba(224,153,68,0.35);border-radius:10px;padding:14px 18px;margin-bottom:28px;">
+                  <p style="color:#e8d48b;font-size:0.85rem;line-height:1.65;">⏰ Tu reserva expira el <strong><span class="v">{{ reservada_hasta }}</span></strong>. Después de esa fecha tu lugar quedará disponible para otras personas.</p>
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ mis_consultas_url }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Ver mi reserva y pagar →</a>
+                </td></tr></table>
+              </td></tr>
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:8px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita · contacto@tarotestrellas.com</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 4 — RECORDATORIO DE PAGO
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-4">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>⏰ Tu reserva vence pronto — TarotEstrellas</span></div>
+        <div class="meta-item"><label>Trigger</label><span>N horas antes de reservada_hasta (job/scheduler)</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ reservada_hasta }}</span>
+            <span class="var-chip">{{ precio_abono }}</span>
+            <span class="var-chip">{{ mis_consultas_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">⏰ Tu reserva vence pronto — TarotEstrellas</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#2a1408,#1e0f05);border:1px solid rgba(224,153,68,0.4);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;margin-bottom:8px;">⏰</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#e09944;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(224,153,68,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Aviso urgente de reserva</div>
+              </td></tr>
+              <tr><td style="background:#1a0e06;border-left:1px solid rgba(224,153,68,0.4);border-right:1px solid rgba(224,153,68,0.4);padding:36px 32px;">
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong></p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:20px;">Tu reserva para <strong style="color:#e8d48b;" class="v">{{ servicio_nombre }}</strong> está a punto de vencer.</p>
+                <div style="background:rgba(224,153,68,0.12);border:1px solid rgba(224,153,68,0.4);border-radius:10px;padding:18px 20px;margin-bottom:24px;text-align:center;">
+                  <p style="color:rgba(245,230,211,0.6);font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Tu reserva expira el</p>
+                  <p style="color:#e8d48b;font-size:1.15rem;font-weight:bold;" class="v">{{ reservada_hasta }}</p>
+                </div>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;">Para asegurar tu lugar, completa el pago del abono de <strong style="color:#e8d48b;" class="v">{{ precio_abono }}</strong> antes de esa fecha.</p>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ mis_consultas_url }}" style="display:inline-block;background:linear-gradient(135deg,#e09944,#f0b855,#e09944);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Completar pago ahora →</a>
+                </td></tr></table>
+                <p style="color:rgba(245,230,211,0.4);font-size:0.78rem;text-align:center;margin-top:20px;">Si ya realizaste el pago, ignora este mensaje.</p>
+              </td></tr>
+              <tr><td style="background:#100804;border:1px solid rgba(224,153,68,0.4);border-top:1px solid rgba(224,153,68,0.15);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 5 — RESERVA EXPIRADA
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-5">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>Tu reserva ha expirado — TarotEstrellas</span></div>
+        <div class="meta-item"><label>Trigger</label><span>ExpirarReservasJob → cita → estado: expirada</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ servicios_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">Tu reserva ha expirado — TarotEstrellas</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">✦</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+              </td></tr>
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:20px;">Lamentablemente tu reserva para <strong style="color:#e8d48b;" class="v">{{ servicio_nombre }}</strong> ha expirado porque no se recibió el pago del abono dentro del tiempo establecido.</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;">Tu lugar ha quedado disponible para otras personas. Si deseas agendar nuevamente, puedes hacerlo cuando lo desees — con gusto te recibiremos.</p>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ servicios_url }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Explorar servicios →</a>
+                </td></tr></table>
+              </td></tr>
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:8px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 6 — CITA CONFIRMADA
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-6">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>¡Tu consulta está confirmada! Te esperamos ✦</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Cita → estado: confirmada (pago validado)</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ fecha_inicio }}</span>
+            <span class="var-chip">{{ duracion_minutos }}</span>
+            <span class="var-chip">{{ mis_consultas_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">¡Tu consulta está confirmada! Te esperamos ✦</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#0d2018,#081a10);border:1px solid rgba(76,175,110,0.35);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;margin-bottom:8px;">🌟</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#4caf6e;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(76,175,110,0.65);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Consulta confirmada</div>
+              </td></tr>
+              <tr><td style="background:#0c1810;border-left:1px solid rgba(76,175,110,0.35);border-right:1px solid rgba(76,175,110,0.35);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:24px;">¡Todo listo! Hemos recibido y confirmado tu pago. Tu consulta está agendada y Chachita te estará esperando.</p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);border-radius:12px;margin-bottom:28px;">
+                  <tr><td style="padding:20px 22px;">
+                    <p style="font-size:0.72rem;color:rgba(76,175,110,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Tu sesión confirmada</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;width:40%;">Servicio</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;"><strong class="v">{{ servicio_nombre }}</strong></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(76,175,110,0.15);">Fecha y hora</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(76,175,110,0.15);"><span class="v">{{ fecha_inicio }}</span></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(76,175,110,0.15);">Duración</td><td style="color:#f5e6d3;font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(76,175,110,0.15);"><span class="v">{{ duracion_minutos }}</span> minutos</td></tr>
+                    </table>
+                  </td></tr>
+                </table>
+                <div style="background:rgba(76,175,110,0.07);border:1px solid rgba(76,175,110,0.2);border-radius:10px;padding:14px 18px;margin-bottom:28px;">
+                  <p style="color:rgba(245,230,211,0.65);font-size:0.82rem;line-height:1.65;">📹 Recibirás el enlace de videollamada por correo poco antes de tu sesión. Asegúrate de estar en un lugar tranquilo y con buena conexión.</p>
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ mis_consultas_url }}" style="display:inline-block;background:linear-gradient(135deg,#4caf6e,#72c98a,#4caf6e);color:#061208;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Ver mis consultas →</a>
+                </td></tr></table>
+              </td></tr>
+              <tr><td style="background:#060e08;border:1px solid rgba(76,175,110,0.35);border-top:1px solid rgba(76,175,110,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita · contacto@tarotestrellas.com</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 7 — RECORDATORIO 24 H
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-7">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>Tu consulta es mañana ✦ TarotEstrellas</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Scheduler: 24 h antes de inicio_utc de cita confirmada</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ fecha_inicio }}</span>
+            <span class="var-chip">{{ link_videollamada }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">Tu consulta es mañana ✦ TarotEstrellas</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">🔮</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(201,168,76,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Recordatorio de consulta</div>
+              </td></tr>
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:24px;">Tu sesión de <strong style="color:#e8d48b;" class="v">{{ servicio_nombre }}</strong> con Chachita es <strong style="color:#e8d48b;">mañana</strong>. Ya está todo listo para recibirte.</p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.25);border-radius:12px;margin-bottom:24px;">
+                  <tr><td style="padding:20px 22px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;width:40%;">📅 Fecha y hora</td><td style="color:#e8d48b;font-size:0.85rem;padding:5px 0;font-weight:bold;"><span class="v">{{ fecha_inicio }}</span></td></tr>
+                      <tr><td style="color:rgba(245,230,211,0.6);font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);">🎥 Videollamada</td><td style="font-size:0.85rem;padding:5px 0;border-top:1px solid rgba(201,168,76,0.12);"><a href="{{ link_videollamada }}" style="color:#c9a84c;text-decoration:underline;" class="v">{{ link_videollamada }}</a></td></tr>
+                    </table>
+                  </td></tr>
+                </table>
+                <div style="background:rgba(122,87,160,0.1);border:1px solid rgba(122,87,160,0.3);border-radius:10px;padding:14px 18px;margin-bottom:28px;">
+                  <p style="color:rgba(245,230,211,0.7);font-size:0.82rem;line-height:1.65;">💡 Recomendamos ingresar a la videollamada <strong style="color:#d4a0e0;">5 minutos antes</strong>, en un espacio tranquilo con buena iluminación y conexión estable.</p>
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ link_videollamada }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Unirme a la videollamada →</a>
+                </td></tr></table>
+              </td></tr>
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:8px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.38);font-size:0.78rem;line-height:1.7;">© 2025 TarotEstrellas · Chachita · contacto@tarotestrellas.com</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         EMAIL 8 — CONSULTA COMPLETADA
+    ════════════════════════════════════════════════════════════ -->
+    <div class="email-panel" id="panel-8">
+      <div class="email-meta">
+        <div class="meta-item"><label>Asunto</label><span>Gracias por tu consulta ✦ TarotEstrellas</span></div>
+        <div class="meta-item"><label>Trigger</label><span>Cita → estado: completada</span></div>
+        <div class="meta-item"><label>Variables</label>
+          <div class="vars">
+            <span class="var-chip">{{ nombre }}</span>
+            <span class="var-chip">{{ servicio_nombre }}</span>
+            <span class="var-chip">{{ servicios_url }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="email-frame">
+        <div class="email-toolbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="toolbar-subject">Gracias por tu consulta ✦ TarotEstrellas</div>
+        </div>
+        <div class="email-headers">De: <span>TarotEstrellas &lt;noreply@tarotestrellas.com&gt;</span><br>Para: <span class="v">{{ nombre }}</span></div>
+        <div class="email-body">
+          <div style="background:#0d0b1e;font-family:Georgia,'Times New Roman',serif;padding:32px 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;">
+              <tr><td style="background:linear-gradient(160deg,#1e1248,#160d2e);border:1px solid rgba(201,168,76,0.3);border-bottom:none;border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+                <div style="font-size:2.4rem;color:#c9a84c;margin-bottom:8px;">✨</div>
+                <div style="font-family:Georgia,serif;font-size:1.65rem;color:#c9a84c;letter-spacing:0.06em;">TarotEstrellas</div>
+                <div style="font-size:0.75rem;color:rgba(201,168,76,0.6);letter-spacing:0.14em;text-transform:uppercase;margin-top:5px;">Gracias por tu confianza</div>
+              </td></tr>
+              <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+                <p style="color:rgba(245,230,211,0.5);text-align:center;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;">——✦——</p>
+                <p style="font-size:1.15rem;color:#f5e6d3;margin-bottom:16px;">Hola, <strong class="v">{{ nombre }}</strong> ✦</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:16px;">Ha sido un honor acompañarte en tu sesión de <strong style="color:#e8d48b;" class="v">{{ servicio_nombre }}</strong>. Gracias por confiar en Chachita para este proceso de claridad y autoconocimiento.</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;font-style:italic;">"Cada consulta es un paso hacia una versión más consciente de ti misma. El universo siempre tiene algo nuevo por revelar."</p>
+                <p style="color:rgba(245,230,211,0.8);line-height:1.75;margin-bottom:28px;">Si deseas continuar este camino, puedes agendar tu próxima consulta cuando lo sientas.</p>
+                <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 8px;">
+                  <a href="{{ servicios_url }}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8d48b,#c9a84c);color:#0d0b1e;font-family:Georgia,serif;font-size:1rem;font-weight:bold;padding:14px 36px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Explorar más servicios →</a>
+                </td></tr></table>
+              </td></tr>
+              <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.12);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+                <p style="color:rgba(201,168,76,0.5);margin-bottom:10px;font-size:0.9rem;">——✦——</p>
+                <p style="color:rgba(245,230,211,0.45);font-size:0.82rem;font-style:italic;margin-bottom:6px;">Con luz y gratitud,</p>
+                <p style="color:#c9a84c;font-size:0.95rem;font-family:Georgia,serif;">Chachita · TarotEstrellas</p>
+                <p style="color:rgba(245,230,211,0.28);font-size:0.75rem;margin-top:10px;">© 2025 TarotEstrellas · contacto@tarotestrellas.com</p>
+              </td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function show(n, btn) {
+  document.querySelectorAll('.email-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

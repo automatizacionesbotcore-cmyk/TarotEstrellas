@@ -1,0 +1,56 @@
+{{-- Trigger: Cita creada, estado pendiente_abono --}}
+{{-- Variables: $nombre, $servicio_nombre, $fecha_inicio, $duracion_minutos, $precio_total, $precio_abono, $reservada_hasta, $mis_consultas_url --}}
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Tu consulta está reservada — Completa tu pago ✦</title></head>
+<body style="margin:0;padding:0;background-color:#0d0b1e;font-family:Georgia,'Times New Roman',serif;">
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Tu lugar está guardado. Completa el pago del abono para confirmarlo.</span>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d0b1e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+  <tr><td style="background:#1a1035;border:1px solid rgba(201,168,76,0.3);border-bottom:1px solid rgba(201,168,76,0.12);border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+    <div style="font-size:36px;color:#c9a84c;margin-bottom:8px;">✦</div>
+    <div style="font-family:Georgia,serif;font-size:26px;color:#c9a84c;letter-spacing:2px;font-weight:normal;">TarotEstrellas</div>
+    <div style="font-size:11px;color:rgba(201,168,76,0.6);letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Lecturas espirituales online</div>
+  </td></tr>
+
+  <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+    <p style="color:rgba(245,230,211,0.45);text-align:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:0 0 28px;">——✦——</p>
+    <p style="font-size:18px;color:#f5e6d3;margin:0 0 12px;">Hola, <strong>{{ $nombre }}</strong> ✦</p>
+    <p style="color:rgba(245,230,211,0.8);line-height:1.75;font-size:15px;margin:0 0 22px;">Tu consulta ha sido reservada exitosamente. Para confirmar tu lugar, completa el pago del abono antes de que expire tu reserva.</p>
+
+    <!-- INFO CARD -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.25);border-radius:12px;margin-bottom:20px;">
+    <tr><td style="padding:20px 22px;">
+      <p style="font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:3px;text-transform:uppercase;margin:0 0 14px;">Detalle de tu reserva</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;width:42%;">Servicio</td><td style="color:#f5e6d3;font-size:13px;padding:6px 0;"><strong>{{ $servicio_nombre }}</strong></td></tr>
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">Fecha y hora</td><td style="color:#f5e6d3;font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">{{ $fecha_inicio }}</td></tr>
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">Duración</td><td style="color:#f5e6d3;font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">{{ $duracion_minutos }} minutos</td></tr>
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">Precio total</td><td style="color:#f5e6d3;font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">{{ $precio_total }}</td></tr>
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">Abono requerido</td><td style="color:#e8d48b;font-size:14px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);font-weight:bold;">{{ $precio_abono }}</td></tr>
+      </table>
+    </td></tr>
+    </table>
+
+    <!-- EXPIRY WARNING -->
+    <div style="background:rgba(224,153,68,0.1);border:1px solid rgba(224,153,68,0.35);border-radius:10px;padding:14px 18px;margin-bottom:28px;">
+      <p style="color:#e8d48b;font-size:13px;line-height:1.65;margin:0;">⏰ Tu reserva expira el <strong>{{ $reservada_hasta }}</strong>. Después de esa fecha tu lugar quedará disponible.</p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 4px;">
+      <a href="{{ $mis_consultas_url }}" style="display:inline-block;background:#c9a84c;color:#0d0b1e;font-family:Georgia,serif;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;letter-spacing:1px;">Ver mi reserva y pagar →</a>
+    </td></tr></table>
+  </td></tr>
+
+  <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.1);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+    <p style="color:rgba(201,168,76,0.45);font-size:14px;margin:0 0 8px;">——✦——</p>
+    <p style="color:rgba(245,230,211,0.35);font-size:12px;line-height:1.7;margin:0;">© 2025 TarotEstrellas · Chachita · contacto@tarotestrellas.com</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

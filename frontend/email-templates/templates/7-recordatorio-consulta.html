@@ -1,0 +1,50 @@
+{{-- Trigger: Scheduler 24 h antes de inicio_utc de cita confirmada --}}
+{{-- Variables: $nombre, $servicio_nombre, $fecha_inicio, $link_videollamada --}}
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Tu consulta es mañana ✦ TarotEstrellas</title></head>
+<body style="margin:0;padding:0;background-color:#0d0b1e;font-family:Georgia,'Times New Roman',serif;">
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Mañana es tu sesión con Chachita. Aquí tienes todos los detalles.</span>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d0b1e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+  <tr><td style="background:#1a1035;border:1px solid rgba(201,168,76,0.3);border-bottom:1px solid rgba(201,168,76,0.12);border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+    <div style="font-size:36px;margin-bottom:8px;">🔮</div>
+    <div style="font-family:Georgia,serif;font-size:26px;color:#c9a84c;letter-spacing:2px;font-weight:normal;">TarotEstrellas</div>
+    <div style="font-size:11px;color:rgba(201,168,76,0.6);letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Recordatorio de consulta</div>
+  </td></tr>
+
+  <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+    <p style="color:rgba(245,230,211,0.45);text-align:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:0 0 28px;">——✦——</p>
+    <p style="font-size:18px;color:#f5e6d3;margin:0 0 14px;">Hola, <strong>{{ $nombre }}</strong> ✦</p>
+    <p style="color:rgba(245,230,211,0.8);line-height:1.75;font-size:15px;margin:0 0 22px;">Tu sesión de <strong style="color:#e8d48b;">{{ $servicio_nombre }}</strong> con Chachita es <strong style="color:#e8d48b;">mañana</strong>. Ya está todo listo para recibirte.</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.25);border-radius:12px;margin-bottom:22px;">
+    <tr><td style="padding:20px 22px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;width:42%;">📅 Fecha y hora</td><td style="color:#e8d48b;font-size:14px;padding:6px 0;font-weight:bold;">{{ $fecha_inicio }}</td></tr>
+        <tr><td style="color:rgba(245,230,211,0.55);font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);">🎥 Videollamada</td><td style="font-size:13px;padding:6px 0;border-top:1px solid rgba(201,168,76,0.12);"><a href="{{ $link_videollamada }}" style="color:#c9a84c;text-decoration:underline;">{{ $link_videollamada }}</a></td></tr>
+      </table>
+    </td></tr>
+    </table>
+
+    <div style="background:rgba(122,87,160,0.1);border:1px solid rgba(122,87,160,0.3);border-radius:10px;padding:14px 18px;margin-bottom:28px;">
+      <p style="color:rgba(245,230,211,0.7);font-size:13px;line-height:1.65;margin:0;">💡 Recomendamos ingresar a la videollamada <strong style="color:#d4a0e0;">5 minutos antes</strong>, en un espacio tranquilo con buena iluminación y conexión estable.</p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:4px 0 4px;">
+      <a href="{{ $link_videollamada }}" style="display:inline-block;background:#c9a84c;color:#0d0b1e;font-family:Georgia,serif;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;letter-spacing:1px;">Unirme a la videollamada →</a>
+    </td></tr></table>
+  </td></tr>
+
+  <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.1);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+    <p style="color:rgba(201,168,76,0.45);font-size:14px;margin:0 0 8px;">——✦——</p>
+    <p style="color:rgba(245,230,211,0.35);font-size:12px;line-height:1.7;margin:0;">© 2025 TarotEstrellas · Chachita · contacto@tarotestrellas.com</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

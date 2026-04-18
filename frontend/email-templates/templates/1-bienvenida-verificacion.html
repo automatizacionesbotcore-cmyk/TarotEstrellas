@@ -1,0 +1,48 @@
+{{-- Trigger: Registro de nuevo usuario --}}
+{{-- Variables: $nombre, $verification_url --}}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>¡Bienvenida a TarotEstrellas! Verifica tu correo ✦</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0d0b1e;font-family:Georgia,'Times New Roman',serif;">
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Activa tu cuenta y comienza tu camino espiritual con Chachita.</span>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d0b1e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+  <!-- HEADER -->
+  <tr><td style="background:#1a1035;border:1px solid rgba(201,168,76,0.3);border-bottom:1px solid rgba(201,168,76,0.12);border-radius:16px 16px 0 0;padding:36px 32px 28px;text-align:center;">
+    <div style="font-size:36px;color:#c9a84c;margin-bottom:8px;">✦</div>
+    <div style="font-family:Georgia,serif;font-size:26px;color:#c9a84c;letter-spacing:2px;font-weight:normal;">TarotEstrellas</div>
+    <div style="font-size:11px;color:rgba(201,168,76,0.6);letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Lecturas espirituales online</div>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#160d2e;border-left:1px solid rgba(201,168,76,0.3);border-right:1px solid rgba(201,168,76,0.3);padding:36px 32px;">
+    <p style="color:rgba(245,230,211,0.45);text-align:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:0 0 28px;">——✦——</p>
+    <p style="font-size:18px;color:#f5e6d3;margin:0 0 14px;">Hola, <strong>{{ $nombre }}</strong> ✦</p>
+    <p style="color:rgba(245,230,211,0.8);line-height:1.75;font-size:15px;margin:0 0 16px;">Gracias por unirte a TarotEstrellas. Estamos emocionadas de acompañarte en este camino de claridad y autoconocimiento.</p>
+    <p style="color:rgba(245,230,211,0.8);line-height:1.75;font-size:15px;margin:0 0 28px;">Para activar tu cuenta y comenzar a explorar nuestros servicios, verifica tu correo:</p>
+    <!-- CTA -->
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 28px;">
+      <a href="{{ $verification_url }}" style="display:inline-block;background:#c9a84c;color:#0d0b1e;font-family:Georgia,serif;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;letter-spacing:1px;">Verificar mi correo →</a>
+    </td></tr></table>
+    <!-- NOTE -->
+    <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 18px;">
+      <p style="color:rgba(245,230,211,0.65);font-size:13px;line-height:1.65;margin:0;">Este enlace expira en <strong style="color:#e8d48b;">60 minutos</strong>. Si no creaste esta cuenta, ignora este mensaje con total seguridad.</p>
+    </div>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#0f0820;border:1px solid rgba(201,168,76,0.3);border-top:1px solid rgba(201,168,76,0.1);border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;">
+    <p style="color:rgba(201,168,76,0.45);font-size:14px;margin:0 0 8px;">——✦——</p>
+    <p style="color:rgba(245,230,211,0.35);font-size:12px;line-height:1.7;margin:0;">© 2025 TarotEstrellas · Chachita<br>Si no creaste esta cuenta, ignora este correo.</p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
