@@ -28,9 +28,13 @@
     "vitest": "^4.0.3"
   },
   "dependencies": {
+    "@daily-co/daily-js": "^0.89.1",
+    "@daily-co/daily-react": "^0.24.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
+    "@stripe/react-stripe-js": "^6.2.0",
+    "@stripe/stripe-js": "^9.2.0",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.99.0",
     "axios": "^1.15.0",
