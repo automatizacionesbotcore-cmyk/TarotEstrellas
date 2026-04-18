@@ -18,6 +18,7 @@ import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { PagarCitaPage } from './pages/app/PagarCitaPage';
 import { SalaVideoPage } from './pages/app/SalaVideoPage';
+import { DetalleCitaPage } from './pages/app/DetalleCitaPage';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
 
@@ -71,6 +72,7 @@ export function App() {
         <Route path="mis-consultas" element={<MisConsultasPage />} />
         <Route path="citas/:id/pagar" element={<PagarCitaPage />} />
         <Route path="sala/:uuid" element={<SalaVideoPage />} />
+        <Route path="citas/:id" element={<DetalleCitaPage />} />
         <Route path="mi-cuenta" element={<MiCuentaPage />} />
       </Route>
 

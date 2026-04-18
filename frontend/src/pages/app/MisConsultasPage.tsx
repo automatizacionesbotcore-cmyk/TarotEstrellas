@@ -176,11 +176,8 @@ export function MisConsultasPage() {
                   </Link>
                 )}
                 {cita.estado !== 'pendiente_abono' && cita.estado !== 'confirmada' && (
-                  <Link
-                    to={cita.tipo_consulta?.slug ? `/servicios/${cita.tipo_consulta.slug}` : '/servicios'}
-                    className="card-link"
-                  >
-                    Ver servicio →
+                  <Link to={`/app/citas/${cita.id}`} className="card-link">
+                    Ver detalle →
                   </Link>
                 )}
               </motion.article>
