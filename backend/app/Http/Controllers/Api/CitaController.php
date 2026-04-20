@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ValidarComprobanteJob;
 use App\Models\Cita;
 use App\Models\ComprobanteTransferencia;
+use App\Models\Consentimiento;
 use App\Models\AppSetting;
+use App\Models\Pago;
+use App\Models\Reagendamiento;
+use App\Models\Reembolso;
 use App\Models\TipoConsulta;
 use App\Models\User;
 use App\Models\ValidacionAgente;
@@ -14,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -24,6 +29,11 @@ class CitaController extends Controller
     private const MINUTOS_VENTANA_TRANSFERENCIA_KEY = 'MINUTOS_VENTANA_TRANSFERENCIA';
     private const MINUTOS_EXTENSION_TRANSFERENCIA_KEY = 'MINUTOS_EXTENSION_TRANSFERENCIA';
     private const EXTENSIONES_PERMITIDAS_KEY = 'EXTENSIONES_PERMITIDAS';
+    private const TRANSFERENCIA_BANCO_KEY = 'TRANSFERENCIA_BANCO';
+    private const TRANSFERENCIA_CUENTA_KEY = 'TRANSFERENCIA_CUENTA';
+    private const TRANSFERENCIA_RUT_KEY = 'TRANSFERENCIA_RUT';
+    private const HORAS_REEMBOLSO_ANTICIPACION_KEY = 'HORAS_REEMBOLSO_ANTICIPACION';
+    private const MAX_CANCELACIONES_CON_REEMBOLSO_CLIENTE_KEY = 'MAX_CANCELACIONES_CON_REEMBOLSO_CLIENTE';
 
     public function index(Request $request): JsonResponse
     {
@@ -38,6 +48,302 @@ class CitaController extends Controller
 
         return response()->json([
             'data' => $citas,
+        ]);
+    }
+
+    public function show(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with([
+                'tipoConsulta:id,slug,nombre,duracion_minutos',
+                'pagos:id,cita_id,uuid,tipo,canal,monto_centavos,moneda,estado,pagado_en,created_at',
+                'grabaciones.transcripcion.resumen',
+            ])
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        return response()->json([
+            'data' => $cita,
+        ]);
+    }
+
+    public function historial(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with([
+                'tipoConsulta:id,slug,nombre,duracion_minutos',
+                'grabaciones.transcripcion.resumen',
+            ])
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        return response()->json([
+            'data' => [
+                'cita' => $cita,
+                'historial' => $cita->grabaciones->map(function ($grabacion) {
+                    return [
+                        'grabacion' => [
+                            'id' => $grabacion->id,
+                            'daily_recording_id' => $grabacion->daily_recording_id,
+                            'daily_room_name' => $grabacion->daily_room_name,
+                            'url_grabacion' => $grabacion->url_grabacion,
+                            'estado' => $grabacion->estado,
+                            'transcripcion_procesada_en' => $grabacion->transcripcion_procesada_en,
+                            'resumen_generado_en' => $grabacion->resumen_generado_en,
+                        ],
+                        'transcripcion' => $grabacion->transcripcion,
+                        'resumen' => $grabacion->transcripcion ? $grabacion->transcripcion->resumen : null,
+                    ];
+                })->values(),
+            ],
+        ]);
+    }
+
+    public function calendarioIcs(Request $request, string $uuid)
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with('tipoConsulta:id,slug,nombre,duracion_minutos')
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        $dtStampUtc = now()->copy()->utc()->format('Ymd\THis\Z');
+        $dtStartUtc = optional($cita->inicio_utc)->copy()->utc()->format('Ymd\THis\Z');
+        $dtEndUtc = optional($cita->fin_utc)->copy()->utc()->format('Ymd\THis\Z');
+
+        $summary = $this->escapeIcsText('Consulta Tarot Estrellas - '.optional($cita->tipoConsulta)->nombre);
+        $description = $this->escapeIcsText(sprintf(
+            "Codigo de referencia: %s\nTipo de consulta: %s\nEstado: %s",
+            (string) $cita->codigo_referencia,
+            (string) optional($cita->tipoConsulta)->nombre,
+            (string) $cita->estado
+        ));
+
+        $uid = $cita->uuid.'@tarotestrellas.com';
+
+        $ics = implode("\r\n", [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Tarot Estrellas//Citas//ES',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'BEGIN:VEVENT',
+            'UID:'.$uid,
+            'DTSTAMP:'.$dtStampUtc,
+            'DTSTART:'.$dtStartUtc,
+            'DTEND:'.$dtEndUtc,
+            'SUMMARY:'.$summary,
+            'DESCRIPTION:'.$description,
+            'STATUS:CONFIRMED',
+            'END:VEVENT',
+            'END:VCALENDAR',
+            '',
+        ]);
+
+        $filename = 'cita-'.$cita->uuid.'.ics';
+
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    public function sala(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with('tipoConsulta:id,slug,nombre,duracion_minutos')
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        $roomName = 'cita-'.$cita->uuid;
+
+        return response()->json([
+            'data' => [
+                'cita_uuid' => $cita->uuid,
+                'room_name' => $roomName,
+                'join_url' => sprintf('https://daily.co/tarotestrellas-%s', $cita->uuid),
+                'recording_enabled' => true,
+                'requires_recording_consent' => true,
+                'duracion_minutos' => (int) $cita->duracion_minutos,
+                'inicio_utc' => optional($cita->inicio_utc)->toIso8601String(),
+                'fin_utc' => optional($cita->fin_utc)->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function registrarConsentimientoSala(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'acepta_grabacion' => ['required', 'boolean'],
+            'version_documento' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        if (! $validated['acepta_grabacion']) {
+            return response()->json([
+                'message' => 'Debes aceptar el consentimiento para ingresar a la sala.',
+            ], 422);
+        }
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        $consentimiento = Consentimiento::query()->create([
+            'user_id' => $user->id,
+            'tipo' => 'grabacion_sala',
+            'version_documento' => $validated['version_documento'] ?? 'v1',
+            'otorgado' => true,
+            'otorgado_en' => now(),
+            'ip_otorgamiento' => $request->ip(),
+            'user_agent' => Str::limit((string) $request->userAgent(), 512, ''),
+        ]);
+
+        return response()->json([
+            'message' => 'Consentimiento registrado correctamente.',
+            'data' => [
+                'cita_uuid' => $cita->uuid,
+                'consentimiento_id' => $consentimiento->id,
+                'otorgado_en' => optional($consentimiento->otorgado_en)->toIso8601String(),
+            ],
+        ], 201);
+    }
+
+    public function marcarEntradaSala(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        if (! in_array($cita->estado, ['reservada', 'confirmada', 'en_curso'], true)) {
+            return response()->json([
+                'message' => 'La cita no esta en estado valido para marcar entrada.',
+            ], 422);
+        }
+
+        if ($cita->estado !== 'en_curso') {
+            $cita->forceFill([
+                'estado' => 'en_curso',
+            ])->save();
+        }
+
+        return response()->json([
+            'message' => 'Entrada a sala registrada.',
+            'data' => [
+                'cita_uuid' => $cita->uuid,
+                'estado' => $cita->estado,
+                'entrada_en' => now()->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function historialAdmin(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->isAdmin()) {
+            return response()->json([
+                'message' => 'No autorizado para consultar historial administrativo.',
+            ], 403);
+        }
+
+        $validated = $this->validateHistorialAdminFilters($request);
+
+        $query = $this->buildHistorialAdminQuery($validated);
+
+        $perPage = (int) ($validated['per_page'] ?? 15);
+
+        return response()->json($query->paginate($perPage));
+    }
+
+    public function historialAdminExport(Request $request)
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->isAdmin()) {
+            return response()->json([
+                'message' => 'No autorizado para exportar historial administrativo.',
+            ], 403);
+        }
+
+        $validated = $this->validateHistorialAdminFilters($request);
+
+        $rows = $this->buildHistorialAdminQuery($validated)
+            ->limit(5000)
+            ->get();
+
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, [
+            'uuid',
+            'codigo_referencia',
+            'estado',
+            'inicio_utc',
+            'fin_utc',
+            'cliente_email',
+            'cliente_nombre',
+            'tipo_consulta_slug',
+            'tipo_consulta_nombre',
+            'total_grabaciones',
+            'total_transcripciones',
+            'total_resumenes',
+        ]);
+
+        foreach ($rows as $row) {
+            $totalGrabaciones = $row->grabaciones->count();
+            $totalTranscripciones = $row->grabaciones->filter(fn ($g) => $g->transcripcion !== null)->count();
+            $totalResumenes = $row->grabaciones->filter(function ($g) {
+                return $g->transcripcion && $g->transcripcion->resumen !== null;
+            })->count();
+
+            fputcsv($stream, [
+                $row->uuid,
+                $row->codigo_referencia,
+                $row->estado,
+                optional($row->inicio_utc)->toDateTimeString(),
+                optional($row->fin_utc)->toDateTimeString(),
+                optional($row->cliente)->email,
+                optional($row->cliente)->name,
+                optional($row->tipoConsulta)->slug,
+                optional($row->tipoConsulta)->nombre,
+                $totalGrabaciones,
+                $totalTranscripciones,
+                $totalResumenes,
+            ]);
+        }
+
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+
+        $filename = 'admin-citas-historial-'.now()->format('Ymd-His').'.csv';
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -365,6 +671,346 @@ class CitaController extends Controller
         ], 201);
     }
 
+    public function datosTransferencia(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        if ($cita->canal_pago !== 'transferencia') {
+            return response()->json([
+                'message' => 'La cita no utiliza pago por transferencia.',
+            ], 422);
+        }
+
+        $banco = (string) AppSetting::getValue(self::TRANSFERENCIA_BANCO_KEY, 'BancoEstado');
+        $cuenta = (string) AppSetting::getValue(self::TRANSFERENCIA_CUENTA_KEY, '1234567890');
+        $rut = (string) AppSetting::getValue(self::TRANSFERENCIA_RUT_KEY, '11111111-1');
+
+        $montoMinimo = (int) round(((int) $cita->precio_final_centavos) * 0.20);
+
+        return response()->json([
+            'data' => [
+                'cita_uuid' => $cita->uuid,
+                'codigo_referencia' => $cita->codigo_referencia,
+                'monto_minimo_abono_centavos' => $montoMinimo,
+                'moneda' => $cita->moneda,
+                'minutos_ventana_transferencia' => $this->getPositiveIntSetting(self::MINUTOS_VENTANA_TRANSFERENCIA_KEY, 30),
+                'datos_bancarios' => [
+                    'banco' => $banco,
+                    'cuenta' => $cuenta,
+                    'rut' => $rut,
+                ],
+            ],
+        ]);
+    }
+
+    public function reagendar(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'inicio_local' => ['required', 'date_format:Y-m-d H:i:s'],
+            'zona_horaria_cliente' => ['required', 'timezone'],
+            'motivo' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with('tipoConsulta:id,slug,nombre,duracion_minutos')
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        if (! in_array($cita->estado, ['pendiente_abono', 'reservada', 'confirmada'], true)) {
+            return response()->json([
+                'message' => 'La cita no se puede reagendar en su estado actual.',
+            ], 422);
+        }
+
+        if (! $cita->inicio_utc || $cita->inicio_utc->diffInHours(now(), false) > -24) {
+            return response()->json([
+                'message' => 'Faltan menos de 24 horas para la cita. No es posible reagendar.',
+            ], 422);
+        }
+
+        $startUtc = CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])
+            ->setTimezone('UTC');
+        $endUtc = $startUtc->addMinutes((int) $cita->duracion_minutos);
+
+        $collision = Cita::query()
+            ->where('id', '!=', $cita->id)
+            ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
+            ->where('inicio_utc', '<', $endUtc)
+            ->where('fin_utc', '>', $startUtc)
+            ->exists();
+
+        if ($collision) {
+            return response()->json([
+                'message' => 'El nuevo horario seleccionado no se encuentra disponible.',
+            ], 422);
+        }
+
+        $reagendamientoGratuito = ! Reagendamiento::query()
+            ->where('reagendado_por', $user->id)
+            ->exists();
+
+        $nuevaCita = DB::transaction(function () use ($cita, $startUtc, $endUtc, $validated, $user, $reagendamientoGratuito) {
+            $nuevaCita = Cita::query()->create([
+                'uuid' => (string) Str::uuid(),
+                'codigo_referencia' => $this->generateReferenceCode(),
+                'cliente_id' => $cita->cliente_id,
+                'especialista_id' => $cita->especialista_id,
+                'tipo_consulta_id' => $cita->tipo_consulta_id,
+                'inicio_utc' => $startUtc,
+                'fin_utc' => $endUtc,
+                'duracion_minutos' => $cita->duracion_minutos,
+                'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
+                'estado' => $cita->estado,
+                'canal_pago' => $cita->canal_pago,
+                'precio_total_centavos' => $cita->precio_total_centavos,
+                'precio_final_centavos' => $cita->precio_final_centavos,
+                'moneda' => $cita->moneda,
+                'tema_principal' => $cita->tema_principal,
+                'notas_cliente' => $cita->notas_cliente,
+                'notas_chachita' => $cita->notas_chachita,
+                'reservada_hasta' => $cita->estado === 'pendiente_abono'
+                    ? now()->addMinutes($this->getPositiveIntSetting(self::MINUTOS_VENTANA_TRANSFERENCIA_KEY, 30))
+                    : $cita->reservada_hasta,
+                'extension_reserva_aplicada_en' => null,
+                'extension_reserva_conteo' => 0,
+                'es_primera_consulta' => $cita->es_primera_consulta,
+            ]);
+
+            Reagendamiento::query()->create([
+                'cita_original_id' => $cita->id,
+                'cita_nueva_id' => $nuevaCita->id,
+                'motivo' => $validated['motivo'] ?? null,
+                'gratuito' => $reagendamientoGratuito,
+                'reagendado_por' => $user->id,
+            ]);
+
+            $cita->forceFill([
+                'estado' => 'reagendada',
+                'cancelada_en' => now(),
+                'motivo_cancelacion' => $validated['motivo'] ?? 'Reagendada por cliente',
+            ])->save();
+
+            return $nuevaCita;
+        });
+
+        return response()->json([
+            'message' => 'Cita reagendada correctamente.',
+            'data' => [
+                'cita_original_uuid' => $cita->uuid,
+                'cita_nueva' => $nuevaCita->fresh(['tipoConsulta:id,slug,nombre,duracion_minutos']),
+                'gratuito' => $reagendamientoGratuito,
+            ],
+        ]);
+    }
+
+    public function cancelar(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'motivo' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        if (in_array($cita->estado, ['cancelada_cliente', 'cancelada_especialista', 'finalizada', 'expirada', 'reagendada'], true)) {
+            return response()->json([
+                'message' => 'La cita no se puede cancelar en su estado actual.',
+            ], 422);
+        }
+
+        $horasAnticipacionReembolso = $this->getPositiveIntSetting(self::HORAS_REEMBOLSO_ANTICIPACION_KEY, 24);
+        $maxCancelacionesConReembolso = max(
+            0,
+            (int) AppSetting::getValue(self::MAX_CANCELACIONES_CON_REEMBOLSO_CLIENTE_KEY, 1)
+        );
+
+        $cancelacionConAnticipacion =
+            $cita->inicio_utc !== null
+            && $cita->inicio_utc->greaterThanOrEqualTo(now()->addHours($horasAnticipacionReembolso));
+
+        $cancelacionesConReembolsoPrevias = Reembolso::query()
+            ->where('cliente_id', $user->id)
+            ->where('razon', 'cancelacion_24h')
+            ->count();
+
+        $reembolsoAplicaPorPolitica =
+            $cancelacionConAnticipacion
+            && $maxCancelacionesConReembolso > 0
+            && $cancelacionesConReembolsoPrevias < $maxCancelacionesConReembolso;
+
+        $abonoCompletado = Pago::query()
+            ->where('cita_id', $cita->id)
+            ->where('tipo', 'abono_20')
+            ->where('estado', 'completado')
+            ->orderByDesc('pagado_en')
+            ->first();
+
+        $reembolso = DB::transaction(function () use ($cita, $validated, $user, $reembolsoAplicaPorPolitica, $abonoCompletado) {
+            $cita->forceFill([
+                'estado' => 'cancelada_cliente',
+                'cancelada_en' => now(),
+                'motivo_cancelacion' => $validated['motivo'] ?? 'Cancelada por cliente',
+            ])->save();
+
+            if (! $reembolsoAplicaPorPolitica || ! $abonoCompletado) {
+                return null;
+            }
+
+            return Reembolso::query()->create([
+                'uuid' => (string) Str::uuid(),
+                'cita_id' => $cita->id,
+                'cliente_id' => $user->id,
+                'pago_id' => $abonoCompletado->id,
+                'monto_centavos' => (int) $abonoCompletado->monto_centavos,
+                'moneda' => $abonoCompletado->moneda,
+                'estado' => 'pendiente',
+                'razon' => 'cancelacion_24h',
+                'metodo' => 'mismo_medio_pago',
+                'solicitado_en' => now(),
+                'metadata' => [
+                    'cita_uuid' => $cita->uuid,
+                    'canal_pago_cita' => $cita->canal_pago,
+                ],
+            ]);
+        });
+
+        $motivoPolitica = 'cancelacion_sin_reembolso';
+        if ($reembolso) {
+            $motivoPolitica = 'reembolso_24h_aplicado';
+        } elseif (! $cancelacionConAnticipacion) {
+            $motivoPolitica = 'menos_de_24h_sin_reembolso';
+        } elseif ($maxCancelacionesConReembolso <= 0) {
+            $motivoPolitica = 'reembolsos_deshabilitados';
+        } elseif ($cancelacionesConReembolsoPrevias >= $maxCancelacionesConReembolso) {
+            $motivoPolitica = 'limite_reembolsos_alcanzado';
+        } elseif (! $abonoCompletado) {
+            $motivoPolitica = 'sin_abono_completado';
+        }
+
+        return response()->json([
+            'message' => 'Cita cancelada correctamente.',
+            'data' => [
+                'uuid' => $cita->uuid,
+                'estado' => $cita->estado,
+                'cancelada_en' => optional($cita->cancelada_en)->toIso8601String(),
+                'motivo_cancelacion' => $cita->motivo_cancelacion,
+                'reembolso' => [
+                    'aplica' => $reembolso !== null,
+                    'uuid' => $reembolso?->uuid,
+                    'estado' => $reembolso?->estado,
+                    'monto_centavos' => $reembolso?->monto_centavos,
+                    'moneda' => $reembolso?->moneda,
+                    'motivo_politica' => $motivoPolitica,
+                ],
+            ],
+        ]);
+    }
+
+    public function marcarNoShow(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'cliente_asistio' => ['nullable', 'boolean'],
+            'especialista_asistio' => ['nullable', 'boolean'],
+            'motivo' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->isAdmin()) {
+            return response()->json([
+                'message' => 'No autorizado para marcar no-show.',
+            ], 403);
+        }
+
+        $cita = Cita::query()
+            ->with('pagos')
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        if (! in_array($cita->estado, ['confirmada', 'en_curso'], true)) {
+            return response()->json([
+                'message' => 'La cita no se puede marcar no-show en su estado actual.',
+            ], 422);
+        }
+
+        $clienteAsistio = (bool) ($validated['cliente_asistio'] ?? false);
+        $especialistaAsistio = (bool) ($validated['especialista_asistio'] ?? true);
+
+        if ($clienteAsistio) {
+            return response()->json([
+                'message' => 'No corresponde marcar no-show si el cliente asistio.',
+            ], 422);
+        }
+
+        $reembolsos = DB::transaction(function () use ($cita, $validated, $user, $especialistaAsistio) {
+            if ($especialistaAsistio) {
+                $cita->forceFill([
+                    'estado' => 'no_show',
+                    'cancelada_en' => now(),
+                    'motivo_cancelacion' => $validated['motivo'] ?? 'Cliente no se presento a la sesion',
+                ])->save();
+
+                return collect();
+            }
+
+            $cita->forceFill([
+                'estado' => 'cancelada_chachita',
+                'cancelada_en' => now(),
+                'motivo_cancelacion' => $validated['motivo'] ?? 'Especialista no asistio a la sesion',
+            ])->save();
+
+            $pagosCompletados = $cita->pagos()
+                ->where('estado', 'completado')
+                ->get();
+
+            return $pagosCompletados->map(function (Pago $pago) use ($cita) {
+                return Reembolso::query()->create([
+                    'uuid' => (string) Str::uuid(),
+                    'cita_id' => $cita->id,
+                    'cliente_id' => $cita->cliente_id,
+                    'pago_id' => $pago->id,
+                    'monto_centavos' => (int) $pago->monto_centavos,
+                    'moneda' => $pago->moneda,
+                    'estado' => 'pendiente',
+                    'razon' => 'cancelacion_chachita',
+                    'metodo' => 'mismo_medio_pago',
+                    'solicitado_en' => now(),
+                    'metadata' => [
+                        'cita_uuid' => $cita->uuid,
+                        'origen' => 'admin_no_show',
+                    ],
+                ]);
+            });
+        });
+
+        return response()->json([
+            'message' => 'No-show procesado correctamente.',
+            'data' => [
+                'uuid' => $cita->uuid,
+                'estado' => $cita->fresh()->estado,
+                'motivo_cancelacion' => $cita->fresh()->motivo_cancelacion,
+                'reembolsos_generados' => $reembolsos->count(),
+                'monto_reembolso_total_centavos' => $reembolsos->sum('monto_centavos'),
+            ],
+        ]);
+    }
+
     private function getPositiveIntSetting(string $key, int $default): int
     {
         return max(1, (int) AppSetting::getValue($key, $default));
@@ -431,5 +1077,63 @@ class CitaController extends Controller
         }
 
         return $baseData;
+    }
+
+    private function escapeIcsText(string $text): string
+    {
+        return str_replace(
+            ["\\", ';', ',', "\r\n", "\r", "\n"],
+            ['\\\\', '\\;', '\\,', '\\n', '\\n', '\\n'],
+            $text
+        );
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function validateHistorialAdminFilters(Request $request): array
+    {
+        return $request->validate([
+            'estado' => ['nullable', 'string', 'max:50'],
+            'cliente_email' => ['nullable', 'email'],
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+    }
+
+    /**
+     * @param array<string,mixed> $validated
+     */
+    private function buildHistorialAdminQuery(array $validated)
+    {
+        $query = Cita::query()
+            ->with([
+                'cliente:id,name,email',
+                'tipoConsulta:id,slug,nombre,duracion_minutos',
+                'grabaciones.transcripcion.resumen',
+            ])
+            ->orderByDesc('inicio_utc');
+
+        if (! empty($validated['estado'])) {
+            $query->where('estado', $validated['estado']);
+        }
+
+        if (! empty($validated['cliente_email'])) {
+            $email = $validated['cliente_email'];
+            $query->whereHas('cliente', function ($q) use ($email) {
+                $q->where('email', $email);
+            });
+        }
+
+        if (! empty($validated['desde'])) {
+            $query->whereDate('inicio_utc', '>=', $validated['desde']);
+        }
+
+        if (! empty($validated['hasta'])) {
+            $query->whereDate('inicio_utc', '<=', $validated['hasta']);
+        }
+
+        return $query;
     }
 }

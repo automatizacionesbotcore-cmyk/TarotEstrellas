@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DailyWebhookEvent extends Model
+class WhatsappWebhookEvent extends Model
 {
     use HasFactory;
 
@@ -23,10 +22,5 @@ class DailyWebhookEvent extends Model
             'payload' => 'array',
             'processed_at' => 'datetime',
         ];
-    }
-
-    public function grabaciones(): HasMany
-    {
-        return $this->hasMany(Grabacion::class);
     }
 }

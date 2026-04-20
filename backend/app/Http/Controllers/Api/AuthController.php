@@ -239,4 +239,22 @@ class AuthController extends Controller
             'message' => 'Correo verificado correctamente.',
         ]);
     }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'El correo ya esta verificado.',
+            ], 422);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'message' => 'Correo de verificacion reenviado.',
+        ]);
+    }
 }

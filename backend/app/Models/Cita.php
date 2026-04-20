@@ -13,6 +13,41 @@ class Cita extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::created(function (self $cita): void {
+            if (! $cita->estado) {
+                return;
+            }
+
+            CitaEstadoHistorial::query()->create([
+                'cita_id' => $cita->id,
+                'estado_anterior' => null,
+                'estado_nuevo' => $cita->estado,
+                'motivo' => null,
+                'cambiado_por' => null,
+                'cambiado_en' => now(),
+                'metadatos' => ['origen' => 'model.created'],
+            ]);
+        });
+
+        static::updated(function (self $cita): void {
+            if (! $cita->wasChanged('estado')) {
+                return;
+            }
+
+            CitaEstadoHistorial::query()->create([
+                'cita_id' => $cita->id,
+                'estado_anterior' => $cita->getOriginal('estado'),
+                'estado_nuevo' => $cita->estado,
+                'motivo' => $cita->motivo_cancelacion,
+                'cambiado_por' => null,
+                'cambiado_en' => now(),
+                'metadatos' => ['origen' => 'model.updated'],
+            ]);
+        });
+    }
+
     protected $fillable = [
         'uuid',
         'codigo_referencia',
@@ -80,5 +115,40 @@ class Cita extends Model
     public function comprobantesTransferencia(): HasMany
     {
         return $this->hasMany(ComprobanteTransferencia::class);
+    }
+
+    public function grabaciones(): HasMany
+    {
+        return $this->hasMany(Grabacion::class);
+    }
+
+    public function transcripciones(): HasMany
+    {
+        return $this->hasMany(Transcripcion::class);
+    }
+
+    public function resumenes(): HasMany
+    {
+        return $this->hasMany(Resumen::class);
+    }
+
+    public function reagendamientosComoOriginal(): HasMany
+    {
+        return $this->hasMany(Reagendamiento::class, 'cita_original_id');
+    }
+
+    public function reagendamientoComoNueva(): HasMany
+    {
+        return $this->hasMany(Reagendamiento::class, 'cita_nueva_id');
+    }
+
+    public function estadosHistorial(): HasMany
+    {
+        return $this->hasMany(CitaEstadoHistorial::class, 'cita_id');
+    }
+
+    public function reembolsos(): HasMany
+    {
+        return $this->hasMany(Reembolso::class, 'cita_id');
     }
 }

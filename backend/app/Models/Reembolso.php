@@ -5,33 +5,32 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Pago extends Model
+class Reembolso extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
         'cita_id',
-        'tipo',
-        'canal',
+        'cliente_id',
+        'pago_id',
         'monto_centavos',
         'moneda',
         'estado',
-        'stripe_payment_intent_id',
-        'stripe_charge_id',
-        'referencia_externa',
-        'pagado_en',
-        'fallo_razon',
+        'razon',
+        'metodo',
+        'solicitado_en',
+        'procesado_en',
         'metadata',
     ];
 
     protected function casts(): array
     {
         return [
-            'pagado_en' => 'datetime',
+            'solicitado_en' => 'datetime',
+            'procesado_en' => 'datetime',
             'metadata' => 'array',
             'deleted_at' => 'datetime',
         ];
@@ -42,8 +41,13 @@ class Pago extends Model
         return $this->belongsTo(Cita::class);
     }
 
-    public function reembolsos(): HasMany
+    public function cliente(): BelongsTo
     {
-        return $this->hasMany(Reembolso::class);
+        return $this->belongsTo(User::class, 'cliente_id');
+    }
+
+    public function pago(): BelongsTo
+    {
+        return $this->belongsTo(Pago::class);
     }
 }

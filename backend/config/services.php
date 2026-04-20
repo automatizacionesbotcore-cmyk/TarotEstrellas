@@ -25,7 +25,8 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_KEY'),
+        'key' => env('RESEND_KEY', env('RESEND_API_KEY')),
+        'webhook_secret' => env('RESEND_WEBHOOK_SECRET'),
     ],
 
     'stripe' => [
@@ -35,6 +36,23 @@ return [
 
     'daily' => [
         'webhook_secret' => env('DAILY_WEBHOOK_SECRET'),
+    ],
+
+    'whatsapp' => [
+        'provider' => env('WHATSAPP_PROVIDER', 'meta'),
+        'meta_app_secret' => env('META_WHATSAPP_APP_SECRET'),
+        'meta_verify_token' => env('META_WHATSAPP_VERIFY_TOKEN'),
+        'ycloud_webhook_secret' => env('YCLOUD_WEBHOOK_SECRET'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'whisper_model' => env('OPENAI_WHISPER_MODEL', 'whisper-1'),
+    ],
+
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'summary_model' => env('ANTHROPIC_SUMMARY_MODEL', 'claude-3-5-haiku-latest'),
     ],
 
     'slack' => [

@@ -1107,20 +1107,21 @@ Saldos a favor del cliente (excedentes, compensaciones).
 |-------|------|---------------|-------------|
 | id | BIGINT UNSIGNED | PK | |
 | uuid | CHAR(36) | UNIQUE | |
-| pago_original_id | BIGINT UNSIGNED | FK → pagos.id | |
 | cita_id | BIGINT UNSIGNED | FK → citas.id | |
+| cliente_id | BIGINT UNSIGNED | FK → users.id | |
+| pago_id | BIGINT UNSIGNED | FK → pagos.id, NULL | Pago asociado cuando existe transacción original |
 | monto_centavos | BIGINT UNSIGNED | NOT NULL | |
 | moneda | CHAR(3) | NOT NULL | |
-| razon | ENUM('cancelacion_24h','cancelacion_chachita','error_sistema','solicitud_cliente','otro') | NOT NULL | |
-| razon_detalle | VARCHAR(500) | NULL | |
-| metodo | ENUM('stripe_refund','transferencia_manual','credito_cliente') | NOT NULL | |
-| stripe_refund_id | VARCHAR(100) | NULL | |
-| estado | ENUM('pendiente','procesando','completado','fallido') | NOT NULL | |
-| procesado_por | BIGINT UNSIGNED | FK → users.id, NULL | Quién autorizó |
+| razon | VARCHAR(50) | NOT NULL | Ej: `cancelacion_24h`, `cancelacion_chachita`, `ajuste_manual`, etc. |
+| metodo | VARCHAR(30) | NOT NULL, default `mismo_medio_pago` | `mismo_medio_pago`, `transferencia_manual`, `credito_cliente` |
+| estado | VARCHAR(30) | NOT NULL, default `pendiente` | `pendiente`, `completado`, `fallido` |
+| solicitado_en | TIMESTAMP | NULL | Momento de creación/solicitud |
 | procesado_en | TIMESTAMP | NULL | |
+| metadata | JSON | NULL | Payload extendido (stripe response, errores, referencias manuales, auditoría) |
 | timestamps | | | |
+| deleted_at | TIMESTAMP | NULL | Soft delete |
 
-**Índices:** `uuid` (unique), `pago_original_id`, `cita_id`, `estado`.
+**Índices:** `uuid` (unique), `cliente_id + razon + estado`, `cita_id + estado`.
 
 ### 4.7 Tablas del Dominio 5 — Consultas
 
@@ -2711,7 +2712,7 @@ Se aplica automáticamente sin código manual:
 | Método | Endpoint | Propósito |
 |--------|----------|-----------|
 | POST | `/api/citas/{uuid}/pagar/stripe` | Crear PaymentIntent |
-| POST | `/api/citas/{uuid}/pagar/transferencia/datos` | Obtener datos bancarios |
+| GET | `/api/citas/{uuid}/pagar/transferencia/datos` | Obtener datos bancarios |
 | POST | `/api/citas/{uuid}/pagar/transferencia/comprobante` | Subir comprobante |
 | GET | `/api/pagos/{uuid}` | Detalle de pago |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (público, con firma) |
@@ -2719,7 +2720,12 @@ Se aplica automáticamente sin código manual:
 | POST | `/api/me/membresias/comprar` | Iniciar compra de membresía |
 | POST | `/api/cupones/validar` | Validar cupón |
 | GET | `/api/me/creditos` | Créditos disponibles |
+| GET | `/api/admin/reembolsos` | Listado paginado de reembolsos |
+| GET | `/api/admin/reembolsos/{uuid}` | Detalle + timeline de reembolso |
+| GET | `/api/admin/reembolsos/metricas` | KPIs de reembolsos |
+| GET | `/api/admin/reembolsos/export` | Export CSV de reembolsos |
 | POST | `/api/admin/reembolsos` | Crear reembolso manual |
+| POST | `/api/admin/reembolsos/{uuid}/procesar` | Procesar/reintentar/marcar completado |
 | POST | `/api/admin/comprobantes/{id}/aprobar` | Aprobar manualmente |
 | POST | `/api/admin/comprobantes/{id}/rechazar` | Rechazar manualmente |
 
@@ -4903,7 +4909,7 @@ TarotEstrellas habla como una amiga sabia: cálida, directa, con un toque poéti
 | POST | `/api/citas/{uuid}/cancelar` | Cancelar cita |
 | GET | `/api/citas/{uuid}/calendario-ics` | Descargar archivo .ics |
 | POST | `/api/citas/{uuid}/pagar/stripe` | Crear PaymentIntent |
-| POST | `/api/citas/{uuid}/pagar/transferencia/datos` | Obtener datos bancarios |
+| GET | `/api/citas/{uuid}/pagar/transferencia/datos` | Obtener datos bancarios |
 | POST | `/api/citas/{uuid}/pagar/transferencia/comprobante` | Subir comprobante |
 | GET | `/api/pagos/{uuid}` | Detalle de pago |
 | POST | `/api/me/membresias/comprar` | Iniciar compra membresía |
@@ -4971,7 +4977,12 @@ TarotEstrellas habla como una amiga sabia: cálida, directa, con un toque poéti
 
 | Método | Endpoint | Propósito |
 |--------|----------|-----------|
+| GET | `/api/admin/reembolsos` | Listar reembolsos |
+| GET | `/api/admin/reembolsos/{uuid}` | Detalle de reembolso + timeline |
+| GET | `/api/admin/reembolsos/metricas` | Métricas de reembolsos |
+| GET | `/api/admin/reembolsos/export` | Exportar reembolsos (CSV) |
 | POST | `/api/admin/reembolsos` | Crear reembolso |
+| POST | `/api/admin/reembolsos/{uuid}/procesar` | Procesar/reintentar/marcar completado |
 | POST | `/api/admin/comprobantes/{id}/aprobar` | Aprobar comprobante |
 | POST | `/api/admin/comprobantes/{id}/rechazar` | Rechazar comprobante |
 | GET | `/api/admin/cupones` | Listar cupones |

@@ -6,7 +6,9 @@ use App\Models\Consentimiento;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
@@ -139,5 +141,47 @@ class AuthControllerTest extends TestCase
         $resetResponse->assertOk();
 
         $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
+    }
+
+    public function test_resend_verification_sends_notification_for_unverified_user(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/auth/resend-verification')
+            ->assertOk()
+            ->assertJsonPath('message', 'Correo de verificacion reenviado.');
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_resend_verification_returns_422_for_verified_user(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/auth/resend-verification')
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'El correo ya esta verificado.');
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_resend_verification_requires_authentication(): void
+    {
+        $this->postJson('/api/auth/resend-verification')
+            ->assertStatus(401);
     }
 }
