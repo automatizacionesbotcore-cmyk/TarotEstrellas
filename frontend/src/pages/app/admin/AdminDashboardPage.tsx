@@ -1,16 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 
+type StatusDetail = { total: number; monto_centavos: number };
+
 type ReembolsosMetricas = {
   total: number;
   monto_total_centavos: number;
-  by_status: Record<string, number>;
-  by_method: Record<string, number>;
+  by_status: Record<string, StatusDetail>;
+  by_method: Record<string, StatusDetail>;
 };
 
 type ComprobantesMetricas = {
   total: number;
   by_status?: Record<string, number>;
+  last_24h?: number;
+  manual_queue?: number;
 };
 
 function formatMoney(cents: number) {
@@ -43,27 +47,35 @@ export function AdminDashboardPage() {
           <span className="stat-label">Monto reembolsado</span>
         </div>
         <div className="stat-card">
-          <span className="stat-value">{reembolsos.data?.by_status?.pendiente ?? 0}</span>
+          <span className="stat-value">{reembolsos.data?.by_status?.pendiente?.total ?? 0}</span>
           <span className="stat-label">Reembolsos pendientes</span>
         </div>
         <div className="stat-card">
           <span className="stat-value">{comprobantes.data?.total ?? '—'}</span>
           <span className="stat-label">Comprobantes totales</span>
         </div>
+        <div className="stat-card">
+          <span className="stat-value">{comprobantes.data?.manual_queue ?? 0}</span>
+          <span className="stat-label">En cola manual</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">{comprobantes.data?.last_24h ?? 0}</span>
+          <span className="stat-label">Últimas 24h</span>
+        </div>
       </section>
 
       {reembolsos.data && (
         <section>
-          <h2>Por estado</h2>
+          <h2>Reembolsos por estado</h2>
           <ul>
             {Object.entries(reembolsos.data.by_status).map(([k, v]) => (
-              <li key={k}><strong>{k}:</strong> {v}</li>
+              <li key={k}><strong>{k}:</strong> {v.total} ({formatMoney(v.monto_centavos)})</li>
             ))}
           </ul>
-          <h2>Por método</h2>
+          <h2>Reembolsos por método</h2>
           <ul>
             {Object.entries(reembolsos.data.by_method).map(([k, v]) => (
-              <li key={k}><strong>{k}:</strong> {v}</li>
+              <li key={k}><strong>{k}:</strong> {v.total} ({formatMoney(v.monto_centavos)})</li>
             ))}
           </ul>
         </section>

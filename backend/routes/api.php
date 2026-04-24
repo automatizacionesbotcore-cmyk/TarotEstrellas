@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminTransferValidationSettingController;
 use App\Http\Controllers\Api\CitaController;
@@ -109,6 +110,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('admin/settings/transfer-validation/audits/export', [AdminTransferValidationSettingController::class, 'exportAudits']);
     Route::post('admin/settings/transfer-validation/audits/{auditId}/revert', [AdminTransferValidationSettingController::class, 'revertAudit']);
     Route::patch('admin/settings/transfer-validation', [AdminTransferValidationSettingController::class, 'update']);
+
+    Route::put('account/profile', [AccountController::class, 'updateProfile']);
+    Route::get('preferencias-notificacion', [AccountController::class, 'getNotificationPrefs']);
+    Route::put('preferencias-notificacion', [AccountController::class, 'updateNotificationPrefs']);
+    Route::post('account/password', [AccountController::class, 'changePassword']);
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);
