@@ -4,6 +4,8 @@ import { Toaster } from './components/ui/Toaster';
 import { PublicLayout } from './layouts/PublicLayout';
 import { AuthLayout } from './layouts/AuthLayout';
 import { AppLayout } from './layouts/AppLayout';
+import { AdminOnly } from './components/guards/AdminOnly';
+import { AdminLayout } from './layouts/AdminLayout';
 import { LandingPage } from './pages/public/LandingPage';
 import { ServiciosPage } from './pages/public/ServiciosPage';
 import { ServicioDetallePage } from './pages/public/ServicioDetallePage';
@@ -26,6 +28,13 @@ const PagarSaldoPage = lazy(() => import('./pages/app/PagarSaldoPage').then((m) 
 const SalaVideoPage  = lazy(() => import('./pages/app/SalaVideoPage').then((m) => ({ default: m.SalaVideoPage })));
 const DetalleCitaPage = lazy(() => import('./pages/app/DetalleCitaPage').then((m) => ({ default: m.DetalleCitaPage })));
 const LegalPage      = lazy(() => import('./pages/public/LegalPage').then((m) => ({ default: m.LegalPage })));
+
+const AdminDashboardPage        = lazy(() => import('./pages/app/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
+const AdminReembolsosPage       = lazy(() => import('./pages/app/admin/AdminReembolsosPage').then((m) => ({ default: m.AdminReembolsosPage })));
+const AdminReembolsoDetallePage = lazy(() => import('./pages/app/admin/AdminReembolsoDetallePage').then((m) => ({ default: m.AdminReembolsoDetallePage })));
+const AdminComprobantesPage     = lazy(() => import('./pages/app/admin/AdminComprobantesPage').then((m) => ({ default: m.AdminComprobantesPage })));
+const AdminCitasPage            = lazy(() => import('./pages/app/admin/AdminCitasPage').then((m) => ({ default: m.AdminCitasPage })));
+const AdminSettingsPage         = lazy(() => import('./pages/app/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })));
 
 function PageLoader() {
   return (
@@ -107,6 +116,21 @@ export function App() {
           element={<Suspense fallback={<PageLoader />}><DetalleCitaPage /></Suspense>}
         />
         <Route path="mi-cuenta" element={<MiCuentaPage />} />
+        <Route
+          path="admin"
+          element={
+            <AdminOnly>
+              <AdminLayout />
+            </AdminOnly>
+          }
+        >
+          <Route index                       element={<Suspense fallback={<PageLoader />}><AdminDashboardPage        /></Suspense>} />
+          <Route path="reembolsos"           element={<Suspense fallback={<PageLoader />}><AdminReembolsosPage       /></Suspense>} />
+          <Route path="reembolsos/:uuid"     element={<Suspense fallback={<PageLoader />}><AdminReembolsoDetallePage /></Suspense>} />
+          <Route path="comprobantes"         element={<Suspense fallback={<PageLoader />}><AdminComprobantesPage     /></Suspense>} />
+          <Route path="citas"                element={<Suspense fallback={<PageLoader />}><AdminCitasPage            /></Suspense>} />
+          <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
+        </Route>
       </Route>
 
       <Route path="/auth/verify-email" element={<VerifyEmailPage />} />

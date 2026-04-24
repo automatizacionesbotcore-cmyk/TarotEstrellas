@@ -65,6 +65,11 @@ export function AppLayout() {
           <NavLink to="/app/mi-cuenta" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Mi cuenta
           </NavLink>
+          {useAuthStore((s) => s.isAdmin()) && (
+            <NavLink to="/app/admin" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              Administración
+            </NavLink>
+          )}
           <ThemeToggle />
           <button
             type="button"
