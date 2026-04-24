@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from '../components/ui/Logo';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useAuthModalStore } from '../stores/authModalStore';
+import { useAuthStore } from '../stores/authStore';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -11,8 +12,9 @@ const pageVariants = {
 };
 
 export function PublicLayout() {
-  const location    = useLocation();
-  const openLogin   = useAuthModalStore((s) => s.openLogin);
+  const location        = useLocation();
+  const openLogin       = useAuthModalStore((s) => s.openLogin);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
     <div className="page-shell">
@@ -22,9 +24,15 @@ export function PublicLayout() {
         </Link>
         <nav aria-label="Navegación principal">
           <NavLink to="/servicios" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Servicios</NavLink>
-          <button type="button" className="btn-secondary" style={{ padding: '0.45rem 1rem' }} onClick={openLogin}>
-            Ingresar
-          </button>
+          {isAuthenticated ? (
+            <Link to="/app" className="btn-secondary" style={{ padding: '0.45rem 1rem' }}>
+              Mi panel
+            </Link>
+          ) : (
+            <button type="button" className="btn-secondary" style={{ padding: '0.45rem 1rem' }} onClick={openLogin}>
+              Ingresar
+            </button>
+          )}
           <ThemeToggle />
         </nav>
       </header>
@@ -58,7 +66,11 @@ export function PublicLayout() {
             </div>
             <div>
               <h4>Cuenta</h4>
-              <button type="button" onClick={openLogin}>Iniciar sesión</button>
+              {isAuthenticated ? (
+                <Link to="/app">Mi panel</Link>
+              ) : (
+                <button type="button" onClick={openLogin}>Iniciar sesión</button>
+              )}
             </div>
             <div>
               <h4>Legal</h4>
