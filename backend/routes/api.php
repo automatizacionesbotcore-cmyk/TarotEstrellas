@@ -111,6 +111,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('admin/settings/transfer-validation', [AdminTransferValidationSettingController::class, 'update']);
 
     Route::get('user', function (Request $request) {
-        return $request->user();
+        return $request->user()->load(['profile', 'roles']);
     });
 });
