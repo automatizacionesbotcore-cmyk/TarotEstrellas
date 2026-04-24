@@ -59,8 +59,8 @@ export function DashboardPage() {
     },
   });
 
-  const upcoming = data?.data.filter((c) => UPCOMING_ESTADOS.has(c.estado)) ?? [];
-  const total    = data?.meta.total ?? 0;
+  const upcoming = data?.data?.filter((c) => UPCOMING_ESTADOS.has(c.estado)) ?? [];
+  const total    = data?.meta?.total ?? 0;
 
   return (
     <main className="page-content">

@@ -82,8 +82,8 @@ export function MisConsultasPage() {
     queryFn:  () => fetchMisConsultas(page),
   });
 
-  const lastPage  = data?.meta.last_page ?? 1;
-  const totalItems = data?.meta.total ?? 0;
+  const lastPage  = data?.meta?.last_page ?? 1;
+  const totalItems = data?.meta?.total ?? 0;
 
   const backendMessage =
     ((error as AxiosError<{ message?: string }>)?.response?.data?.message as string | undefined) ?? null;
