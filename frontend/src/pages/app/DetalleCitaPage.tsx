@@ -52,9 +52,9 @@ const ESTADO_LABELS: Record<string, string> = {
 
 // ── API ───────────────────────────────────────────────────────────────────────
 const fetchCita        = (id: string) => api.get(`/citas/${id}`).then((r) => (r.data as { data: CitaDetalle }).data);
-const fetchGrabacion   = (id: string) => api.get(`/citas/${id}/grabacion`).then((r) => (r.data as { data: Grabacion }).data);
-const fetchTranscripcion = (id: string) => api.get(`/citas/${id}/transcripcion`).then((r) => (r.data as { data: Transcripcion }).data);
-const fetchResumen     = (id: string) => api.get(`/citas/${id}/resumen`).then((r) => (r.data as { data: ResumenIA }).data);
+const fetchGrabacion   = (id: string) => api.get(`/me/consultas/${id}/grabacion-url`).then((r) => (r.data as { data: Grabacion }).data);
+const fetchTranscripcion = (id: string) => api.get(`/me/consultas/${id}/transcripcion`).then((r) => (r.data as { data: Transcripcion }).data);
+const fetchResumen     = (id: string) => api.get(`/me/consultas/${id}/resumen`).then((r) => (r.data as { data: ResumenIA }).data);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDate(iso: string, tz: string) {

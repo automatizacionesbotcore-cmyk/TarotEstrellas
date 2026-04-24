@@ -43,12 +43,12 @@ const fetchMetodosPago = () =>
   api.get('/metodos-pago').then((r) => (r.data as { data: MetodoPago[] }).data);
 
 const createSaldoIntent = (citaId: string) =>
-  api.post(`/citas/${citaId}/pagos/stripe-saldo`).then((r) => r.data as PaymentIntentResponse);
+  api.post('/pagos/abono', { cita_uuid: citaId }).then((r) => r.data as PaymentIntentResponse);
 
 const uploadComprobanteSaldo = (citaId: string, file: File) => {
   const form = new FormData();
   form.append('comprobante', file);
-  return api.post(`/citas/${citaId}/pagos/comprobante-saldo`, form, {
+  return api.post(`/citas/${citaId}/pagar/transferencia/comprobante`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };

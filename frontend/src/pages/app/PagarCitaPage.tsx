@@ -62,18 +62,18 @@ const fetchMetodosPago = () =>
   api.get('/metodos-pago').then((r) => (r.data as MetodosPagoResponse).data);
 
 const createPaymentIntent = (citaId: string) =>
-  api.post(`/citas/${citaId}/pagos/stripe`).then((r) => r.data as PaymentIntentResponse);
+  api.post(`/citas/${citaId}/pagar/stripe`).then((r) => r.data as PaymentIntentResponse);
 
 const uploadComprobante = (citaId: string, file: File) => {
   const form = new FormData();
   form.append('comprobante', file);
-  return api.post(`/citas/${citaId}/pagos/comprobante`, form, {
+  return api.post(`/citas/${citaId}/pagar/transferencia/comprobante`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
 const extenderReserva = (citaId: string) =>
-  api.post(`/citas/${citaId}/extender`).then((r) => r.data as { reservada_hasta: string });
+  api.post(`/citas/${citaId}/extender-reserva`).then((r) => r.data as { reservada_hasta: string });
 
 const validarCupon = (codigo: string, citaId: string) =>
   api.post('/cupones/validar', { codigo, cita_id: Number(citaId) })
