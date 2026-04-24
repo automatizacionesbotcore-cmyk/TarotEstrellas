@@ -13,6 +13,10 @@ class DatabaseSeeder extends Seeder
             TipoConsultaSeeder::class,
             AppSettingSeeder::class,
         ]);
+
+        if (app()->environment('local', 'testing')) {
+            $this->call(DevUserSeeder::class);
+        }
     }
 }
 
