@@ -12,15 +12,15 @@ type TipoConsulta = {
   slug: string;
   nombre: string;
   descripcion: string;
-  categoria: 'tarot' | 'astrologia' | 'otros';
   duracion_minutos: number;
   requiere_datos_natales: boolean;
   moneda: string;
-  precio_centavos: number | null;
+  precio_referencial_centavos: number | null;
+  color_hex: string | null;
+  imagen_url: string | null;
 };
 
 type TiposResponse = {
-  currency: string;
   data: TipoConsulta[];
 };
 
@@ -233,10 +233,9 @@ export function ServiciosPage() {
             <h3>{tipo.nombre}</h3>
             <p>{tipo.descripcion}</p>
             <div className="service-card-pills">
-              <span className="service-pill">{tipo.categoria}</span>
               <span className="service-pill primera-consulta-pill">🎉 10% primera consulta</span>
             </div>
-            <strong>{formatPrice(tipo.precio_centavos, tipo.moneda)}</strong>
+            <strong>{formatPrice(tipo.precio_referencial_centavos, tipo.moneda)}</strong>
             <span>{tipo.duracion_minutos} min</span>
             <Link to={`/servicios/${tipo.slug}`} className="btn-secondary" style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}>
               Ver detalle

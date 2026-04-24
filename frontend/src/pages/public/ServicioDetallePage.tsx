@@ -12,15 +12,14 @@ type ServicioDetalle = {
   slug: string;
   nombre: string;
   descripcion: string;
-  categoria: string;
   requiere_datos_natales: boolean;
   duracion_minutos: number;
-  precio_centavos: number | null;
+  precio_referencial_centavos: number | null;
   moneda: string;
+  color_hex: string | null;
 };
 
 type ServicioResponse = {
-  currency: string;
   data: ServicioDetalle;
 };
 
@@ -361,18 +360,17 @@ export function ServicioDetallePage() {
             transition={{ duration: 0.5 }}
             style={{ marginBottom: '1.2rem' }}
           >
-            <p className="dash-eyebrow">✦ {servicio.categoria}</p>
+            <p className="dash-eyebrow">✦ Detalle del servicio</p>
             <h1 className="dash-title">{servicio.nombre}</h1>
           </motion.div>
 
           <motion.section className="detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
           <div className="detail-hero">
             <div>
-              <span className="service-pill">{servicio.categoria}</span>
               <p>{servicio.descripcion}</p>
               <div className="detail-meta-row">
                 <span>Duracion: {servicio.duracion_minutos} minutos</span>
-                <span>Precio: {formatPrice(servicio.precio_centavos, servicio.moneda)}</span>
+                <span>Precio: {formatPrice(servicio.precio_referencial_centavos, servicio.moneda)}</span>
                 <span>{servicio.requiere_datos_natales ? 'Requiere datos natales' : 'No requiere datos natales'}</span>
               </div>
             </div>
@@ -553,7 +551,7 @@ export function ServicioDetallePage() {
                   </p>
                   <p><strong>Zona horaria:</strong> {selectedTimezone || detectedTimezone}</p>
                   <p><strong>Duración:</strong> {servicio?.duracion_minutos} minutos</p>
-                  <p><strong>Precio total:</strong> {formatPrice(servicio?.precio_centavos ?? null, servicio?.moneda ?? 'USD')}</p>
+                  <p><strong>Precio total:</strong> {formatPrice(servicio?.precio_referencial_centavos ?? null, servicio?.moneda ?? 'CLP')}</p>
                   <p><strong>Tema:</strong> {temaPrincipal || 'No indicado'}</p>
                   <p><strong>Pregunta:</strong> {pregunta || 'No indicada'}</p>
                 </div>

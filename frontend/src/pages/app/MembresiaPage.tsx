@@ -14,8 +14,23 @@ type Membresia = {
   fecha_inicio: string | null;
 };
 
-const fetchMembresia = () =>
-  api.get('/membresia').then((r) => (r.data as { data: Membresia }).data);
+const NO_MEMBRESIA: Membresia = {
+  activa: false,
+  nombre: null,
+  descripcion: null,
+  consultas_restantes: 0,
+  consultas_totales: 0,
+  fecha_vencimiento: null,
+  fecha_inicio: null,
+};
+
+const fetchMembresia = (): Promise<Membresia> =>
+  api.get('/membresia')
+    .then((r) => (r.data as { data: Membresia }).data)
+    .catch((err) => {
+      if (err?.response?.status === 404) return NO_MEMBRESIA;
+      throw err;
+    });
 
 function fmtDate(iso: string) {
   return new Intl.DateTimeFormat('es-CL', { dateStyle: 'long' }).format(new Date(iso));
