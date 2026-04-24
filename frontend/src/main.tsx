@@ -5,8 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import './style.css';
 import { useThemeStore } from './stores/themeStore';
+import { useAuthStore } from './stores/authStore';
 
 useThemeStore.getState().initialize();
+
+if (useAuthStore.getState().token) {
+  void useAuthStore.getState().refreshUser();
+}
 
 const queryClient = new QueryClient();
 const routerBaseName = import.meta.env.PROD ? '/tarotEstrella/tarotestrellas/frontend/dist' : '/';
