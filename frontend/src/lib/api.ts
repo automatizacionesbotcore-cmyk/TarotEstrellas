@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import { useToastStore } from '../stores/toastStore';
 
 function resolveApiBaseUrl() {
   const fromEnv = import.meta.env.VITE_API_URL;
@@ -46,9 +47,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    if (status === 401) {
       useAuthStore.getState().clearSession();
-      window.location.href = '/auth/login';
+      if (window.location.pathname !== '/auth/login') {
+        window.location.href = '/auth/login';
+      }
+    } else if (status === 403) {
+      useToastStore.getState().addToast('error', 'No tienes permisos para realizar esta acción.');
+    } else if (status >= 500 || error.code === 'ECONNABORTED') {
+      useToastStore.getState().addToast('error', 'Error temporal del servidor. Reintenta en unos segundos.');
     }
 
     return Promise.reject(error);
