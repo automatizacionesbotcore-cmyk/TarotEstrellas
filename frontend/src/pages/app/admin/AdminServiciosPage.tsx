@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { AdminTable, type Column } from '../../../components/admin/AdminTable';
@@ -39,6 +39,8 @@ const EMPTY_FORM: FormFields = {
   requiere_datos_natales: false,
 };
 
+const DURACIONES = [15, 30, 45, 60, 90, 120, 180, 240];
+
 function formatPrice(centavos: number, moneda: string) {
   const valor = centavos / 100;
   return moneda === 'CLP'
@@ -72,6 +74,11 @@ export function AdminServiciosPage() {
   });
 
   const tipos = query.data ?? [];
+
+  const imagePreviewUrl = useMemo(() => {
+    if (imagenFile) return URL.createObjectURL(imagenFile);
+    return null;
+  }, [imagenFile]);
 
   function openCreate() {
     setEditingTipo(null);
@@ -158,9 +165,9 @@ export function AdminServiciosPage() {
       render: (row) => {
         const idx = tipos.findIndex((t) => t.id === row.id);
         return (
-          <span style={{ display: 'flex', gap: '0.25rem' }}>
-            <button className="btn-icon" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveRow(idx, -1); }} aria-label="Subir">{'▲'}</button>
-            <button className="btn-icon" disabled={idx === tipos.length - 1} onClick={(e) => { e.stopPropagation(); moveRow(idx, 1); }} aria-label="Bajar">{'▼'}</button>
+          <span className="admin-reorder-btns">
+            <button className="admin-reorder-btn" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveRow(idx, -1); }} aria-label="Subir">&#9650;</button>
+            <button className="admin-reorder-btn" disabled={idx === tipos.length - 1} onClick={(e) => { e.stopPropagation(); moveRow(idx, 1); }} aria-label="Bajar">&#9660;</button>
           </span>
         );
       },
@@ -173,9 +180,8 @@ export function AdminServiciosPage() {
       label: 'Estado',
       render: (r) => (
         <button
-          className={`service-pill ${r.activo ? 'estado-confirmada' : 'estado-cancelada'}`}
+          className={`service-pill admin-toggle-pill ${r.activo ? 'estado-confirmada' : 'estado-cancelada'}`}
           onClick={(e) => { e.stopPropagation(); toggleMutation.mutate(r.id); }}
-          style={{ cursor: 'pointer' }}
         >
           {r.activo ? 'Activo' : 'Inactivo'}
         </button>
@@ -192,13 +198,13 @@ export function AdminServiciosPage() {
     },
   ];
 
-  const DURACIONES = [15, 30, 45, 60, 90, 120, 180, 240];
+  const currentImageUrl = editingTipo?.imagen_url;
 
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1>Servicios (Tipos de Consulta)</h1>
-        <button className="btn-primary" onClick={openCreate}>Nuevo servicio</button>
+      <header className="admin-page-header">
+        <h1>Servicios</h1>
+        <button className="btn-primary btn-shimmer" onClick={openCreate}>+ Nuevo servicio</button>
       </header>
 
       <AdminTable
@@ -209,80 +215,133 @@ export function AdminServiciosPage() {
       />
 
       {showModal && (
-        <div className="confirm-dialog-backdrop" role="dialog" aria-modal="true">
-          <div className="confirm-dialog" style={{ maxWidth: '540px', width: '100%' }}>
-            <h3>{editingTipo ? 'Editar servicio' : 'Nuevo servicio'}</h3>
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={() => !saving && setShowModal(false)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2>{editingTipo ? 'Editar servicio' : 'Nuevo servicio'}</h2>
+              <button className="admin-modal-close" onClick={() => !saving && setShowModal(false)} aria-label="Cerrar">&times;</button>
+            </div>
 
             {editingTipo && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                Slug: <code>{editingTipo.slug}</code>
-              </p>
+              <div className="admin-modal-slug">
+                <span className="service-pill">/{editingTipo.slug}</span>
+              </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label className="form-label">
-                Nombre
-                <input className="form-input" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} maxLength={100} />
-                {errors.nombre && <span className="form-error">{errors.nombre[0]}</span>}
-              </label>
+            <div className="admin-modal-body">
+              <div className="admin-form">
+                {/* Nombre */}
+                <label>
+                  <span className="admin-form-label-text">Nombre</span>
+                  <input
+                    type="text"
+                    value={form.nombre}
+                    onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                    maxLength={100}
+                    placeholder="Ej: Lectura de Tarot"
+                  />
+                  {errors.nombre && <span className="admin-field-error">{errors.nombre[0]}</span>}
+                </label>
 
-              <label className="form-label">
-                Descripción
-                <textarea className="form-input" rows={3} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} maxLength={500} />
-                {errors.descripcion && <span className="form-error">{errors.descripcion[0]}</span>}
-              </label>
+                {/* Descripcion */}
+                <label>
+                  <span className="admin-form-label-text">Descripción</span>
+                  <textarea
+                    rows={3}
+                    value={form.descripcion}
+                    onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                    maxLength={500}
+                    placeholder="Describe brevemente el servicio..."
+                  />
+                  {errors.descripcion && <span className="admin-field-error">{errors.descripcion[0]}</span>}
+                </label>
 
-              <label className="form-label">
-                Duración (minutos)
-                <select className="form-input" value={form.duracion_minutos} onChange={(e) => setForm({ ...form, duracion_minutos: Number(e.target.value) })}>
-                  {DURACIONES.map((d) => <option key={d} value={d}>{d} min</option>)}
-                </select>
-              </label>
+                {/* Duracion + Precio en fila */}
+                <div className="admin-form-row">
+                  <label>
+                    <span className="admin-form-label-text">Duración</span>
+                    <select value={form.duracion_minutos} onChange={(e) => setForm({ ...form, duracion_minutos: Number(e.target.value) })}>
+                      {DURACIONES.map((d) => <option key={d} value={d}>{d} min</option>)}
+                    </select>
+                  </label>
 
-              <label className="form-label">
-                Precio ({form.moneda === 'CLP' ? 'pesos' : 'dólares'})
-                <input className="form-input" type="number" min="0" value={precioPesos} onChange={(e) => setPrecioPesos(e.target.value)} />
-                {errors.precio_referencial_centavos && <span className="form-error">{errors.precio_referencial_centavos[0]}</span>}
-              </label>
-
-              <label className="form-label">
-                Moneda
-                <select className="form-input" value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value })}>
-                  <option value="CLP">CLP</option>
-                  <option value="USD">USD</option>
-                </select>
-              </label>
-
-              <label className="form-label">
-                Color
-                <input type="color" value={form.color_hex} onChange={(e) => setForm({ ...form, color_hex: e.target.value })} />
-              </label>
-
-              <label className="form-label" style={{ flexDirection: 'row', gap: '0.5rem', alignItems: 'center' }}>
-                <input type="checkbox" checked={form.requiere_datos_natales} onChange={(e) => setForm({ ...form, requiere_datos_natales: e.target.checked })} />
-                Requiere datos natales
-              </label>
-
-              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Imagen</p>
-                {editingTipo?.imagen_url && (
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <img
-                      src={editingTipo.imagen_url}
-                      alt={editingTipo.nombre}
-                      style={{ maxWidth: '120px', borderRadius: '8px' }}
+                  <label>
+                    <span className="admin-form-label-text">Precio ({form.moneda === 'CLP' ? 'pesos' : 'USD'})</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={precioPesos}
+                      onChange={(e) => setPrecioPesos(e.target.value)}
+                      placeholder="45000"
                     />
-                    <button className="btn-secondary" style={{ marginLeft: '0.5rem' }} onClick={handleDeleteImagen}>Eliminar imagen</button>
-                  </div>
-                )}
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setImagenFile(e.target.files?.[0] ?? null)} />
+                    {errors.precio_referencial_centavos && <span className="admin-field-error">{errors.precio_referencial_centavos[0]}</span>}
+                  </label>
+                </div>
+
+                {/* Moneda + Color en fila */}
+                <div className="admin-form-row">
+                  <label>
+                    <span className="admin-form-label-text">Moneda</span>
+                    <select value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value })}>
+                      <option value="CLP">CLP (Pesos chilenos)</option>
+                      <option value="USD">USD (Dólares)</option>
+                    </select>
+                  </label>
+
+                  <label className="admin-color-field">
+                    <span className="admin-form-label-text">Color</span>
+                    <div className="admin-color-picker-wrap">
+                      <input type="color" value={form.color_hex} onChange={(e) => setForm({ ...form, color_hex: e.target.value })} />
+                      <span className="admin-color-value">{form.color_hex}</span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Checkbox datos natales */}
+                <label className="admin-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={form.requiere_datos_natales}
+                    onChange={(e) => setForm({ ...form, requiere_datos_natales: e.target.checked })}
+                  />
+                  <span>Requiere datos natales del consultante</span>
+                </label>
+
+                {/* Imagen */}
+                <div className="admin-image-section">
+                  <span className="admin-form-label-text">Imagen del servicio</span>
+
+                  {(currentImageUrl || imagePreviewUrl) && (
+                    <div className="admin-image-preview">
+                      <img
+                        src={imagePreviewUrl ?? currentImageUrl!}
+                        alt={editingTipo?.nombre ?? 'Vista previa'}
+                      />
+                      {currentImageUrl && !imagePreviewUrl && (
+                        <button type="button" className="admin-image-remove" onClick={handleDeleteImagen} aria-label="Eliminar imagen">&times;</button>
+                      )}
+                    </div>
+                  )}
+
+                  <label className="admin-image-upload-area">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setImagenFile(e.target.files?.[0] ?? null)}
+                      hidden
+                    />
+                    <span className="admin-upload-icon">&#128247;</span>
+                    <span>{imagenFile ? imagenFile.name : 'Seleccionar imagen'}</span>
+                    <span className="admin-upload-hint">JPG, PNG o WebP. Máx 2 MB</span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <div className="confirm-dialog-actions" style={{ marginTop: '1rem' }}>
+            <div className="admin-modal-footer">
               <button type="button" className="btn-secondary" onClick={() => setShowModal(false)} disabled={saving}>Cancelar</button>
               <button type="button" className="btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando…' : 'Guardar'}
+                {saving ? 'Guardando...' : editingTipo ? 'Guardar cambios' : 'Crear servicio'}
               </button>
             </div>
           </div>
