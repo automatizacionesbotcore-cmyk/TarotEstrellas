@@ -34,6 +34,7 @@ const AdminReembolsosPage       = lazy(() => import('./pages/app/admin/AdminReem
 const AdminReembolsoDetallePage = lazy(() => import('./pages/app/admin/AdminReembolsoDetallePage').then((m) => ({ default: m.AdminReembolsoDetallePage })));
 const AdminComprobantesPage     = lazy(() => import('./pages/app/admin/AdminComprobantesPage').then((m) => ({ default: m.AdminComprobantesPage })));
 const AdminCitasPage            = lazy(() => import('./pages/app/admin/AdminCitasPage').then((m) => ({ default: m.AdminCitasPage })));
+const AdminServiciosPage        = lazy(() => import('./pages/app/admin/AdminServiciosPage').then((m) => ({ default: m.AdminServiciosPage })));
 const AdminSettingsPage         = lazy(() => import('./pages/app/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })));
 
 function PageLoader() {
@@ -129,6 +130,7 @@ export function App() {
           <Route path="reembolsos/:uuid"     element={<Suspense fallback={<PageLoader />}><AdminReembolsoDetallePage /></Suspense>} />
           <Route path="comprobantes"         element={<Suspense fallback={<PageLoader />}><AdminComprobantesPage     /></Suspense>} />
           <Route path="citas"                element={<Suspense fallback={<PageLoader />}><AdminCitasPage            /></Suspense>} />
+          <Route path="servicios"            element={<Suspense fallback={<PageLoader />}><AdminServiciosPage        /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
         </Route>
       </Route>

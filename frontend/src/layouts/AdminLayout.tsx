@@ -5,6 +5,7 @@ const navItems = [
   { to: '/app/admin/reembolsos',   label: 'Reembolsos',   end: false },
   { to: '/app/admin/comprobantes', label: 'Comprobantes', end: false },
   { to: '/app/admin/citas',        label: 'Citas',        end: false },
+  { to: '/app/admin/servicios',    label: 'Servicios',    end: false },
   { to: '/app/admin/settings',     label: 'Ajustes',      end: false },
 ];
 
