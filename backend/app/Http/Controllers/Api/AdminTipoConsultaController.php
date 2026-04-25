@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TipoConsulta;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminTipoConsultaController extends Controller
@@ -56,6 +57,63 @@ class AdminTipoConsultaController extends Controller
         ]);
 
         $tipo->update($validated);
+
+        return response()->json(['data' => $tipo->fresh()]);
+    }
+
+    public function toggle(int $id): JsonResponse
+    {
+        $tipo = TipoConsulta::findOrFail($id);
+        $tipo->update(['activo' => ! $tipo->activo]);
+
+        return response()->json(['data' => $tipo->fresh()]);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:tipos_consulta,id',
+        ]);
+
+        foreach ($validated['ids'] as $position => $id) {
+            TipoConsulta::where('id', $id)->update(['orden_visualizacion' => $position + 1]);
+        }
+
+        return response()->json(['message' => 'Orden actualizado.']);
+    }
+
+    public function uploadImagen(Request $request, int $id): JsonResponse
+    {
+        $tipo = TipoConsulta::findOrFail($id);
+
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($tipo->imagen_url) {
+            $oldPath = str_replace('/storage/', 'public/', $tipo->imagen_url);
+            Storage::delete($oldPath);
+        }
+
+        $ext = $request->file('imagen')->getClientOriginalExtension();
+        $filename = "{$tipo->slug}.{$ext}";
+        $request->file('imagen')->storeAs('public/tipos-consulta', $filename);
+
+        $tipo->update(['imagen_url' => "/storage/tipos-consulta/{$filename}"]);
+
+        return response()->json(['data' => $tipo->fresh()]);
+    }
+
+    public function deleteImagen(int $id): JsonResponse
+    {
+        $tipo = TipoConsulta::findOrFail($id);
+
+        if ($tipo->imagen_url) {
+            $path = str_replace('/storage/', 'public/', $tipo->imagen_url);
+            Storage::delete($path);
+            $tipo->update(['imagen_url' => null]);
+        }
 
         return response()->json(['data' => $tipo->fresh()]);
     }

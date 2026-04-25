@@ -121,6 +121,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [AdminTipoConsultaController::class, 'index']);
         Route::post('/', [AdminTipoConsultaController::class, 'store']);
         Route::put('{id}', [AdminTipoConsultaController::class, 'update']);
+        Route::patch('reorder', [AdminTipoConsultaController::class, 'reorder']);
+        Route::patch('{id}/toggle', [AdminTipoConsultaController::class, 'toggle']);
+        Route::post('{id}/imagen', [AdminTipoConsultaController::class, 'uploadImagen']);
+        Route::delete('{id}/imagen', [AdminTipoConsultaController::class, 'deleteImagen']);
     });
 
     Route::get('user', function (Request $request) {
