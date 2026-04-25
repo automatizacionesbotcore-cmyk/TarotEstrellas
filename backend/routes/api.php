@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminTipoConsultaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminTransferValidationSettingController;
 use App\Http\Controllers\Api\CitaController;
@@ -115,6 +116,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('preferencias-notificacion', [AccountController::class, 'getNotificationPrefs']);
     Route::put('preferencias-notificacion', [AccountController::class, 'updateNotificationPrefs']);
     Route::post('account/password', [AccountController::class, 'changePassword']);
+
+    Route::middleware('admin')->prefix('admin/tipos-consulta')->group(function () {
+        Route::get('/', [AdminTipoConsultaController::class, 'index']);
+        Route::post('/', [AdminTipoConsultaController::class, 'store']);
+        Route::put('{id}', [AdminTipoConsultaController::class, 'update']);
+    });
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);
