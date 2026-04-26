@@ -231,6 +231,24 @@ class MeController extends Controller
         ]);
     }
 
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'confirmacion' => ['required', 'in:ELIMINAR'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        // Revocar todos los tokens antes de eliminar
+        $user->tokens()->delete();
+
+        // Soft delete — el registro persiste con deleted_at para reactivación futura
+        $user->delete();
+
+        return response()->json(['message' => 'Cuenta eliminada correctamente.']);
+    }
+
     private function buildConsultasQuery(User $user)
     {
         return Cita::query()

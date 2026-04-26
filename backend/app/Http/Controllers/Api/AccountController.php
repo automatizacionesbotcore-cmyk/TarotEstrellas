@@ -14,12 +14,18 @@ class AccountController extends Controller
     public function updateProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nombre' => ['required', 'string', 'max:100'],
+            'nombre'                  => ['required', 'string', 'max:100'],
+            'apellido'                => ['nullable', 'string', 'max:120'],
+            'telefono'                => ['nullable', 'string', 'max:30'],
+            'zona_horaria'            => ['nullable', 'string', 'timezone'],
+            'genero'                  => ['nullable', 'in:masculino,femenino,no_binario,prefiero_no_decir'],
+            'fecha_nacimiento_publica' => ['nullable', 'date', 'before:today'],
+            'biografia'               => ['nullable', 'string', 'max:500'],
         ]);
 
         $user = $request->user();
         $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
-        $profile->update(['nombre' => $validated['nombre']]);
+        $profile->update(array_filter($validated, fn ($v) => $v !== null));
 
         return response()->json([
             'message' => 'Perfil actualizado.',

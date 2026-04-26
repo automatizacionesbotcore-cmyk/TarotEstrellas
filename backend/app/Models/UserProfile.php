@@ -18,6 +18,11 @@ class UserProfile extends Model
         'telefono_pais',
         'pais_residencia',
         'idioma_preferido',
+        'zona_horaria',
+        'genero',
+        'fecha_nacimiento_publica',
+        'avatar_url',
+        'biografia',
     ];
 
     public function user(): BelongsTo
