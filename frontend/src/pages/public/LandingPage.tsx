@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
 import { useAuthModalStore } from '../../stores/authModalStore';
 
 const StarField = lazy(() => import('../../components/3d/StarField'));
@@ -37,30 +39,15 @@ const INFO_CARDS = [
   },
 ];
 
-// Servicios destacados — reemplazar con API cuando esté disponible
-const FEATURED_SERVICES = [
-  {
-    slug: 'tarot-general',
-    nombre: 'Tarot General',
-    descripcion: 'Una lectura completa para obtener claridad sobre tu situación actual y los caminos que se abren ante ti.',
-    categoria: 'tarot',
-    duracion_minutos: 60,
-  },
-  {
-    slug: 'carta-astral',
-    nombre: 'Carta Astral',
-    descripcion: 'Análisis profundo de tu carta natal: planetas, casas y aspectos que definen tu esencia y propósito de vida.',
-    categoria: 'astrologia',
-    duracion_minutos: 90,
-  },
-  {
-    slug: 'tarot-amor',
-    nombre: 'Tarot Amor y Relaciones',
-    descripcion: 'Lectura enfocada en tu vida afectiva, vínculos presentes y patrones emocionales que buscan sanar.',
-    categoria: 'tarot',
-    duracion_minutos: 45,
-  },
-];
+type FeaturedServicio = {
+  id: number;
+  slug: string;
+  nombre: string;
+  descripcion: string;
+  duracion_minutos: number;
+  precio_moneda: number | null;
+  moneda: string;
+};
 
 const FAQS = [
   {
@@ -95,9 +82,26 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.14 } },
 };
 
+function formatPrice(centavos: number | null, moneda: string) {
+  if (centavos === null) return null;
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: moneda,
+    maximumFractionDigits: moneda === 'CLP' ? 0 : 2,
+  }).format(centavos / 100);
+}
+
 export function LandingPage() {
   const openRegister = useAuthModalStore((s) => s.openRegister);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const { data: featuredData } = useQuery<{ data: FeaturedServicio[] }>({
+    queryKey: ['tipos-consulta', 'featured'],
+    queryFn: async () => (await api.get('/public/tipos-consulta', { params: { moneda: 'CLP' } })).data,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const featuredServices = featuredData?.data.slice(0, 3) ?? [];
 
   useEffect(() => {
     document.title = 'TarotEstrellas | Lecturas espirituales online';
@@ -215,28 +219,33 @@ export function LandingPage() {
           </motion.p>
 
           <motion.div className="cards-grid" variants={stagger}>
-            {FEATURED_SERVICES.map((s, i) => (
-              <motion.article
-                key={s.slug}
-                className="service-card"
-                variants={fadeUp}
-                custom={i}
-                transition={{ duration: 0.5 }}
-                whileHover={{ y: -4, transition: { duration: 0.25 } }}
-              >
-                <span className="service-pill">{s.categoria}</span>
-                <h3>{s.nombre}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1 }}>{s.descripcion}</p>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>⏱ {s.duracion_minutos} min</span>
-                <Link
-                  to={`/servicios/${s.slug}`}
-                  className="btn-secondary"
-                  style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
+            {featuredServices.map((s, i) => {
+              const precio = formatPrice(s.precio_moneda, s.moneda);
+              return (
+                <motion.article
+                  key={s.slug}
+                  className="service-card"
+                  variants={fadeUp}
+                  custom={i}
+                  transition={{ duration: 0.5 }}
+                  whileHover={{ y: -4, transition: { duration: 0.25 } }}
                 >
-                  Ver detalle
-                </Link>
-              </motion.article>
-            ))}
+                  <h3>{s.nombre}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1 }}>{s.descripcion}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    <span>⏱ {s.duracion_minutos} min</span>
+                    {precio && <strong style={{ color: 'var(--accent)' }}>{precio}</strong>}
+                  </div>
+                  <Link
+                    to={`/servicios/${s.slug}`}
+                    className="btn-secondary"
+                    style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
+                  >
+                    Ver detalle
+                  </Link>
+                </motion.article>
+              );
+            })}
           </motion.div>
 
           <motion.div

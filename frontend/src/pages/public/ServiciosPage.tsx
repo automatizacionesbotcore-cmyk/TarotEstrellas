@@ -7,6 +7,9 @@ const FloatingCard = lazy(() => import('../../components/3d/FloatingCard'));
 import type { AxiosError } from 'axios';
 import { api } from '../../lib/api';
 
+const MONEDAS = ['CLP', 'USD', 'MXN', 'EUR'] as const;
+type Moneda = typeof MONEDAS[number];
+
 type TipoConsulta = {
   id: number;
   slug: string;
@@ -15,6 +18,7 @@ type TipoConsulta = {
   duracion_minutos: number;
   requiere_datos_natales: boolean;
   moneda: string;
+  precio_moneda: number | null;
   precio_referencial_centavos: number | null;
   color_hex: string | null;
   imagen_url: string | null;
@@ -31,6 +35,7 @@ type TipoConsultaFilters = {
   requiere_datos_natales: string;
   precio_min: string;
   precio_max: string;
+  moneda: Moneda;
 };
 
 // Variantes exactas del spec (sección 6.6.3)
@@ -57,6 +62,7 @@ async function fetchTipos(filters: TipoConsultaFilters): Promise<TiposResponse> 
       requiere_datos_natales: filters.requiere_datos_natales || undefined,
       precio_min: filters.precio_min || undefined,
       precio_max: filters.precio_max || undefined,
+      moneda: filters.moneda,
     },
   });
   return response.data as TiposResponse;
@@ -72,6 +78,13 @@ function formatPrice(value: number | null, currency: string) {
   }).format(amount);
 }
 
+function getDisplayPrice(tipo: TipoConsulta, moneda: Moneda) {
+  if (tipo.precio_moneda !== undefined && tipo.precio_moneda !== null) {
+    return formatPrice(tipo.precio_moneda, moneda);
+  }
+  return formatPrice(tipo.precio_referencial_centavos, tipo.moneda);
+}
+
 export function ServiciosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -83,6 +96,7 @@ export function ServiciosPage() {
       requiere_datos_natales: searchParams.get('requiere_datos_natales') ?? '',
       precio_min: searchParams.get('precio_min') ?? '',
       precio_max: searchParams.get('precio_max') ?? '',
+      moneda: (searchParams.get('moneda') ?? 'CLP') as Moneda,
     }),
     [searchParams],
   );
@@ -153,6 +167,15 @@ export function ServiciosPage() {
               <option value="tarot">Tarot y mancias</option>
               <option value="astrologia">Astrología</option>
               <option value="otros">Otros</option>
+            </select>
+          </label>
+
+          <label>
+            Moneda
+            <select value={filters.moneda} onChange={(e) => updateFilter('moneda', e.target.value)}>
+              {MONEDAS.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
             </select>
           </label>
 
@@ -235,7 +258,7 @@ export function ServiciosPage() {
             <div className="service-card-pills">
               <span className="service-pill primera-consulta-pill">🎉 10% primera consulta</span>
             </div>
-            <strong>{formatPrice(tipo.precio_referencial_centavos, tipo.moneda)}</strong>
+            <strong>{getDisplayPrice(tipo, filters.moneda)}</strong>
             <span>{tipo.duracion_minutos} min</span>
             <Link to={`/servicios/${tipo.slug}`} className="btn-secondary" style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}>
               Ver detalle
