@@ -3776,6 +3776,43 @@ p               { text-wrap: pretty; }
 	.precios-moneda-grid { grid-template-columns: 1fr; }
 }
 
+/* ── CANAL PAGO SELECTOR ──────────────────────────────────────────────────── */
+.booking-field-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.canal-pago-options {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.canal-pago-option {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	padding: 0.75rem 1rem;
+	border: 1.5px solid var(--border);
+	border-radius: 10px;
+	cursor: pointer;
+	transition: border-color 0.18s, background 0.18s;
+	font-size: 0.95rem;
+}
+
+.canal-pago-option input[type="radio"] {
+	accent-color: var(--accent);
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+}
+
+.canal-pago-option.selected {
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
 /* ── RESEÑAS ──────────────────────────────────────────────────────────────── */
 .resena-card {
 	background: var(--card-bg);

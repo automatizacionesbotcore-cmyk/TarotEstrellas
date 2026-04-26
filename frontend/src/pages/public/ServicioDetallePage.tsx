@@ -80,12 +80,13 @@ async function fetchEspecialistas(): Promise<EspecialistaPublico[]> {
 }
 
 async function reservarCita(payload: {
-  tipo_consulta_id: number;
-  inicio_utc: string;
-  timezone_cliente: string;
+  tipo_consulta_slug: string;
+  inicio_local: string;
+  zona_horaria_cliente: string;
+  canal_pago: 'stripe' | 'transferencia';
   especialista_id?: number;
   tema_principal?: string;
-  pregunta_especifica?: string;
+  notas_cliente?: string;
 }): Promise<CitaResponse> {
   const response = await api.post('/citas', payload);
   return response.data as CitaResponse;
@@ -157,6 +158,7 @@ export function ServicioDetallePage() {
   const [temaPrincipal, setTemaPrincipal] = useState('');
   const [pregunta, setPregunta] = useState('');
   const [selectedEspecialistaId, setSelectedEspecialistaId] = useState<number | null>(null);
+  const [canalPago, setCanalPago] = useState<'stripe' | 'transferencia'>('stripe');
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   const { slug = '' } = useParams();
@@ -340,12 +342,13 @@ export function ServicioDetallePage() {
     }
 
     await bookingMutation.mutateAsync({
-      tipo_consulta_id: servicio.id,
-      inicio_utc: selectedSlot,
-      timezone_cliente: selectedTimezone || detectedTimezone,
+      tipo_consulta_slug: servicio.slug,
+      inicio_local: selectedSlotData!.inicio_local,
+      zona_horaria_cliente: selectedTimezone || detectedTimezone,
+      canal_pago: canalPago,
       especialista_id: selectedEspecialistaId ?? undefined,
       tema_principal: temaPrincipal || undefined,
-      pregunta_especifica: pregunta || undefined,
+      notas_cliente: pregunta || undefined,
     });
   };
 
@@ -607,6 +610,32 @@ export function ServicioDetallePage() {
                   />
                 </label>
 
+                <div className="booking-field-group">
+                  <span className="booking-field-label">Método de pago del abono</span>
+                  <div className="canal-pago-options">
+                    <label className={`canal-pago-option${canalPago === 'stripe' ? ' selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="canal_pago"
+                        value="stripe"
+                        checked={canalPago === 'stripe'}
+                        onChange={() => setCanalPago('stripe')}
+                      />
+                      <span>💳 Tarjeta de crédito / débito</span>
+                    </label>
+                    <label className={`canal-pago-option${canalPago === 'transferencia' ? ' selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="canal_pago"
+                        value="transferencia"
+                        checked={canalPago === 'transferencia'}
+                        onChange={() => setCanalPago('transferencia')}
+                      />
+                      <span>🏦 Transferencia bancaria (Chile)</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="wizard-actions">
                   <button className="btn-secondary" type="button" onClick={goBack}>
                     Volver
@@ -644,6 +673,7 @@ export function ServicioDetallePage() {
                   <p><strong>Zona horaria</strong> {selectedTimezone || detectedTimezone}</p>
                   <p><strong>Duración</strong> {servicio?.duracion_minutos} minutos</p>
                   <p><strong>Precio total</strong> {formatPrice(servicio?.precio_referencial_centavos ?? null, servicio?.moneda ?? 'CLP')}</p>
+                  <p><strong>Método de pago</strong> {canalPago === 'stripe' ? 'Tarjeta de crédito / débito' : 'Transferencia bancaria'}</p>
                   <p><strong>Tema</strong> {temaPrincipal || '—'}</p>
                   {pregunta && <p className="booking-summary-full"><strong>Pregunta</strong> {pregunta}</p>}
                 </div>

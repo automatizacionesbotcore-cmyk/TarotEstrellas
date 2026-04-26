@@ -173,7 +173,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('especialista/mis-citas', [EspecialistaDashboardController::class, 'misCitas']);
 
-    Route::get('admin/reportes/ingresos', [AdminReportesController::class, 'ingresos']);
+    Route::middleware('admin')->get('admin/reportes/ingresos', [AdminReportesController::class, 'ingresos']);
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);

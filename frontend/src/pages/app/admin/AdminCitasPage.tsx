@@ -22,7 +22,7 @@ const ESTADOS = [
   { value: 'finalizada',             label: 'Finalizada'             },
   { value: 'completada',             label: 'Completada (legacy)'    },
   { value: 'cancelada_cliente',      label: 'Cancelada cliente'      },
-  { value: 'cancelada_especialista', label: 'Cancelada especialista' },
+  { value: 'cancelada_chachita',     label: 'Cancelada especialista' },
   { value: 'no_show',                label: 'No show'                },
   { value: 'expirada',               label: 'Expirada'               },
 ];
