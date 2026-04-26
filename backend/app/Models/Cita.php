@@ -74,6 +74,9 @@ class Cita extends Model
         'cancelada_en',
         'motivo_cancelacion',
         'es_primera_consulta',
+        'paquete_id',
+        'membresia_id',
+        'cupon_id',
     ];
 
     protected function casts(): array
@@ -150,5 +153,20 @@ class Cita extends Model
     public function reembolsos(): HasMany
     {
         return $this->hasMany(Reembolso::class, 'cita_id');
+    }
+
+    public function cupon(): BelongsTo
+    {
+        return $this->belongsTo(Cupon::class, 'cupon_id');
+    }
+
+    public function paquete(): BelongsTo
+    {
+        return $this->belongsTo(Paquete::class, 'paquete_id');
+    }
+
+    public function membresia(): BelongsTo
+    {
+        return $this->belongsTo(Membresia::class, 'membresia_id', 'uuid');
     }
 }

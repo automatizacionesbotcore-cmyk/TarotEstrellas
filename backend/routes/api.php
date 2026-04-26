@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\GrabacionController;
 use App\Http\Controllers\Api\ResenaController;
 use App\Http\Controllers\Api\EspecialistaDashboardController;
 use App\Http\Controllers\Api\AdminReportesController;
+use App\Http\Controllers\Api\CuponController;
+use App\Http\Controllers\Api\MembresiaController;
 use App\Http\Controllers\Api\SeoController;
 use App\Http\Controllers\Api\Webhooks\DailyWebhookController;
 use App\Http\Controllers\Api\Webhooks\ResendWebhookController;
@@ -174,6 +176,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('especialista/mis-citas', [EspecialistaDashboardController::class, 'misCitas']);
 
     Route::middleware('admin')->get('admin/reportes/ingresos', [AdminReportesController::class, 'ingresos']);
+
+    // Cupones
+    Route::post('cupones/validar', [CuponController::class, 'validar']);
+    Route::post('citas/{uuid}/aplicar-cupon', [CuponController::class, 'aplicar']);
+
+    // Membresía
+    Route::get('membresia', [MembresiaController::class, 'show']);
+    Route::post('citas/{uuid}/aplicar-membresia', [MembresiaController::class, 'aplicar']);
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);

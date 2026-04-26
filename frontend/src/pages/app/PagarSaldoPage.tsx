@@ -23,32 +23,32 @@ type Cita = {
   tipo_consulta: { nombre: string; duracion_minutos: number } | null;
 };
 
-type MetodoPago = {
-  id: number;
+type DatosBancarios = {
   banco: string;
   titular: string;
-  numero_cuenta: string;
+  cuenta: string;
   tipo_cuenta: string;
   rut?: string;
-  email?: string;
+  email?: string | null;
 };
 
 type PaymentIntentResponse = { client_secret: string };
 
 // ── API ───────────────────────────────────────────────────────────────────────
-const fetchCita        = (id: string) =>
+const fetchCita = (id: string) =>
   api.get(`/citas/${id}`).then((r) => (r.data as { data: Cita }).data);
 
-const fetchMetodosPago = () =>
-  api.get('/metodos-pago').then((r) => (r.data as { data: MetodoPago[] }).data);
+const fetchDatosTransferencia = (citaId: string) =>
+  api.get(`/citas/${citaId}/pagar/transferencia/datos`)
+    .then((r) => (r.data as { datos_bancarios: DatosBancarios }).datos_bancarios);
 
 const createSaldoIntent = (citaId: string) =>
   api.post('/pagos/abono', { cita_uuid: citaId }).then((r) => r.data as PaymentIntentResponse);
 
-const uploadComprobanteSaldo = (citaId: string, file: File) => {
+const uploadComprobanteSaldo = (citaUuid: string, file: File) => {
   const form = new FormData();
   form.append('comprobante', file);
-  return api.post(`/citas/${citaId}/pagar/transferencia/comprobante`, form, {
+  return api.post(`/citas/${citaUuid}/pagar/transferencia/comprobante`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
@@ -133,7 +133,7 @@ function SaldoStripeForm({
 }
 
 // ── Transfer saldo panel ──────────────────────────────────────────────────────
-function SaldoTransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] }) {
+function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancarios: DatosBancarios | null }) {
   const [file, setFile]           = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded]   = useState(false);
@@ -145,7 +145,7 @@ function SaldoTransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago
     setUploading(true);
     setUploadError('');
     try {
-      await uploadComprobanteSaldo(String(cita.id), file);
+      await uploadComprobanteSaldo(cita.uuid, file);
       setUploaded(true);
     } catch {
       setUploadError('No se pudo subir el comprobante. Intenta de nuevo.');
@@ -154,7 +154,6 @@ function SaldoTransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago
     }
   };
 
-  const banco  = metodos[0];
   const saldo  = getSaldoCentavos(cita);
 
   return (
@@ -164,16 +163,16 @@ function SaldoTransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago
         <strong className="ref-code">{cita.codigo_referencia}-SALDO</strong>
       </div>
 
-      {banco ? (
+      {datosBancarios ? (
         <div className="bank-details">
           <p className="pay-section-label">Datos para transferir</p>
           <dl>
-            <dt>Banco</dt><dd>{banco.banco}</dd>
-            <dt>Titular</dt><dd>{banco.titular}</dd>
-            <dt>N° de cuenta</dt><dd>{banco.numero_cuenta}</dd>
-            <dt>Tipo de cuenta</dt><dd>{banco.tipo_cuenta}</dd>
-            {banco.rut   ? <><dt>RUT</dt><dd>{banco.rut}</dd></>    : null}
-            {banco.email ? <><dt>Email</dt><dd>{banco.email}</dd></> : null}
+            <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
+            <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
+            <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
+            <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
+            {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
+            {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
           </dl>
           <p className="pay-abono-note">
             Monto a transferir: <strong>{formatMoney(saldo, cita.moneda)}</strong>
@@ -253,9 +252,10 @@ export function PagarSaldoPage() {
     enabled:  Boolean(id),
   });
 
-  const { data: metodos = [] } = useQuery({
-    queryKey: ['metodos-pago'],
-    queryFn:  fetchMetodosPago,
+  const { data: datosBancarios = null } = useQuery({
+    queryKey: ['datos-transferencia', id],
+    queryFn:  () => fetchDatosTransferencia(id),
+    enabled:  Boolean(id) && method === 'transfer',
   });
 
   const intentMutation = useMutation({
@@ -390,7 +390,7 @@ export function PagarSaldoPage() {
                 ) : null}
 
                 {method === 'transfer' ? (
-                  <SaldoTransferPanel cita={cita} metodos={metodos} />
+                  <SaldoTransferPanel cita={cita} datosBancarios={datosBancarios} />
                 ) : null}
               </motion.div>
             )}
