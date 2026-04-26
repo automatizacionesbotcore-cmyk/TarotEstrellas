@@ -88,6 +88,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(PreferenciaNotificacion::class);
     }
 
+    public function perfilEspecialista(): HasOne
+    {
+        return $this->hasOne(\App\Models\PerfilEspecialista::class);
+    }
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles')

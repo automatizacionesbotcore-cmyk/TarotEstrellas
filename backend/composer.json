@@ -10,6 +10,7 @@
         "barryvdh/laravel-dompdf": "^2.2",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.3",
+        "laravel/socialite": "^5.26",
         "laravel/tinker": "^2.9"
     },
     "require-dev": {

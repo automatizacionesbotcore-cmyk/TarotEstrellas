@@ -1,7 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminDisponibilidadController;
+use App\Http\Controllers\Api\PublicEspecialistasController;
+use App\Http\Controllers\Api\SuperAdminEspecialistasController;
+use App\Http\Controllers\Api\AdminMetricasController;
 use App\Http\Controllers\Api\AdminTipoConsultaController;
+use App\Http\Controllers\Api\AdminTipoConsultaPrecioController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminTransferValidationSettingController;
 use App\Http\Controllers\Api\CitaController;
@@ -31,6 +36,8 @@ Route::prefix('webhooks')->group(function () {
 });
 
 Route::prefix('auth')->group(function () {
+    Route::get('google', [AuthController::class, 'googleRedirect']);
+    Route::get('google/callback', [AuthController::class, 'googleCallback']);
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
@@ -50,6 +57,7 @@ Route::prefix('public')->group(function () {
     Route::get('tipos-consulta/{slug}', [PublicTipoConsultaController::class, 'show']);
     Route::get('tipos-consulta/{slug}/disponibilidad-rapida', [DisponibilidadController::class, 'quickBySlug']);
     Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
+    Route::get('especialistas', [PublicEspecialistasController::class, 'index']);
 });
 
 Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
@@ -113,9 +121,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('admin/settings/transfer-validation', [AdminTransferValidationSettingController::class, 'update']);
 
     Route::put('account/profile', [AccountController::class, 'updateProfile']);
+    Route::delete('me/account', [MeController::class, 'deleteAccount']);
     Route::get('preferencias-notificacion', [AccountController::class, 'getNotificationPrefs']);
     Route::put('preferencias-notificacion', [AccountController::class, 'updateNotificationPrefs']);
     Route::post('account/password', [AccountController::class, 'changePassword']);
+
+    Route::get('admin/metricas', [AdminMetricasController::class, 'index'])->middleware('admin');
+
+    Route::middleware('admin')->group(function () {
+        // Horario base
+        Route::get('admin/disponibilidad/horario', [AdminDisponibilidadController::class, 'indexHorario']);
+        Route::put('admin/disponibilidad/horario', [AdminDisponibilidadController::class, 'upsertHorario']);
+
+        // Bloqueos
+        Route::get('admin/disponibilidad/bloqueos', [AdminDisponibilidadController::class, 'indexBloqueos']);
+        Route::post('admin/disponibilidad/bloqueos', [AdminDisponibilidadController::class, 'storeBloqueo']);
+        Route::patch('admin/disponibilidad/bloqueos/{id}', [AdminDisponibilidadController::class, 'updateBloqueo']);
+        Route::delete('admin/disponibilidad/bloqueos/{id}', [AdminDisponibilidadController::class, 'destroyBloqueo']);
+
+        // Precios multi-moneda
+        Route::get('admin/tipos-consulta/{id}/precios', [AdminTipoConsultaPrecioController::class, 'index']);
+        Route::put('admin/tipos-consulta/{id}/precios', [AdminTipoConsultaPrecioController::class, 'upsert']);
+    });
+
+    Route::middleware('super_admin')->prefix('admin/especialistas')->group(function () {
+        Route::get('/', [SuperAdminEspecialistasController::class, 'index']);
+        Route::post('/', [SuperAdminEspecialistasController::class, 'store']);
+        Route::put('{id}', [SuperAdminEspecialistasController::class, 'update']);
+        Route::patch('{id}/toggle', [SuperAdminEspecialistasController::class, 'toggle']);
+    });
 
     Route::middleware('admin')->prefix('admin/tipos-consulta')->group(function () {
         Route::get('/', [AdminTipoConsultaController::class, 'index']);

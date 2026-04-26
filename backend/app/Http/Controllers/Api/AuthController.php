@@ -8,12 +8,14 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -238,6 +240,84 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Correo verificado correctamente.',
         ]);
+    }
+
+    public function googleRedirect(): RedirectResponse
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function googleCallback(): RedirectResponse
+    {
+        $frontendUrl = rtrim((string) env('FRONTEND_URL', 'http://localhost:5173'), '/');
+
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        } catch (\Exception) {
+            return redirect($frontendUrl.'/auth/login?error=google_failed');
+        }
+
+        $clienteRole = Role::query()->where('nombre', 'cliente')->first();
+        if (! $clienteRole) {
+            return redirect($frontendUrl.'/auth/login?error=google_failed');
+        }
+
+        // Buscar incluyendo soft-deleted para poder restaurar
+        $user = User::query()->withTrashed()->where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            if ($user->trashed()) {
+                $user->restore();
+            }
+            if (! $user->provider_id) {
+                $user->update(['provider' => 'google', 'provider_id' => $googleUser->getId()]);
+            }
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
+        } else {
+            $nameParts = explode(' ', (string) $googleUser->getName(), 2);
+            $user = DB::transaction(function () use ($googleUser, $clienteRole, $nameParts) {
+                $newUser = User::query()->create([
+                    'name'              => $googleUser->getName(),
+                    'email'             => $googleUser->getEmail(),
+                    'password'          => Str::random(32),
+                    'provider'          => 'google',
+                    'provider_id'       => $googleUser->getId(),
+                    'email_verified_at' => now(),
+                ]);
+
+                $newUser->profile()->create([
+                    'nombre'   => $nameParts[0],
+                    'apellido' => $nameParts[1] ?? null,
+                ]);
+
+                $newUser->preferenciaNotificacion()->create([
+                    'zona_horaria'   => 'America/Santiago',
+                    'canal_preferido' => 'email',
+                ]);
+
+                $newUser->roles()->syncWithoutDetaching([
+                    $clienteRole->id => ['asignado_en' => now(), 'asignado_por' => null],
+                ]);
+
+                return $newUser;
+            });
+        }
+
+        $user->forceFill(['last_login_at' => now()])->save();
+        $token = $user->createToken('auth')->plainTextToken;
+        $user->load(['profile', 'roles']);
+
+        $userPayload = urlencode((string) json_encode([
+            'uuid'               => $user->uuid,
+            'email'              => $user->email,
+            'nombre'             => $user->profile?->nombre ?? $user->name,
+            'email_verified_at'  => $user->email_verified_at?->toIso8601String(),
+            'roles'              => $user->roles->pluck('nombre')->values(),
+        ]));
+
+        return redirect($frontendUrl.'/auth/google/callback?token='.$token.'&user='.$userPayload);
     }
 
     public function resendVerification(Request $request): JsonResponse
