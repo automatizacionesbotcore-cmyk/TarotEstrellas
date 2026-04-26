@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CitaConfirmadaMail;
+use App\Mail\CitaReservadaMail;
 use App\Models\Cita;
 use App\Models\Pago;
 use App\Models\StripeWebhookEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class StripeWebhookController extends Controller
@@ -121,9 +124,11 @@ class StripeWebhookController extends Controller
         ]);
 
         if ($tipoPago === 'abono_20') {
-            $cita->forceFill([
-                'estado' => 'reservada',
-            ])->save();
+            $cita->forceFill(['estado' => 'reservada'])->save();
+            $cita->load(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+            if ($cita->cliente?->email) {
+                Mail::to($cita->cliente->email)->send(new CitaReservadaMail($cita));
+            }
             return;
         }
 
@@ -131,6 +136,10 @@ class StripeWebhookController extends Controller
             'estado' => 'confirmada',
             'confirmada_en' => now(),
         ])->save();
+        $cita->load(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+        if ($cita->cliente?->email) {
+            Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
+        }
     }
 
     /**

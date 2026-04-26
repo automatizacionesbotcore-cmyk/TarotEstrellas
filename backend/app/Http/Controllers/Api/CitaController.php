@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ValidarComprobanteJob;
+use App\Mail\CitaCanceladaMail;
 use App\Models\Cita;
 use App\Models\ComprobanteTransferencia;
 use App\Models\Consentimiento;
@@ -19,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -901,6 +903,11 @@ class CitaController extends Controller
             $motivoPolitica = 'limite_reembolsos_alcanzado';
         } elseif (! $abonoCompletado) {
             $motivoPolitica = 'sin_abono_completado';
+        }
+
+        if ($cita->cliente?->email) {
+            $cita->load(['cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+            Mail::to($cita->cliente->email)->send(new CitaCanceladaMail($cita, $reembolso !== null));
         }
 
         return response()->json([

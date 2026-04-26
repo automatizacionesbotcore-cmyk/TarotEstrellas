@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\EnviarRecordatorioCitaJob;
 use App\Jobs\ExpirarReservasJob;
 use App\Jobs\ProcesarReembolsosPendientesJob;
 use Illuminate\Foundation\Inspiring;
@@ -12,3 +13,4 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new ExpirarReservasJob())->everyMinute()->withoutOverlapping();
 Schedule::job(new ProcesarReembolsosPendientesJob())->everyFiveMinutes()->withoutOverlapping();
+Schedule::job(new EnviarRecordatorioCitaJob())->hourly()->withoutOverlapping();
