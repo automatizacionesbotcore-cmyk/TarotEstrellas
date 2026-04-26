@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -172,6 +173,83 @@ function CambiarPasswordSection() {
   );
 }
 
+const GENERO_OPTS = [
+  { value: '', label: 'Prefiero no indicar' },
+  { value: 'masculino', label: 'Masculino' },
+  { value: 'femenino', label: 'Femenino' },
+  { value: 'no_binario', label: 'No binario' },
+  { value: 'prefiero_no_decir', label: 'Otro / Prefiero no decir' },
+];
+
+const TIMEZONES = [
+  'America/Santiago', 'America/Argentina/Buenos_Aires', 'America/Bogota',
+  'America/Lima', 'America/Mexico_City', 'America/New_York', 'Europe/Madrid',
+  'Europe/London', 'UTC',
+];
+
+function EliminarCuentaSection() {
+  const navigate      = useNavigate();
+  const clearSession  = useAuthStore((s) => s.clearSession);
+  const [fase, setFase] = useState<'idle' | 'confirmar' | 'pending'>('idle');
+
+  const handleEliminar = async () => {
+    setFase('pending');
+    try {
+      await api.delete('/me/account', { data: { confirmacion: 'ELIMINAR' } });
+      clearSession();
+      navigate('/', { replace: true });
+      toast.success('Tu cuenta ha sido eliminada.');
+    } catch {
+      setFase('confirmar');
+      toast.error('No se pudo eliminar la cuenta. Intenta de nuevo.');
+    }
+  };
+
+  return (
+    <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
+      <h2 className="dash-section-title" style={{ color: 'var(--red, #e05555)' }}>Zona de peligro</h2>
+      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+        Al eliminar tu cuenta se desactivará el acceso. Tus datos no se borran permanentemente
+        y podrás reactivarla contactándonos.
+      </p>
+
+      {fase === 'idle' && (
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ borderColor: 'var(--red, #e05555)', color: 'var(--red, #e05555)' }}
+          onClick={() => setFase('confirmar')}
+        >
+          Eliminar mi cuenta
+        </button>
+      )}
+
+      {fase === 'confirmar' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--red, #e05555)' }}>
+            ¿Segura/o que deseas eliminar tu cuenta? Esta acción desactivará tu acceso.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ background: 'var(--red, #e05555)', borderColor: 'var(--red, #e05555)' }}
+              onClick={handleEliminar}
+            >
+              Sí, eliminar
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => setFase('idle')}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {fase === 'pending' && <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Eliminando cuenta…</p>}
+    </motion.section>
+  );
+}
+
 const stagger = {
   hidden:  {},
   visible: { transition: { staggerChildren: 0.1 } },
@@ -186,13 +264,44 @@ export function MiCuentaPage() {
   const user = useAuthStore((s) => s.user);
 
   const [nombre,     setNombre]     = useState(user?.nombre ?? '');
+  const [apellido,   setApellido]   = useState('');
+  const [telefono,   setTelefono]   = useState('');
+  const [zonaTz,     setZonaTz]     = useState('America/Santiago');
+  const [genero,     setGenero]     = useState('');
+  const [fechaNac,   setFechaNac]   = useState('');
+  const [biografia,  setBiografia]  = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    if (profileLoaded) return;
+    api.get('/user').then((r: any) => {
+      const p = r.data?.profile;
+      if (!p) return;
+      if (p.nombre)     setNombre(p.nombre);
+      if (p.apellido)   setApellido(p.apellido);
+      if (p.telefono)   setTelefono(p.telefono);
+      if (p.zona_horaria) setZonaTz(p.zona_horaria);
+      if (p.genero)     setGenero(p.genero);
+      if (p.fecha_nacimiento_publica) setFechaNac(p.fecha_nacimiento_publica.slice(0, 10));
+      if (p.biografia)  setBiografia(p.biografia);
+      setProfileLoaded(true);
+    }).catch(() => {});
+  }, [profileLoaded]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.put('/account/profile', { nombre });
+      await api.put('/account/profile', {
+        nombre,
+        apellido:                 apellido || undefined,
+        telefono:                 telefono || undefined,
+        zona_horaria:             zonaTz || undefined,
+        genero:                   genero || undefined,
+        fecha_nacimiento_publica: fechaNac || undefined,
+        biografia:                biografia || undefined,
+      });
       toast.success('Perfil actualizado correctamente.');
     } catch {
       toast.error('No se pudo guardar el perfil. Intenta de nuevo.');
@@ -210,39 +319,80 @@ export function MiCuentaPage() {
           <h1 className="dash-title">Mi Cuenta</h1>
         </motion.div>
 
-        <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
-          <h2 className="dash-section-title">Perfil</h2>
-          <form className="auth-form cuenta-form" onSubmit={handleSubmit}>
-            <label>
-              Nombre
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                autoComplete="name"
-                placeholder="Como te llamamos?"
-              />
-            </label>
-            <label>
-              Correo
-              <input type="email" value={user?.email ?? ''} disabled />
-            </label>
-            <button className="btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-          </form>
-        </motion.section>
+        <div className="cuenta-grid">
+          <div className="cuenta-column">
+            <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
+              <h2 className="dash-section-title">Perfil</h2>
+              <form className="auth-form cuenta-form" onSubmit={handleSubmit}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <label>
+                    Nombre
+                    <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="given-name" required />
+                  </label>
+                  <label>
+                    Apellido
+                    <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} autoComplete="family-name" />
+                  </label>
+                </div>
+                <label>
+                  Correo
+                  <input type="email" value={user?.email ?? ''} disabled />
+                </label>
+                <label>
+                  Teléfono
+                  <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} autoComplete="tel" placeholder="+56 9 1234 5678" />
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <label>
+                    Género
+                    <select value={genero} onChange={(e) => setGenero(e.target.value)}>
+                      {GENERO_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    Fecha de nacimiento
+                    <input type="date" value={fechaNac} onChange={(e) => setFechaNac(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+                  </label>
+                </div>
+                <label>
+                  Zona horaria
+                  <select value={zonaTz} onChange={(e) => setZonaTz(e.target.value)}>
+                    {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </label>
+                <label>
+                  Biografía <span className="booking-optional">(opcional, máx. 500 car.)</span>
+                  <textarea
+                    value={biografia}
+                    onChange={(e) => setBiografia(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    style={{ resize: 'vertical' }}
+                    placeholder="Cuéntanos un poco sobre ti..."
+                  />
+                </label>
+                <button className="btn-primary" type="submit" disabled={submitting}>
+                  {submitting ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </form>
+            </motion.section>
 
-        <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
-          <h2 className="dash-section-title">Datos natales</h2>
-          <p className="cuenta-coming-soon">
-            Pronto podras ingresar tu fecha, hora y lugar de nacimiento para lecturas de carta astral personalizadas.
-          </p>
-        </motion.section>
+            <CambiarPasswordSection />
+          </div>
 
-        <NotificacionesSection />
+          <div className="cuenta-column">
+            <NotificacionesSection />
 
-        <CambiarPasswordSection />
+            <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
+              <h2 className="dash-section-title">Datos natales</h2>
+              <p className="cuenta-coming-soon">
+                Pronto podrás ingresar tu fecha, hora y lugar de nacimiento para lecturas de carta astral personalizadas.
+              </p>
+            </motion.section>
+
+            <EliminarCuentaSection />
+          </div>
+        </div>
 
       </motion.div>
     </main>
