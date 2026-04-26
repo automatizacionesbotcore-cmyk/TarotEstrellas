@@ -33,8 +33,8 @@ class AdminMetricasController extends Controller
             ->toArray();
 
         $total = Cita::count();
-        $completadas = $byEstado['completada']['total'] ?? 0;
-        $canceladas = $byEstado['cancelada']['total'] ?? 0;
+        $completadas = ($byEstado['finalizada']['total'] ?? 0) + ($byEstado['completada']['total'] ?? 0);
+        $canceladas = ($byEstado['cancelada_cliente']['total'] ?? 0) + ($byEstado['cancelada_especialista']['total'] ?? 0) + ($byEstado['cancelada']['total'] ?? 0);
         $tasaCancelacion = $total > 0 ? round(($canceladas / $total) * 100, 1) : 0;
 
         $ingresoTotal = Pago::where('estado', 'completado')->sum('monto_centavos');
@@ -89,7 +89,7 @@ class AdminMetricasController extends Controller
             ->select(
                 'tipos_consulta.nombre',
                 DB::raw('count(*) as total_citas'),
-                DB::raw('sum(case when citas.estado = "completada" then 1 else 0 end) as completadas'),
+                DB::raw('sum(case when citas.estado in ("finalizada","completada") then 1 else 0 end) as completadas'),
                 DB::raw('coalesce(sum(citas.precio_final_centavos), 0) as monto_centavos'),
             )
             ->groupBy('tipos_consulta.id', 'tipos_consulta.nombre')

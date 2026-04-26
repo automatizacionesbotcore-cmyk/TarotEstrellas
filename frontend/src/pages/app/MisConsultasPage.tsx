@@ -35,12 +35,18 @@ type CitasResponse = {
 };
 
 const ESTADO_LABELS: Record<string, string> = {
-  pendiente_abono: 'Pendiente de abono',
-  reservada:       'Reservada',
-  confirmada:      'Confirmada',
-  completada:      'Completada',
-  cancelada:       'Cancelada',
-  expirada:        'Expirada',
+  pendiente_abono:        'Pendiente de abono',
+  reservada:              'Reservada',
+  confirmada:             'Confirmada',
+  en_curso:               'En curso',
+  finalizada:             'Finalizada',
+  completada:             'Completada',
+  cancelada_cliente:      'Cancelada',
+  cancelada_especialista: 'Cancelada',
+  cancelada:              'Cancelada',
+  no_show:                'No se presentó',
+  expirada:               'Expirada',
+  reagendada:             'Reagendada',
 };
 
 function formatMoney(valueInCents: number, currency: string) {

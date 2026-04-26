@@ -16,11 +16,15 @@ type Cita = {
 type Historial = { data: Cita[]; meta?: { total: number } };
 
 const ESTADOS = [
-  { value: 'reservada',   label: 'Reservada'   },
-  { value: 'confirmada',  label: 'Confirmada'  },
-  { value: 'completada',  label: 'Completada'  },
-  { value: 'cancelada',   label: 'Cancelada'   },
-  { value: 'cancelada_chachita', label: 'Cancelada especialista' },
+  { value: 'reservada',              label: 'Reservada'              },
+  { value: 'confirmada',             label: 'Confirmada'             },
+  { value: 'en_curso',               label: 'En curso'               },
+  { value: 'finalizada',             label: 'Finalizada'             },
+  { value: 'completada',             label: 'Completada (legacy)'    },
+  { value: 'cancelada_cliente',      label: 'Cancelada cliente'      },
+  { value: 'cancelada_especialista', label: 'Cancelada especialista' },
+  { value: 'no_show',                label: 'No show'                },
+  { value: 'expirada',               label: 'Expirada'               },
 ];
 
 export function AdminCitasPage() {

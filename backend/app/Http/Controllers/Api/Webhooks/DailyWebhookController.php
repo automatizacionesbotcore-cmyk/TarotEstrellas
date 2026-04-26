@@ -220,6 +220,17 @@ class DailyWebhookController extends Controller
             'metadata' => $event,
         ]);
         $grabacion->save();
+
+        if ($estado === 'sesion_finalizada' && $citaId !== null) {
+            Cita::query()
+                ->where('id', $citaId)
+                ->whereIn('estado', ['confirmada', 'en_curso'])
+                ->update([
+                    'estado' => 'finalizada',
+                    'finalizada_en' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
     }
 
     private function resolveCitaId(string $citaUuid): ?int

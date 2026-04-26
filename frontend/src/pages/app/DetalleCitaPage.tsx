@@ -42,12 +42,18 @@ type ResumenIA = {
 type Tab = 'info' | 'grabacion' | 'transcripcion' | 'resumen' | 'resena';
 
 const ESTADO_LABELS: Record<string, string> = {
-  pendiente_abono: 'Pendiente de abono',
-  reservada:       'Reservada',
-  confirmada:      'Confirmada',
-  completada:      'Completada',
-  cancelada:       'Cancelada',
-  expirada:        'Expirada',
+  pendiente_abono:       'Pendiente de abono',
+  reservada:             'Reservada',
+  confirmada:            'Confirmada',
+  en_curso:              'En curso',
+  finalizada:            'Finalizada',
+  completada:            'Completada',
+  cancelada_cliente:     'Cancelada por cliente',
+  cancelada_especialista:'Cancelada por especialista',
+  cancelada:             'Cancelada',
+  no_show:               'No se presentó',
+  expirada:              'Expirada',
+  reagendada:            'Reagendada',
 };
 
 // ── API ───────────────────────────────────────────────────────────────────────
