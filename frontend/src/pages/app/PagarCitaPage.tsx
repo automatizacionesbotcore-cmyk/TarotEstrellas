@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { loadStripe, type StripeCardElement } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { api } from '../../lib/api';
 import { generateIcs } from '../../lib/ics';
+
+const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
 
 // ── Stripe init ─────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
@@ -443,6 +445,9 @@ function SuccessScreen({ cita, usedMembresia = false }: { cita: Cita; usedMembre
         />
       ))}
       <div className="pay-success-content">
+        <Suspense fallback={null}>
+          <ConstellationPortal />
+        </Suspense>
         <motion.span
           className="pay-success-icon"
           animate={{ rotate: [0, 15, -15, 0] }}

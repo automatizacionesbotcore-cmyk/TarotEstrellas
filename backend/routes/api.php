@@ -175,7 +175,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('especialista/mis-citas', [EspecialistaDashboardController::class, 'misCitas']);
 
-    Route::middleware('admin')->get('admin/reportes/ingresos', [AdminReportesController::class, 'ingresos']);
+    Route::middleware('admin')->group(function () {
+        Route::get('admin/reportes/ingresos',   [AdminReportesController::class, 'ingresos']);
+        Route::get('admin/reportes/consultas',  [AdminReportesController::class, 'consultas']);
+        Route::get('admin/reportes/clientes',   [AdminReportesController::class, 'clientes']);
+        Route::get('admin/reportes/fiscal',     [AdminReportesController::class, 'fiscal']);
+    });
 
     // Cupones
     Route::post('cupones/validar', [CuponController::class, 'validar']);

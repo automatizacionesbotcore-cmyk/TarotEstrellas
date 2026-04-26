@@ -1,14 +1,20 @@
 {
-  "title": "Politica de privacidad",
-  "version": "v2.1",
+  "title": "Política de privacidad",
+  "version": "v3.0 — 2026",
   "paragraphs": [
-    "Recopilamos solo los datos necesarios para crear tu cuenta, gestionar reservas, procesar pagos y mejorar la experiencia del servicio.",
-    "Tus datos personales incluyen identificacion basica, contacto y trazabilidad de actividad dentro de la plataforma. No vendemos tu informacion a terceros.",
-    "Usamos proveedores tecnologicos para autenticacion, notificaciones y cobros. Cada proveedor trata los datos segun sus politicas y contratos de procesamiento.",
-    "Guardamos historiales y consentimientos para fines de seguridad, soporte y cumplimiento legal. Puedes solicitar correccion o actualizacion de tus datos cuando lo necesites.",
-    "Aplicamos medidas tecnicas y organizativas para proteger la informacion frente a accesos no autorizados, perdida o uso indebido.",
-    "Puedes solicitar eliminacion de cuenta y datos, salvo aquellos que deban conservarse por obligaciones legales, fiscales o de prevencion de fraude.",
-    "Las comunicaciones sobre reservas, cambios de horario y recordatorios se enviaran por los canales habilitados en tu perfil, segun tus preferencias.",
-    "Al aceptar esta politica confirmas que leiste el documento completo y autorizas el tratamiento de datos conforme a la version vigente."
+    "1. RESPONSABLE DEL TRATAMIENTO. TarotEstrellas, operado en Chile, es responsable del tratamiento de tus datos personales conforme a la Ley N° 19.628 sobre Protección de la Vida Privada.",
+    "2. DATOS QUE RECOPILAMOS. Recopilamos: (a) datos de registro — nombre, correo electrónico, contraseña cifrada; (b) datos de perfil — fecha de nacimiento, lugar de nacimiento, zona horaria; (c) datos de sesiones — temas consultados, notas, grabaciones de video; (d) datos de pago — últimos 4 dígitos de tarjeta y datos de facturación procesados por Stripe; (e) datos técnicos — dirección IP, tipo de navegador, registros de acceso.",
+    "3. FINALIDAD DEL TRATAMIENTO. Usamos tus datos para: prestar el servicio de consultas espirituales; procesar pagos y emitir comprobantes; enviarte confirmaciones y recordatorios de citas; mejorar la plataforma mediante análisis agregado; cumplir obligaciones legales.",
+    "4. BASE LEGAL. El tratamiento se fundamenta en la ejecución del contrato de servicio contigo, tu consentimiento explícito para el tratamiento de datos sensibles de bienestar espiritual, y el cumplimiento de obligaciones legales.",
+    "5. DATOS SENSIBLES. La información que compartes en sesiones (temas de consulta, situaciones personales) es considerada sensible. Solo la ven tú y la especialista. No la compartimos con terceros salvo mandato legal.",
+    "6. RETENCIÓN. Conservamos tus datos mientras mantengas una cuenta activa y por 5 años adicionales para cumplimiento de obligaciones tributarias. Grabaciones de sesiones se conservan por 12 meses, tras lo cual se eliminan automáticamente.",
+    "7. COMPARTICIÓN CON TERCEROS. Compartimos datos únicamente con: Stripe (procesador de pagos, USA — Cláusulas Contractuales Estándar); Daily.co (plataforma de video, USA — SCC); Resend (correo transaccional). No vendemos tus datos a terceros.",
+    "8. TRANSFERENCIAS INTERNACIONALES. Algunos proveedores operan fuera de Chile. En todos los casos exigimos garantías contractuales equivalentes al nivel de protección chileno.",
+    "9. TUS DERECHOS. Tienes derecho a: acceder a tus datos, rectificarlos, suprimirlos, oponerte al tratamiento y solicitar portabilidad. Para ejercerlos escríbenos a privacidad@tarotestrellas.cl con asunto 'Derechos ARCO'.",
+    "10. SEGURIDAD. Implementamos cifrado TLS en tránsito, cifrado AES-256 en reposo para datos sensibles, y acceso restringido por roles. No obstante, ningún sistema es 100% seguro y te recomendamos proteger también tus credenciales.",
+    "11. COOKIES. Para el uso de cookies consulta nuestra Política de Cookies.",
+    "12. MENORES. El servicio no está dirigido a menores de 18 años. Si detectamos que hemos recopilado datos de menores, los eliminaremos de inmediato.",
+    "13. CAMBIOS. Te notificaremos por correo ante cambios sustanciales con 15 días de anticipación.",
+    "14. CONTACTO. Responsable de Privacidad: contacto@tarotestrellas.cl."
   ]
 }
