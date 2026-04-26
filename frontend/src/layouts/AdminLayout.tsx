@@ -2,21 +2,28 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 const BASE_ITEMS = [
-  { to: '/app/admin',                label: 'Resumen',        end: true,  superAdminOnly: false },
-  { to: '/app/admin/reembolsos',     label: 'Reembolsos',     end: false, superAdminOnly: false },
-  { to: '/app/admin/comprobantes',   label: 'Comprobantes',   end: false, superAdminOnly: false },
-  { to: '/app/admin/citas',          label: 'Citas',          end: false, superAdminOnly: false },
-  { to: '/app/admin/servicios',      label: 'Servicios',      end: false, superAdminOnly: false },
-  { to: '/app/admin/disponibilidad', label: 'Disponibilidad', end: false, superAdminOnly: false },
-  { to: '/app/admin/especialistas',  label: 'Especialistas',  end: false, superAdminOnly: true  },
-  { to: '/app/admin/settings',       label: 'Ajustes',        end: false, superAdminOnly: false },
+  { to: '/app/admin',                label: 'Resumen',        end: true,  superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/mis-citas',      label: 'Mi agenda',      end: false, superAdminOnly: false, especialistaOnly: true  },
+  { to: '/app/admin/reembolsos',     label: 'Reembolsos',     end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/comprobantes',   label: 'Comprobantes',   end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/citas',          label: 'Citas',          end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/servicios',      label: 'Servicios',      end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/disponibilidad', label: 'Disponibilidad', end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/especialistas',  label: 'Especialistas',  end: false, superAdminOnly: true,  especialistaOnly: false },
+  { to: '/app/admin/reportes',       label: 'Reportes',       end: false, superAdminOnly: true,  especialistaOnly: false },
+  { to: '/app/admin/settings',       label: 'Ajustes',        end: false, superAdminOnly: false, especialistaOnly: false },
 ];
 
 export function AdminLayout() {
-  const user         = useAuthStore((s) => s.user);
-  const isSuperAdmin = Array.isArray(user?.roles) && user.roles.includes('super_admin');
+  const user          = useAuthStore((s) => s.user);
+  const isSuperAdmin  = Array.isArray(user?.roles) && user.roles.includes('super_admin');
+  const isEspecialista = Array.isArray(user?.roles) && user.roles.includes('admin_especialista');
 
-  const navItems = BASE_ITEMS.filter((i) => !i.superAdminOnly || isSuperAdmin);
+  const navItems = BASE_ITEMS.filter((i) => {
+    if (i.superAdminOnly && !isSuperAdmin) return false;
+    if (i.especialistaOnly && !isEspecialista && !isSuperAdmin) return false;
+    return true;
+  });
 
   return (
     <div className="admin-shell">

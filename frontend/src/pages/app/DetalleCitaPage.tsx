@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../lib/api';
 
@@ -39,7 +39,7 @@ type ResumenIA = {
   emocion_predominante: string | null;
 };
 
-type Tab = 'info' | 'grabacion' | 'transcripcion' | 'resumen';
+type Tab = 'info' | 'grabacion' | 'transcripcion' | 'resumen' | 'resena';
 
 const ESTADO_LABELS: Record<string, string> = {
   pendiente_abono: 'Pendiente de abono',
@@ -266,12 +266,101 @@ function TabResumen({ id }: { id: string }) {
   );
 }
 
+// ── Tab: Reseña ───────────────────────────────────────────────────────────────
+function TabResena({ id }: { id: string }) {
+  const queryClient = useQueryClient();
+  const [puntuacion, setPuntuacion] = useState(0);
+  const [comentario, setComentario] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const { data: existente, isLoading } = useQuery<{ data: { puntuacion: number; comentario: string | null } | null }>({
+    queryKey: ['resena', id],
+    queryFn: async () => (await api.get(`/citas/${id}/resena`)).data,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => api.post(`/citas/${id}/resena`, { puntuacion, comentario: comentario || null }),
+    onSuccess: () => {
+      setSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: ['resena', id] });
+    },
+  });
+
+  if (isLoading) return <Processing label="Cargando reseña…" />;
+
+  if (existente?.data || submitted) {
+    const r = existente?.data;
+    return (
+      <div className="resena-enviada">
+        <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+          {Array.from({ length: 5 }, (_, i) => (i < (r?.puntuacion ?? puntuacion) ? '★' : '☆')).join('')}
+        </p>
+        <p style={{ color: 'var(--text-muted)' }}>{r?.comentario ?? comentario ?? 'Sin comentario.'}</p>
+        <p style={{ color: 'var(--success, #4caf50)', marginTop: '0.75rem', fontWeight: 600 }}>
+          ✓ Reseña enviada. ¡Gracias por tu opinión!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="resena-form">
+      <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+        Cuéntanos cómo fue tu experiencia con la sesión.
+      </p>
+
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', fontSize: '2rem', cursor: 'pointer' }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => setPuntuacion(star)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              color: star <= puntuacion ? 'var(--accent)' : 'var(--text-muted)',
+              fontSize: '2rem', lineHeight: 1,
+            }}
+            aria-label={`${star} estrella${star > 1 ? 's' : ''}`}
+          >
+            {star <= puntuacion ? '★' : '☆'}
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        className="form-input"
+        placeholder="Comentario opcional (máx. 1000 caracteres)"
+        maxLength={1000}
+        rows={4}
+        value={comentario}
+        onChange={(e) => setComentario(e.target.value)}
+        style={{ resize: 'vertical' }}
+      />
+
+      {mutation.isError && (
+        <p className="form-error">No se pudo enviar la reseña. Intenta de nuevo.</p>
+      )}
+
+      <button
+        type="button"
+        className="btn-primary"
+        style={{ marginTop: '1rem' }}
+        disabled={puntuacion === 0 || mutation.isPending}
+        onClick={() => mutation.mutate()}
+      >
+        {mutation.isPending ? 'Enviando…' : 'Enviar reseña'}
+      </button>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 const TABS: { key: Tab; label: string }[] = [
   { key: 'info',          label: 'Información' },
   { key: 'grabacion',     label: 'Grabación' },
   { key: 'transcripcion', label: 'Transcripción' },
   { key: 'resumen',       label: 'Resumen IA' },
+  { key: 'resena',        label: 'Reseña' },
 ];
 
 export function DetalleCitaPage() {
@@ -298,7 +387,10 @@ export function DetalleCitaPage() {
     </main>
   );
 
-  const showPostTabs = cita.estado === 'completada';
+  const showPostTabs = cita.estado === 'completada' || cita.estado === 'finalizada';
+  const showResena = cita.estado === 'finalizada';
+
+  const visibleTabs = TABS.filter(({ key }) => key !== 'resena' || showResena);
 
   return (
     <main className="page-content">
@@ -310,7 +402,7 @@ export function DetalleCitaPage() {
 
       {/* Tabs */}
       <div className="detalle-tabs" role="tablist">
-        {TABS.map(({ key, label }) => {
+        {visibleTabs.map(({ key, label }) => {
           const disabled = !showPostTabs && key !== 'info';
           return (
             <button
@@ -347,6 +439,7 @@ export function DetalleCitaPage() {
           {activeTab === 'grabacion'     && <TabGrabacion id={id} />}
           {activeTab === 'transcripcion' && <TabTranscripcion id={id} />}
           {activeTab === 'resumen'       && <TabResumen id={id} />}
+          {activeTab === 'resena'        && <TabResena id={id} />}
         </motion.div>
       </AnimatePresence>
 

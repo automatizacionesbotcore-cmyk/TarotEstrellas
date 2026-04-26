@@ -49,6 +49,15 @@ type FeaturedServicio = {
   moneda: string;
 };
 
+type Especialista = {
+  id: number;
+  slug: string;
+  nombre: string;
+  especialidad: string;
+  bio: string | null;
+  avatar_url: string | null;
+};
+
 const FAQS = [
   {
     q: '¿Cómo funciona una consulta por videollamada?',
@@ -101,7 +110,14 @@ export function LandingPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: especialistasData } = useQuery<{ data: Especialista[] }>({
+    queryKey: ['especialistas', 'landing'],
+    queryFn: async () => (await api.get('/public/especialistas')).data,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const featuredServices = featuredData?.data.slice(0, 3) ?? [];
+  const especialistas = especialistasData?.data ?? [];
 
   useEffect(() => {
     document.title = 'TarotEstrellas | Lecturas espirituales online';
@@ -259,6 +275,55 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
       </section>
+
+      <p className="section-ornament" aria-hidden="true">——✦——</p>
+
+      {/* ── NUESTROS ESPECIALISTAS ── */}
+      {especialistas.length > 0 && (
+        <section className="landing-section" aria-label="Nuestros especialistas">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
+              Nuestros especialistas
+            </motion.h2>
+            <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
+              Conoce a quienes te acompañarán en tu proceso.
+            </motion.p>
+
+            <motion.div className="especialista-cards" variants={stagger}>
+              {especialistas.map((e) => (
+                <motion.article
+                  key={e.slug}
+                  className="especialista-card"
+                  variants={fadeUp}
+                  transition={{ duration: 0.5 }}
+                  whileHover={{ y: -4, transition: { duration: 0.22 } }}
+                >
+                  <div className="especialista-card-avatar">
+                    {e.avatar_url
+                      ? <img src={e.avatar_url} alt={e.nombre} />
+                      : <span>{e.nombre.charAt(0).toUpperCase()}</span>}
+                  </div>
+                  <p className="especialista-card-nombre">{e.nombre}</p>
+                  <p className="especialista-card-especialidad">{e.especialidad}</p>
+                  {e.bio && <p className="especialista-card-bio">{e.bio}</p>}
+                  <Link
+                    to={`/especialistas/${e.slug}`}
+                    className="btn-secondary"
+                    style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
+                  >
+                    Ver perfil
+                  </Link>
+                </motion.article>
+              ))}
+            </motion.div>
+          </motion.div>
+        </section>
+      )}
 
       <p className="section-ornament" aria-hidden="true">——✦——</p>
 

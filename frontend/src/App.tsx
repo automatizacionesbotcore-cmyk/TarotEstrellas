@@ -40,6 +40,8 @@ const AdminServiciosPage        = lazy(() => import('./pages/app/admin/AdminServ
 const AdminSettingsPage         = lazy(() => import('./pages/app/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })));
 const AdminDisponibilidadPage   = lazy(() => import('./pages/app/admin/AdminDisponibilidadPage').then((m) => ({ default: m.AdminDisponibilidadPage })));
 const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspecialistasPage').then((m) => ({ default: m.AdminEspecialistasPage })));
+const AdminReportesPage         = lazy(() => import('./pages/app/admin/AdminReportesPage').then((m) => ({ default: m.AdminReportesPage })));
+const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/EspecialistaMisCitasPage').then((m) => ({ default: m.EspecialistaMisCitasPage })));
 
 function PageLoader() {
   return (
@@ -138,6 +140,8 @@ export function App() {
           <Route path="servicios"            element={<Suspense fallback={<PageLoader />}><AdminServiciosPage        /></Suspense>} />
           <Route path="disponibilidad"       element={<Suspense fallback={<PageLoader />}><AdminDisponibilidadPage   /></Suspense>} />
           <Route path="especialistas"        element={<Suspense fallback={<PageLoader />}><AdminEspecialistasPage    /></Suspense>} />
+          <Route path="reportes"             element={<Suspense fallback={<PageLoader />}><AdminReportesPage         /></Suspense>} />
+          <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
         </Route>
       </Route>

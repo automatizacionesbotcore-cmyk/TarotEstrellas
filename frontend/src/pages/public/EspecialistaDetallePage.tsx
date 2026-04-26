@@ -34,6 +34,30 @@ type DetalleResponse = {
   };
 };
 
+type ResenaPublica = {
+  uuid: string;
+  puntuacion: number;
+  comentario: string | null;
+  cliente_nombre: string;
+  created_at: string;
+};
+
+type ResenasResponse = {
+  data: {
+    promedio: number | null;
+    total: number;
+    resenas: ResenaPublica[];
+  };
+};
+
+function StarRating({ value }: { value: number }) {
+  return (
+    <span style={{ color: 'var(--accent)', fontSize: '1rem', letterSpacing: 2 }}>
+      {Array.from({ length: 5 }, (_, i) => (i < value ? '★' : '☆')).join('')}
+    </span>
+  );
+}
+
 function formatPrice(centavos: number | null, moneda: string) {
   if (centavos === null) return 'Consultar';
   return new Intl.NumberFormat('es-CL', {
@@ -52,6 +76,15 @@ export function EspecialistaDetallePage() {
     queryKey: ['public', 'especialista', slug],
     queryFn: async () => {
       const r = await api.get<DetalleResponse>(`/public/especialistas/${slug}`);
+      return r.data.data;
+    },
+    enabled: Boolean(slug),
+  });
+
+  const { data: resenasData } = useQuery<ResenasResponse['data']>({
+    queryKey: ['public', 'especialista', slug, 'resenas'],
+    queryFn: async () => {
+      const r = await api.get<ResenasResponse>(`/public/especialistas/${slug}/resenas`);
       return r.data.data;
     },
     enabled: Boolean(slug),
@@ -155,6 +188,35 @@ export function EspecialistaDetallePage() {
                     </div>
                   </div>
                 </Link>
+              ))}
+            </div>
+          </section>
+        )}
+        {/* ── Reseñas ── */}
+        {resenasData && resenasData.total > 0 && (
+          <section style={{ marginTop: '2.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <h2 style={{ margin: 0 }}>Reseñas</h2>
+              {resenasData.promedio !== null && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <StarRating value={Math.round(resenasData.promedio)} />
+                  <strong>{resenasData.promedio.toFixed(1)}</strong>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    ({resenasData.total} {resenasData.total === 1 ? 'reseña' : 'reseñas'})
+                  </span>
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {resenasData.resenas.map((r) => (
+                <div key={r.uuid} className="resena-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <StarRating value={r.puntuacion} />
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{r.created_at}</span>
+                  </div>
+                  {r.comentario && <p style={{ margin: 0 }}>{r.comentario}</p>}
+                  <p style={{ margin: '0.4rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>— {r.cliente_nombre}</p>
+                </div>
               ))}
             </div>
           </section>

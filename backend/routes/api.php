@@ -18,6 +18,10 @@ use App\Http\Controllers\Api\PagoController;
 use App\Http\Controllers\Api\PublicTipoConsultaController;
 use App\Http\Controllers\Api\ReembolsoController;
 use App\Http\Controllers\Api\GrabacionController;
+use App\Http\Controllers\Api\ResenaController;
+use App\Http\Controllers\Api\EspecialistaDashboardController;
+use App\Http\Controllers\Api\AdminReportesController;
+use App\Http\Controllers\Api\SeoController;
 use App\Http\Controllers\Api\Webhooks\DailyWebhookController;
 use App\Http\Controllers\Api\Webhooks\ResendWebhookController;
 use App\Http\Controllers\Api\Webhooks\StripeWebhookController;
@@ -26,6 +30,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('health', HealthController::class);
+Route::get('sitemap.xml', [SeoController::class, 'sitemap']);
+Route::get('robots.txt', [SeoController::class, 'robots']);
 
 Route::prefix('webhooks')->group(function () {
     Route::post('stripe', StripeWebhookController::class);
@@ -59,6 +65,7 @@ Route::prefix('public')->group(function () {
     Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
     Route::get('especialistas', [PublicEspecialistasController::class, 'index']);
     Route::get('especialistas/{slug}', [PublicEspecialistasController::class, 'show']);
+    Route::get('especialistas/{slug}/resenas', [ResenaController::class, 'indexPublic']);
 });
 
 Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
@@ -91,6 +98,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('citas/{uuid}/sala/entrada', [CitaController::class, 'marcarEntradaSala']);
     Route::post('citas/{uuid}/reagendar', [CitaController::class, 'reagendar']);
     Route::post('citas/{uuid}/cancelar', [CitaController::class, 'cancelar']);
+    Route::post('citas/{uuid}/resena', [ResenaController::class, 'store']);
+    Route::get('citas/{uuid}/resena', [ResenaController::class, 'miResena']);
     Route::post('citas', [CitaController::class, 'store']);
     Route::post('citas/{uuid}/extender-reserva', [CitaController::class, 'extenderReserva']);
     Route::post('citas/{uuid}/pagar/stripe', [CitaController::class, 'crearPaymentIntentStripe']);
@@ -161,6 +170,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{id}/imagen', [AdminTipoConsultaController::class, 'uploadImagen']);
         Route::delete('{id}/imagen', [AdminTipoConsultaController::class, 'deleteImagen']);
     });
+
+    Route::get('especialista/mis-citas', [EspecialistaDashboardController::class, 'misCitas']);
+
+    Route::get('admin/reportes/ingresos', [AdminReportesController::class, 'ingresos']);
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);
