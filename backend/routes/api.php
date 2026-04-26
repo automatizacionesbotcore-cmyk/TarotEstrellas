@@ -58,6 +58,7 @@ Route::prefix('public')->group(function () {
     Route::get('tipos-consulta/{slug}/disponibilidad-rapida', [DisponibilidadController::class, 'quickBySlug']);
     Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
     Route::get('especialistas', [PublicEspecialistasController::class, 'index']);
+    Route::get('especialistas/{slug}', [PublicEspecialistasController::class, 'show']);
 });
 
 Route::get('disponibilidad', [DisponibilidadController::class, 'index']);

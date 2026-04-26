@@ -9,6 +9,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { LandingPage } from './pages/public/LandingPage';
 import { ServiciosPage } from './pages/public/ServiciosPage';
 import { ServicioDetallePage } from './pages/public/ServicioDetallePage';
+import { EspecialistaDetallePage } from './pages/public/EspecialistaDetallePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
@@ -68,6 +69,7 @@ export function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/servicios" element={<ServiciosPage />} />
         <Route path="/servicios/:slug" element={<ServicioDetallePage />} />
+        <Route path="/especialistas/:slug" element={<EspecialistaDetallePage />} />
         <Route
           path="/legal/:slug"
           element={
