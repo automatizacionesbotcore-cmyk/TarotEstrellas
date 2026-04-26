@@ -3,8 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ command }) => ({
-  // In WAMP this project is served from a subdirectory, so production assets
-  // need an absolute base path. Dev server keeps root-based paths.
-  base: command === 'build' ? '/tarotEstrella/tarotestrellas/frontend/dist/' : '/',
+  // Dev: WAMP subdirectory. Build: root path for Hostinger (tarotestrellas.cl).
+  base: command === 'build' ? '/' : '/',
   plugins: [react(), tailwindcss()],
 }));
