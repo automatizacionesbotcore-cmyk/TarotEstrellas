@@ -32,8 +32,11 @@ class CitaController extends Controller
     private const MINUTOS_EXTENSION_TRANSFERENCIA_KEY = 'MINUTOS_EXTENSION_TRANSFERENCIA';
     private const EXTENSIONES_PERMITIDAS_KEY = 'EXTENSIONES_PERMITIDAS';
     private const TRANSFERENCIA_BANCO_KEY = 'TRANSFERENCIA_BANCO';
+    private const TRANSFERENCIA_TITULAR_KEY = 'TRANSFERENCIA_TITULAR';
     private const TRANSFERENCIA_CUENTA_KEY = 'TRANSFERENCIA_CUENTA';
+    private const TRANSFERENCIA_TIPO_CUENTA_KEY = 'TRANSFERENCIA_TIPO_CUENTA';
     private const TRANSFERENCIA_RUT_KEY = 'TRANSFERENCIA_RUT';
+    private const TRANSFERENCIA_EMAIL_KEY = 'TRANSFERENCIA_EMAIL';
     private const HORAS_REEMBOLSO_ANTICIPACION_KEY = 'HORAS_REEMBOLSO_ANTICIPACION';
     private const MAX_CANCELACIONES_CON_REEMBOLSO_CLIENTE_KEY = 'MAX_CANCELACIONES_CON_REEMBOLSO_CLIENTE';
 
@@ -690,23 +693,29 @@ class CitaController extends Controller
             ], 422);
         }
 
-        $banco = (string) AppSetting::getValue(self::TRANSFERENCIA_BANCO_KEY, 'BancoEstado');
-        $cuenta = (string) AppSetting::getValue(self::TRANSFERENCIA_CUENTA_KEY, '1234567890');
-        $rut = (string) AppSetting::getValue(self::TRANSFERENCIA_RUT_KEY, '11111111-1');
+        $banco      = (string) AppSetting::getValue(self::TRANSFERENCIA_BANCO_KEY, 'BancoEstado');
+        $titular    = (string) AppSetting::getValue(self::TRANSFERENCIA_TITULAR_KEY, 'Tarot Estrellas');
+        $cuenta     = (string) AppSetting::getValue(self::TRANSFERENCIA_CUENTA_KEY, '1234567890');
+        $tipoCuenta = (string) AppSetting::getValue(self::TRANSFERENCIA_TIPO_CUENTA_KEY, 'Corriente');
+        $rut        = (string) AppSetting::getValue(self::TRANSFERENCIA_RUT_KEY, '11111111-1');
+        $email      = (string) AppSetting::getValue(self::TRANSFERENCIA_EMAIL_KEY, '');
 
         $montoMinimo = (int) round(((int) $cita->precio_final_centavos) * 0.20);
 
         return response()->json([
             'data' => [
-                'cita_uuid' => $cita->uuid,
-                'codigo_referencia' => $cita->codigo_referencia,
+                'cita_uuid'                   => $cita->uuid,
+                'codigo_referencia'           => $cita->codigo_referencia,
                 'monto_minimo_abono_centavos' => $montoMinimo,
-                'moneda' => $cita->moneda,
+                'moneda'                      => $cita->moneda,
                 'minutos_ventana_transferencia' => $this->getPositiveIntSetting(self::MINUTOS_VENTANA_TRANSFERENCIA_KEY, 30),
                 'datos_bancarios' => [
-                    'banco' => $banco,
-                    'cuenta' => $cuenta,
-                    'rut' => $rut,
+                    'banco'       => $banco,
+                    'titular'     => $titular,
+                    'cuenta'      => $cuenta,
+                    'tipo_cuenta' => $tipoCuenta,
+                    'rut'         => $rut,
+                    'email'       => $email ?: null,
                 ],
             ],
         ]);

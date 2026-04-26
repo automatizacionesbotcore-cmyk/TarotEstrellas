@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 
 type CitaListItem = {
   id: number;
+  uuid: string;
   estado: string;
   inicio_utc: string;
   fin_utc: string;
@@ -165,7 +166,7 @@ export function MisConsultasPage() {
 
                 {cita.estado === 'pendiente_abono' && (
                   <Link
-                    to={`/app/citas/${cita.id}/pagar`}
+                    to={`/app/citas/${cita.uuid}/pagar`}
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
@@ -174,7 +175,7 @@ export function MisConsultasPage() {
                 )}
                 {cita.estado === 'reservada' && (
                   <Link
-                    to={`/app/citas/${cita.id}/pagar-saldo`}
+                    to={`/app/citas/${cita.uuid}/pagar-saldo`}
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
@@ -183,7 +184,7 @@ export function MisConsultasPage() {
                 )}
                 {cita.estado === 'confirmada' && (
                   <Link
-                    to={`/app/sala/${cita.id}`}
+                    to={`/app/sala/${cita.uuid}`}
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
@@ -191,7 +192,7 @@ export function MisConsultasPage() {
                   </Link>
                 )}
                 {cita.estado !== 'pendiente_abono' && cita.estado !== 'reservada' && cita.estado !== 'confirmada' && (
-                  <Link to={`/app/citas/${cita.id}`} className="card-link">
+                  <Link to={`/app/citas/${cita.uuid}`} className="card-link">
                     Ver detalle →
                   </Link>
                 )}

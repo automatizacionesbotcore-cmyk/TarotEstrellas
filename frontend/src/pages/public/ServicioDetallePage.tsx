@@ -53,6 +53,7 @@ type AvailabilityResponse = {
 type CitaResponse = {
   data: {
     id: number;
+    uuid: string;
     estado: string;
     inicio_utc: string;
     fin_utc: string;
@@ -735,7 +736,10 @@ export function ServicioDetallePage() {
                       Ver mis consultas
                     </Link>
                     {!isCountdownExpired ? (
-                      <Link className="btn-primary btn-shimmer" to="/app/mis-consultas">
+                      <Link
+                        className="btn-primary btn-shimmer"
+                        to={`/app/citas/${bookingMutation.data.data.uuid}/pagar`}
+                      >
                         Ir a pagar →
                       </Link>
                     ) : null}

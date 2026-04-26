@@ -27,15 +27,13 @@ type Cita = {
   tipo_consulta: { nombre: string; duracion_minutos: number } | null;
 };
 
-type MetodoPago = {
-  id: number;
-  tipo: 'transferencia';
+type DatosBancarios = {
   banco: string;
   titular: string;
-  numero_cuenta: string;
+  cuenta: string;
   tipo_cuenta: string;
-  rut?: string;
-  email?: string;
+  rut: string;
+  email: string | null;
 };
 
 type CuponValidacion = {
@@ -52,14 +50,14 @@ type Membresia = {
 };
 
 type PaymentIntentResponse = { client_secret: string };
-type MetodosPagoResponse  = { data: MetodoPago[] };
 
 // ── API helpers ──────────────────────────────────────────────────────────────
-const fetchCita       = (id: string) =>
+const fetchCita = (id: string) =>
   api.get(`/citas/${id}`).then((r) => (r.data as { data: Cita }).data);
 
-const fetchMetodosPago = () =>
-  api.get('/metodos-pago').then((r) => (r.data as MetodosPagoResponse).data);
+const fetchDatosTransferencia = (citaId: string) =>
+  api.get(`/citas/${citaId}/pagar/transferencia/datos`)
+     .then((r) => (r.data as { data: { datos_bancarios: DatosBancarios } }).data.datos_bancarios);
 
 const createPaymentIntent = (citaId: string) =>
   api.post(`/citas/${citaId}/pagar/stripe`).then((r) => r.data as PaymentIntentResponse);
@@ -305,7 +303,7 @@ function StripeForm({
 }
 
 // ── Transfer panel ───────────────────────────────────────────────────────────
-function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] }) {
+function TransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancarios: DatosBancarios | null }) {
   const [seconds, setSeconds]     = useState(() => getRemainingSeconds(cita.reservada_hasta));
   const [extended, setExtended]   = useState(false);
   const [file, setFile]           = useState<File | null>(null);
@@ -322,7 +320,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
 
   const handleExtend = async () => {
     try {
-      const res = await extenderReserva(String(cita.id));
+      const res = await extenderReserva(String(cita.uuid));
       setSeconds(getRemainingSeconds(res.reservada_hasta));
       setExtended(true);
     } catch { /* silencioso */ }
@@ -333,7 +331,7 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
     setUploading(true);
     setUploadError('');
     try {
-      await uploadComprobante(String(cita.id), file);
+      await uploadComprobante(cita.uuid, file);
       setUploaded(true);
     } catch {
       setUploadError('No se pudo subir el comprobante. Intenta de nuevo.');
@@ -341,8 +339,6 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
       setUploading(false);
     }
   };
-
-  const banco = metodos[0];
 
   return (
     <div className="transfer-panel">
@@ -366,16 +362,16 @@ function TransferPanel({ cita, metodos }: { cita: Cita; metodos: MetodoPago[] })
         <strong className="ref-code">{cita.codigo_referencia}</strong>
       </div>
 
-      {banco ? (
+      {datosBancarios ? (
         <div className="bank-details">
           <p className="pay-section-label">Datos para transferir</p>
           <dl>
-            <dt>Banco</dt><dd>{banco.banco}</dd>
-            <dt>Titular</dt><dd>{banco.titular}</dd>
-            <dt>N° de cuenta</dt><dd>{banco.numero_cuenta}</dd>
-            <dt>Tipo de cuenta</dt><dd>{banco.tipo_cuenta}</dd>
-            {banco.rut   ? <><dt>RUT</dt><dd>{banco.rut}</dd></>    : null}
-            {banco.email ? <><dt>Email</dt><dd>{banco.email}</dd></> : null}
+            <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
+            <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
+            <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
+            <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
+            {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
+            {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
           </dl>
           <p className="pay-abono-note">
             Monto a transferir: <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
@@ -497,9 +493,11 @@ export function PagarCitaPage() {
     enabled:  Boolean(id),
   });
 
-  const { data: metodos = [] } = useQuery({
-    queryKey: ['metodos-pago'],
-    queryFn:  fetchMetodosPago,
+  const { data: datosBancarios = null } = useQuery<DatosBancarios | null>({
+    queryKey: ['datos-transferencia', id],
+    queryFn:  () => fetchDatosTransferencia(id),
+    enabled:  Boolean(id) && method === 'transfer',
+    retry:    false,
   });
 
   const intentMutation = useMutation({
@@ -659,7 +657,7 @@ export function PagarCitaPage() {
                 ) : null}
 
                 {method === 'transfer' ? (
-                  <TransferPanel cita={cita} metodos={metodos} />
+                  <TransferPanel cita={cita} datosBancarios={datosBancarios} />
                 ) : null}
               </motion.div>
             )}
