@@ -350,13 +350,14 @@ class CitaController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'tipo_consulta_slug' => ['required', 'string', 'exists:tipos_consulta,slug'],
-            'inicio_local' => ['required', 'date_format:Y-m-d H:i:s'],
+            'tipo_consulta_slug'  => ['required', 'string', 'exists:tipos_consulta,slug'],
+            'inicio_local'        => ['required', 'date_format:Y-m-d H:i:s'],
             'zona_horaria_cliente' => ['required', 'timezone'],
-            'canal_pago' => ['required', 'in:stripe,transferencia'],
-            'moneda' => ['nullable', 'string', 'size:3'],
-            'tema_principal' => ['nullable', 'string', 'max:50'],
-            'notas_cliente' => ['nullable', 'string', 'max:2000'],
+            'canal_pago'          => ['required', 'in:stripe,transferencia'],
+            'moneda'              => ['nullable', 'string', 'size:3'],
+            'tema_principal'      => ['nullable', 'string', 'max:50'],
+            'notas_cliente'       => ['nullable', 'string', 'max:2000'],
+            'especialista_id'     => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
         /** @var User $user */
@@ -390,7 +391,7 @@ class CitaController extends Controller
             'uuid' => (string) Str::uuid(),
             'codigo_referencia' => $this->generateReferenceCode(),
             'cliente_id' => $user->id,
-            'especialista_id' => null,
+            'especialista_id' => $validated['especialista_id'] ?? null,
             'tipo_consulta_id' => $tipo->id,
             'inicio_utc' => $startUtc,
             'fin_utc' => $endUtc,

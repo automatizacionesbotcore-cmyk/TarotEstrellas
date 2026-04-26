@@ -11,7 +11,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             TipoConsultaSeeder::class,
+            TipoConsultaPrecioSeeder::class,
             AppSettingSeeder::class,
+            DisponibilidadBaseSeeder::class,
         ]);
 
         if (app()->environment('local', 'testing')) {
