@@ -15,6 +15,7 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
+import { GoogleCallbackPage } from './pages/auth/GoogleCallbackPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
@@ -36,6 +37,8 @@ const AdminComprobantesPage     = lazy(() => import('./pages/app/admin/AdminComp
 const AdminCitasPage            = lazy(() => import('./pages/app/admin/AdminCitasPage').then((m) => ({ default: m.AdminCitasPage })));
 const AdminServiciosPage        = lazy(() => import('./pages/app/admin/AdminServiciosPage').then((m) => ({ default: m.AdminServiciosPage })));
 const AdminSettingsPage         = lazy(() => import('./pages/app/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })));
+const AdminDisponibilidadPage   = lazy(() => import('./pages/app/admin/AdminDisponibilidadPage').then((m) => ({ default: m.AdminDisponibilidadPage })));
+const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspecialistasPage').then((m) => ({ default: m.AdminEspecialistasPage })));
 
 function PageLoader() {
   return (
@@ -131,11 +134,14 @@ export function App() {
           <Route path="comprobantes"         element={<Suspense fallback={<PageLoader />}><AdminComprobantesPage     /></Suspense>} />
           <Route path="citas"                element={<Suspense fallback={<PageLoader />}><AdminCitasPage            /></Suspense>} />
           <Route path="servicios"            element={<Suspense fallback={<PageLoader />}><AdminServiciosPage        /></Suspense>} />
+          <Route path="disponibilidad"       element={<Suspense fallback={<PageLoader />}><AdminDisponibilidadPage   /></Suspense>} />
+          <Route path="especialistas"        element={<Suspense fallback={<PageLoader />}><AdminEspecialistasPage    /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
         </Route>
       </Route>
 
       <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </>

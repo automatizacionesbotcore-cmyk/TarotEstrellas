@@ -7,6 +7,16 @@ import { useAuthStore } from '../../stores/authStore';
 import { useAuthModalStore } from '../../stores/authModalStore';
 import { MonthCalendar } from '../../components/ui/MonthCalendar';
 
+type EspecialistaPublico = {
+  id: number;
+  uuid: string;
+  slug: string;
+  nombre: string;
+  especialidad: string | null;
+  biografia: string | null;
+  avatar_url: string | null;
+};
+
 type ServicioDetalle = {
   id: number;
   slug: string;
@@ -34,8 +44,9 @@ type AvailabilityResponse = {
   data: Array<{
     inicio_utc: string;
     fin_utc: string;
-    inicio_cliente: string;
-    fin_cliente: string;
+    inicio_local: string;
+    fin_local: string;
+    zona_horaria: string;
   }>;
 };
 
@@ -62,22 +73,17 @@ async function fetchQuickAvailability(slug: string): Promise<QuickAvailabilityRe
   return response.data as QuickAvailabilityResponse;
 }
 
-async function fetchAvailability(tipoConsultaId: number, date: string, tzCliente: string): Promise<AvailabilityResponse> {
-  const response = await api.get('/public/disponibilidad', {
-    params: {
-      tipo_consulta_id: tipoConsultaId,
-      fecha: date,
-      tz_cliente: tzCliente,
-    },
-  });
 
-  return response.data as AvailabilityResponse;
+async function fetchEspecialistas(): Promise<EspecialistaPublico[]> {
+  const r = await api.get<{ data: EspecialistaPublico[] }>('/public/especialistas');
+  return r.data.data;
 }
 
 async function reservarCita(payload: {
   tipo_consulta_id: number;
   inicio_utc: string;
   timezone_cliente: string;
+  especialista_id?: number;
   tema_principal?: string;
   pregunta_especifica?: string;
 }): Promise<CitaResponse> {
@@ -150,6 +156,7 @@ export function ServicioDetallePage() {
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [temaPrincipal, setTemaPrincipal] = useState('');
   const [pregunta, setPregunta] = useState('');
+  const [selectedEspecialistaId, setSelectedEspecialistaId] = useState<number | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   const { slug = '' } = useParams();
@@ -163,6 +170,19 @@ export function ServicioDetallePage() {
     queryFn: () => fetchQuickAvailability(slug),
     enabled: Boolean(slug),
   });
+  const { data: especialistas = [] } = useQuery<EspecialistaPublico[]>({
+    queryKey: ['public', 'especialistas'],
+    queryFn: fetchEspecialistas,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const multiEspecialista = especialistas.length > 1;
+
+  useEffect(() => {
+    if (especialistas.length === 1 && selectedEspecialistaId === null) {
+      setSelectedEspecialistaId(especialistas[0].id);
+    }
+  }, [especialistas]);
 
   const servicio = data?.data;
 
@@ -182,9 +202,19 @@ export function ServicioDetallePage() {
   }, [detectedTimezone]);
 
   const availabilityQuery = useQuery({
-    queryKey: ['disponibilidad-dia', servicio?.id, agendaDate, selectedTimezone],
-    queryFn: () => fetchAvailability(servicio!.id, agendaDate, selectedTimezone),
-    enabled: Boolean(servicio?.id) && Boolean(agendaDate),
+    queryKey: ['disponibilidad-dia', servicio?.slug, agendaDate, selectedTimezone, selectedEspecialistaId],
+    queryFn: async () => {
+      const r = await api.get('/public/disponibilidad', {
+        params: {
+          tipo_consulta_slug: servicio!.slug,
+          date: agendaDate,
+          tz: selectedTimezone,
+          ...(selectedEspecialistaId ? { especialista_id: selectedEspecialistaId } : {}),
+        },
+      });
+      return r.data as AvailabilityResponse;
+    },
+    enabled: Boolean(servicio?.slug) && Boolean(agendaDate),
   });
 
   const bookingMutation = useMutation({
@@ -259,6 +289,9 @@ export function ServicioDetallePage() {
 
   const stepHint = useMemo(() => {
     if (currentStep === 1) {
+      if (multiEspecialista && !selectedEspecialistaId) {
+        return 'Paso 1 de 4: elige tu especialista';
+      }
       return 'Paso 1 de 4: elige fecha y horario';
     }
 
@@ -271,7 +304,7 @@ export function ServicioDetallePage() {
     }
 
     return 'Paso 4 de 4: reserva creada';
-  }, [currentStep]);
+  }, [currentStep, multiEspecialista, selectedEspecialistaId]);
 
   const goNext = () => {
     if (currentStep === 1 && !selectedSlot) {
@@ -310,6 +343,7 @@ export function ServicioDetallePage() {
       tipo_consulta_id: servicio.id,
       inicio_utc: selectedSlot,
       timezone_cliente: selectedTimezone || detectedTimezone,
+      especialista_id: selectedEspecialistaId ?? undefined,
       tema_principal: temaPrincipal || undefined,
       pregunta_especifica: pregunta || undefined,
     });
@@ -418,7 +452,7 @@ export function ServicioDetallePage() {
             <p className="wizard-step-hint">{stepHint}</p>
 
             <ol className="wizard-steps" aria-label="Progreso de agendamiento">
-              <li className={currentStep >= 1 ? 'active' : ''}>Fecha y hora</li>
+              <li className={currentStep >= 1 ? 'active' : ''}>{multiEspecialista ? 'Especialista y hora' : 'Fecha y hora'}</li>
               <li className={currentStep >= 2 ? 'active' : ''}>Información</li>
               <li className={currentStep >= 3 ? 'active' : ''}>Resumen</li>
               <li className={currentStep >= 4 ? 'active' : ''}>Confirmación</li>
@@ -434,70 +468,125 @@ export function ServicioDetallePage() {
                 exit="exit"
                 transition={{ duration: 0.25 }}
               >
-                <MonthCalendar
-                  value={agendaDate}
-                  min={getLocalDateYmd()}
-                  onChange={setAgendaDate}
-                />
+                {multiEspecialista && !selectedEspecialistaId ? (
+                  /* ── Selector de especialista ── */
+                  <div>
+                    <p className="booking-step-intro">Elige con quién quieres hacer tu consulta.</p>
+                    <div className="especialista-cards">
+                      {especialistas.map((e) => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          className="especialista-card"
+                          onClick={() => setSelectedEspecialistaId(e.id)}
+                        >
+                          {e.avatar_url && (
+                            <img className="especialista-card-avatar" src={e.avatar_url} alt={e.nombre} />
+                          )}
+                          <strong className="especialista-card-nombre">{e.nombre}</strong>
+                          {e.especialidad && (
+                            <span className="especialista-card-especialidad">{e.especialidad}</span>
+                          )}
+                          {e.biografia && (
+                            <p className="especialista-card-bio">{e.biografia}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Calendario y slots ── */
+                  <div>
+                    {multiEspecialista && selectedEspecialistaId && (
+                      <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ fontSize: '0.82rem', padding: '0.3rem 0.75rem' }}
+                          onClick={() => { setSelectedEspecialistaId(null); setSelectedSlot(''); }}
+                        >
+                          ← Cambiar especialista
+                        </button>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                          {especialistas.find((e) => e.id === selectedEspecialistaId)?.nombre}
+                        </span>
+                      </div>
+                    )}
+                    <div className="booking-step1-layout">
+                      <div className="booking-step1-calendar">
+                        <MonthCalendar
+                          value={agendaDate}
+                          min={getLocalDateYmd()}
+                          onChange={setAgendaDate}
+                        />
+                      </div>
 
-                <label>
-                  Zona horaria
-                  <select
-                    value={selectedTimezone}
-                    onChange={(event) => setSelectedTimezone(event.target.value || detectedTimezone)}
-                  >
-                    {timezoneOptions.map((timezone) => (
-                      <option key={timezone} value={timezone}>
-                        {timezone}
-                        {timezone === detectedTimezone ? ' (detectada)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                      <div className="booking-step1-slots">
+                        <label>
+                          Zona horaria
+                          <select
+                            value={selectedTimezone}
+                            onChange={(event) => setSelectedTimezone(event.target.value || detectedTimezone)}
+                          >
+                            {timezoneOptions.map((timezone) => (
+                              <option key={timezone} value={timezone}>
+                                {timezone}
+                                {timezone === detectedTimezone ? ' (detectada)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
 
-                <div className="slots-grid">
-                  {availabilityQuery.isLoading ? <p>Cargando horarios del día...</p> : null}
-                  {!availabilityQuery.isLoading && slots.length === 0 ? (
-                    <p>No hay horarios disponibles para la fecha seleccionada.</p>
-                  ) : null}
+                        <div className="slots-grid">
+                          {availabilityQuery.isLoading ? <p>Cargando horarios del día...</p> : null}
+                          {!availabilityQuery.isLoading && slots.length === 0 ? (
+                            <p>No hay horarios disponibles para la fecha seleccionada.</p>
+                          ) : null}
 
-                  {slots.map((slot) => {
-                    const isSelected = selectedSlot === slot.inicio_utc;
-                    return (
-                      <button
-                        key={slot.inicio_utc}
-                        type="button"
-                        className={isSelected ? 'slot-chip selected' : 'slot-chip'}
-                        onClick={() => setSelectedSlot(slot.inicio_utc)}
-                      >
-                        {new Date(slot.inicio_cliente).toLocaleTimeString('es-CL', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                          {slots.map((slot) => {
+                            const isSelected = selectedSlot === slot.inicio_utc;
+                            return (
+                              <button
+                                key={slot.inicio_utc}
+                                type="button"
+                                className={isSelected ? 'slot-chip selected' : 'slot-chip'}
+                                onClick={() => setSelectedSlot(slot.inicio_utc)}
+                              >
+                                {new Date(slot.inicio_local).toLocaleTimeString('es-CL', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="wizard-actions">
+                      <button className="btn-primary" type="button" disabled={!selectedSlot} onClick={goNext}>
+                        Continuar
                       </button>
-                    );
-                  })}
-                </div>
-
-                <div className="wizard-actions">
-                  <button className="btn-primary" type="button" disabled={!selectedSlot} onClick={goNext}>
-                    Continuar
-                  </button>
-                </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : null}
 
             {currentStep === 2 ? (
               <motion.div
                 key="step-2"
+                className="booking-step-content"
                 variants={stepVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.25 }}
               >
+                <p className="booking-step-intro">Cuéntanos sobre tu consulta para que la especialista pueda preparar mejor tu sesión.</p>
+
                 <label>
-                  Tema principal (opcional)
+                  <span className="booking-field-label">Tema principal <span className="booking-optional">(opcional)</span></span>
                   <input
                     type="text"
                     maxLength={80}
@@ -508,13 +597,13 @@ export function ServicioDetallePage() {
                 </label>
 
                 <label>
-                  Pregunta específica (opcional)
+                  <span className="booking-field-label">Pregunta específica <span className="booking-optional">(opcional)</span></span>
                   <textarea
                     rows={4}
                     maxLength={1000}
                     value={pregunta}
                     onChange={(event) => setPregunta(event.target.value)}
-                    placeholder="Cuéntanos sobre tu consulta para preparar mejor la sesión"
+                    placeholder="Describe brevemente lo que te gustaría explorar en la sesión..."
                   />
                 </label>
 
@@ -532,42 +621,45 @@ export function ServicioDetallePage() {
             {currentStep === 3 ? (
               <motion.div
                 key="step-3"
+                className="booking-step-content"
                 variants={stepVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.25 }}
               >
+                <p className="booking-step-intro">Verifica los datos de tu reserva antes de confirmar.</p>
+
                 <div className="booking-summary">
-                  <p><strong>Servicio:</strong> {servicio?.nombre}</p>
+                  <p><strong>Servicio</strong> {servicio?.nombre}</p>
                   <p>
-                    <strong>Fecha:</strong>{' '}
+                    <strong>Fecha y hora</strong>
                     {selectedSlotData
-                      ? new Date(selectedSlotData.inicio_cliente).toLocaleString('es-CL', {
+                      ? new Date(selectedSlotData.inicio_local).toLocaleString('es-CL', {
                           dateStyle: 'full',
                           timeStyle: 'short',
                         })
                       : 'Sin seleccionar'}
                   </p>
-                  <p><strong>Zona horaria:</strong> {selectedTimezone || detectedTimezone}</p>
-                  <p><strong>Duración:</strong> {servicio?.duracion_minutos} minutos</p>
-                  <p><strong>Precio total:</strong> {formatPrice(servicio?.precio_referencial_centavos ?? null, servicio?.moneda ?? 'CLP')}</p>
-                  <p><strong>Tema:</strong> {temaPrincipal || 'No indicado'}</p>
-                  <p><strong>Pregunta:</strong> {pregunta || 'No indicada'}</p>
+                  <p><strong>Zona horaria</strong> {selectedTimezone || detectedTimezone}</p>
+                  <p><strong>Duración</strong> {servicio?.duracion_minutos} minutos</p>
+                  <p><strong>Precio total</strong> {formatPrice(servicio?.precio_referencial_centavos ?? null, servicio?.moneda ?? 'CLP')}</p>
+                  <p><strong>Tema</strong> {temaPrincipal || '—'}</p>
+                  {pregunta && <p className="booking-summary-full"><strong>Pregunta</strong> {pregunta}</p>}
                 </div>
 
-                {!isAuthenticated ? (
+                {!isAuthenticated && (
                   <p className="form-warning">Debes iniciar sesión para confirmar la reserva.</p>
-                ) : null}
+                )}
 
-                {bookingMutation.isError ? (
+                {bookingMutation.isError && (
                   <p className="form-error">No se pudo reservar el horario. Intenta con otro slot.</p>
-                ) : null}
+                )}
 
                 <div className="wizard-actions">
                   <button className="btn-secondary" type="button" onClick={goBack}>Volver</button>
                   <button
-                    className="btn-primary"
+                    className="btn-primary btn-shimmer"
                     type="button"
                     disabled={!selectedSlot || bookingMutation.isPending}
                     onClick={handleReservar}

@@ -772,92 +772,160 @@ a {
 
 /* ── BOOKING WIZARD ─────────────────────────────────────────────────────── */
 .booking-panel {
-	margin-top: 1.2rem;
-	padding-top: 1rem;
-	border-top: 1px dashed color-mix(in srgb, var(--text) 22%, transparent);
+	margin-top: 1.6rem;
+	padding: 1.4rem 1.6rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--card) 60%, transparent);
+}
+
+.booking-panel h2 {
+	margin: 0 0 0.2rem;
+	font-size: 1.25rem;
+}
+
+.booking-step1-layout {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 1.5rem;
+	align-items: start;
+}
+
+.booking-step1-calendar {
+	min-width: 0;
+}
+
+.booking-step1-slots {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.booking-step1-slots label {
+	max-width: 320px;
+}
+
+.booking-step1-slots .slots-grid {
+	grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+}
+
+@media (max-width: 640px) {
+	.booking-step1-layout {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+	.booking-step1-slots label { max-width: none; }
+	.booking-step1-slots .slots-grid {
+		grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	}
 }
 
 .wizard-step-hint {
-	margin: 0;
-	font-size: 0.88rem;
-	opacity: 0.9;
+	margin: 0 0 0.8rem;
+	font-size: 0.82rem;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .wizard-steps {
-	margin: 0;
+	margin: 0 0 1.2rem;
 	padding: 0;
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 0.5rem;
+	gap: 0.4rem;
 	list-style: none;
 }
 
 .wizard-steps li {
-	padding: 0.4rem 0.5rem;
-	border-radius: 999px;
-	border: 1px solid color-mix(in srgb, var(--text) 22%, transparent);
+	padding: 0.5rem 0.5rem;
+	border-radius: 10px;
+	border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
 	background: color-mix(in srgb, var(--bg) 76%, transparent);
 	font-size: 0.78rem;
 	text-align: center;
-	opacity: 0.72;
+	color: var(--text-muted);
+	transition: all 0.25s;
 }
 
 .wizard-steps li.active {
-	opacity: 1;
 	font-weight: 600;
-	border-color: color-mix(in srgb, var(--accent) 65%, transparent);
-	background: color-mix(in srgb, var(--accent) 24%, transparent);
+	color: var(--text);
+	border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+	box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .wizard-actions {
 	display: flex;
-	gap: 0.55rem;
+	gap: 0.65rem;
 	flex-wrap: wrap;
+	margin-top: 0.4rem;
 }
 
 .booking-summary {
-	border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
-	background: color-mix(in srgb, var(--bg) 72%, transparent);
-	border-radius: 12px;
-	padding: 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+	background: var(--card);
+	border-radius: 14px;
+	padding: 1rem 1.2rem;
 	display: grid;
-	gap: 0.35rem;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem 1.5rem;
 }
 
 .booking-summary p {
 	margin: 0;
-	font-size: 0.92rem;
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.booking-summary p strong {
+	color: var(--text-muted);
+	font-weight: 500;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	display: block;
 }
 
 .slots-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
 	gap: 0.5rem;
 }
 
 .slot-chip {
 	border-radius: 10px;
-	border: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
+	border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
 	background: color-mix(in srgb, var(--bg) 70%, transparent);
 	color: var(--text);
-	padding: 0.5rem;
+	padding: 0.6rem 0.5rem;
 	cursor: pointer;
 	font: inherit;
-	transition: border-color 0.2s, background 0.2s;
+	font-size: 0.95rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.slot-chip:hover {
+	border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .slot-chip.selected {
-	border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-	background: color-mix(in srgb, var(--accent) 34%, transparent);
-	color: #17141f;
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 28%, transparent);
+	color: var(--text);
 	font-weight: 700;
+	box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .booking-success {
-	border: 1px solid color-mix(in srgb, #9be6ba 55%, transparent);
-	background: color-mix(in srgb, #9be6ba 18%, transparent);
-	border-radius: 10px;
-	padding: 0.65rem;
+	border: 1px solid color-mix(in srgb, #4caf6e 40%, transparent);
+	background: color-mix(in srgb, #4caf6e 12%, transparent);
+	border-radius: 14px;
+	padding: 1rem 1.2rem;
 }
 
 .booking-success h3,
@@ -865,37 +933,79 @@ a {
 	margin: 0;
 }
 
+.booking-success h3 {
+	font-size: 1.1rem;
+	color: #4caf6e;
+}
+
 .booking-success p {
-	margin-top: 0.35rem;
+	margin-top: 0.4rem;
 	font-size: 0.9rem;
 }
 
 .countdown-box {
-	margin-top: 0.65rem;
-	border: 1px solid color-mix(in srgb, var(--text) 22%, transparent);
-	background: color-mix(in srgb, var(--bg) 78%, transparent);
-	border-radius: 10px;
-	padding: 0.55rem 0.65rem;
-	display: grid;
-	gap: 0.2rem;
+	margin-top: 0.8rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+	background: var(--card);
+	border-radius: 12px;
+	padding: 0.75rem 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
 }
 
-.countdown-label { font-size: 0.8rem; opacity: 0.85; }
+.countdown-label {
+	font-size: 0.82rem;
+	color: var(--text-muted);
+}
 
 .countdown-time {
-	font-size: 1.3rem;
+	font-size: 1.5rem;
 	line-height: 1;
+	font-weight: 700;
 	font-variant-numeric: tabular-nums;
-	letter-spacing: 0.03em;
-	color: #d3ffd8;
+	letter-spacing: 0.04em;
+	color: #4caf6e;
 }
 
-.countdown-time.expired { color: #ffb3b3; }
+.countdown-time.expired { color: #e05555; }
 
 .countdown-expired {
 	margin: 0;
 	font-size: 0.84rem;
-	color: #ffb3b3;
+	color: #e05555;
+}
+
+.booking-step-content {
+	max-width: 560px;
+}
+
+.booking-step-intro {
+	margin: 0 0 0.6rem;
+	font-size: 0.9rem;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+.booking-field-label {
+	font-weight: 500;
+	font-size: 0.9rem;
+}
+
+.booking-optional {
+	font-weight: 400;
+	font-size: 0.8rem;
+	color: var(--text-muted);
+}
+
+.booking-summary-full {
+	grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+	.booking-panel { padding: 1rem; }
+	.booking-summary { grid-template-columns: 1fr; }
+	.booking-step-content { max-width: none; }
 }
 
 .verify-banner {
@@ -983,6 +1093,70 @@ a {
 	letter-spacing: 0.06em;
 }
 
+/* Admin dashboard breakdown cards */
+.admin-breakdown-section {
+	margin-bottom: 1.6rem;
+}
+
+.admin-breakdown-title {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text);
+	margin: 0 0 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 0.82rem;
+	color: var(--text-muted);
+}
+
+.admin-breakdown-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 0.75rem;
+}
+
+.admin-breakdown-card {
+	background: var(--card);
+	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+	border-radius: 14px;
+	padding: 1rem 1.2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-breakdown-card:hover {
+	border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+	box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.admin-breakdown-count {
+	font-size: 1.8rem;
+	font-weight: 700;
+	color: var(--accent);
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.admin-breakdown-label {
+	font-size: 0.82rem;
+	color: var(--text);
+	text-transform: capitalize;
+	font-weight: 500;
+}
+
+.admin-breakdown-amount {
+	font-size: 0.78rem;
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	margin-top: 0.2rem;
+}
+
+.admin-breakdown-pendiente { border-left: 3px solid #e09944; }
+.admin-breakdown-completado { border-left: 3px solid #4caf6e; }
+.admin-breakdown-fallido { border-left: 3px solid #e05555; }
+
 .dash-actions {
 	display: flex;
 	gap: 0.75rem;
@@ -1068,12 +1242,24 @@ a {
 }
 
 /* ── MI CUENTA ──────────────────────────────────────────────────────────── */
+.cuenta-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2rem;
+	align-items: start;
+}
+
+.cuenta-column {
+	display: flex;
+	flex-direction: column;
+}
+
 .cuenta-section {
 	margin-bottom: 1.6rem;
 }
 
 .cuenta-form {
-	max-width: 480px;
+	max-width: none;
 }
 
 .cuenta-coming-soon {
@@ -1323,6 +1509,12 @@ a {
 	/* Toast */
 	.toaster { right: 0.75rem; left: 0.75rem; bottom: 1rem; }
 	.toast   { max-width: 100%; }
+
+	/* Mi Cuenta responsive */
+	.cuenta-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+	/* Admin breakdown responsive */
+	.admin-breakdown-grid { grid-template-columns: 1fr; }
 
 	/* 404 */
 	.not-found-code { font-size: 5rem; }
@@ -2431,7 +2623,7 @@ p               { text-wrap: pretty; }
 }
 
 /* ── NOTIF PREFS ─────────────────────────────────────────────────────────── */
-.notif-prefs { display: flex; flex-direction: column; gap: 1.2rem; max-width: 480px; }
+.notif-prefs { display: flex; flex-direction: column; gap: 1.2rem; }
 
 .notif-group { display: flex; flex-direction: column; gap: 0.5rem; }
 
@@ -3197,4 +3389,226 @@ p               { text-wrap: pretty; }
 	.admin-modal-body,
 	.admin-modal-footer { padding-left: 1rem; padding-right: 1rem; }
 	.admin-form-row { grid-template-columns: 1fr; }
+}
+
+/* ========== Google OAuth button ========== */
+.btn-google {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6rem;
+	width: 100%;
+	padding: 0.65rem 1rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: 10px;
+	background: var(--card);
+	color: var(--text);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	text-decoration: none;
+	transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+	margin-bottom: 0.25rem;
+}
+.btn-google:hover {
+	background: color-mix(in srgb, var(--accent) 6%, var(--card));
+	border-color: var(--accent);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.auth-divider {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0.5rem 0;
+	color: var(--text-muted);
+	font-size: 0.8rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--border-subtle);
+}
+
+/* ========== Admin Disponibilidad ========== */
+.disponibilidad-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.disponibilidad-card {
+	background: var(--card);
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	padding: 1rem;
+	transition: border-color 0.2s;
+}
+
+.disponibilidad-card.activo {
+	border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.disponibilidad-card.inactivo {
+	opacity: 0.6;
+}
+
+.disponibilidad-dia {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: 600;
+	font-size: 0.95rem;
+	margin-bottom: 0.75rem;
+}
+
+.disponibilidad-horas {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.disponibilidad-horas label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+/* Toggle switch */
+.toggle-label {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	position: relative;
+}
+
+.toggle-label input[type="checkbox"] {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.toggle-slider {
+	display: block;
+	width: 38px;
+	height: 22px;
+	background: var(--border-subtle);
+	border-radius: 11px;
+	position: relative;
+	transition: background 0.2s;
+	flex-shrink: 0;
+}
+
+.toggle-slider::after {
+	content: '';
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 16px;
+	height: 16px;
+	background: #fff;
+	border-radius: 50%;
+	transition: transform 0.2s;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.toggle-label input:checked + .toggle-slider {
+	background: var(--accent);
+}
+
+.toggle-label input:checked + .toggle-slider::after {
+	transform: translateX(16px);
+}
+
+/* Bloqueos form */
+.bloqueo-form {
+	background: var(--card);
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	max-width: 640px;
+}
+
+.form-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+}
+
+@media (max-width: 600px) {
+	.disponibilidad-grid { grid-template-columns: 1fr 1fr; }
+	.form-row { grid-template-columns: 1fr; }
+}
+
+/* Especialista picker en wizard de agendamiento */
+.especialista-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 1rem;
+	margin-top: 1rem;
+}
+
+.especialista-card {
+	background: var(--card);
+	border: 1.5px solid var(--border-subtle);
+	border-radius: 14px;
+	padding: 1.25rem 1rem;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+	text-align: center;
+	transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+	color: var(--text);
+}
+
+.especialista-card:hover {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+	transform: translateY(-2px);
+}
+
+.especialista-card-avatar {
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-bottom: 0.25rem;
+	border: 2px solid var(--border-subtle);
+}
+
+.especialista-card-nombre {
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.especialista-card-especialidad {
+	font-size: 0.82rem;
+	color: var(--accent);
+	font-weight: 500;
+}
+
+.especialista-card-bio {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	margin: 0;
+	line-height: 1.4;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+@media (max-width: 480px) {
+	.especialista-cards { grid-template-columns: 1fr; }
 }
