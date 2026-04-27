@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('especialista_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->index(['especialista_id', 'fecha_inicio_utc', 'fecha_fin_utc']);
+            $table->index(['especialista_id', 'fecha_inicio_utc', 'fecha_fin_utc'], 'bloqueos_esp_fechas_idx');
         });
     }
 
