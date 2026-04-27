@@ -12,7 +12,7 @@
 
 <IfModule mod_headers.c>
     # Cabeceras CORS solo en preflights (204 de la regla anterior)
-    Header always set Access-Control-Allow-Origin "https://tarotestrellas.cl" "expr=%{REQUEST_STATUS} == 204"
+    Header always set Access-Control-Allow-Origin "https://tarotestrellas.com" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, X-XSRF-TOKEN" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Credentials "true" "expr=%{REQUEST_STATUS} == 204"
