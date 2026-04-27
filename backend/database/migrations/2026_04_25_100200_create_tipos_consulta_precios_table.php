@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('tipo_consulta_id')->references('id')->on('tipos_consulta')->cascadeOnDelete();
-            $table->index(['tipo_consulta_id', 'moneda', 'vigente_desde']);
+            $table->index(['tipo_consulta_id', 'moneda', 'vigente_desde'], 'tc_precios_id_moneda_desde_idx');
         });
     }
 
