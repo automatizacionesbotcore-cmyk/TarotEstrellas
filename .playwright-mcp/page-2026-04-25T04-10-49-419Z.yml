@@ -1,0 +1,84 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "TarotEstrellas — inicio" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic "TarotEstrellas" [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]: TarotEstrellas
+    - navigation "Navegación principal" [ref=e10]:
+      - link "Servicios" [ref=e11] [cursor=pointer]:
+        - /url: /servicios
+      - button "Ingresar" [ref=e12] [cursor=pointer]
+      - button "Modo claro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e20]: Modo claro
+  - main [ref=e22]:
+    - generic [ref=e49]:
+      - paragraph [ref=e50]: ✦ Detalle del servicio
+      - heading "Lectura de Tarot" [level=1] [ref=e51]
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: Lectura integral de situacion actual y camino proximo.
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Duracion: 60 minutos"
+            - generic [ref=e58]: "Precio: $45.000"
+            - generic [ref=e59]: No requiere datos natales
+        - complementary [ref=e60]:
+          - heading "Próximos horarios" [level=2] [ref=e61]
+          - paragraph [ref=e62]: Sin horarios visibles por ahora.
+      - generic [ref=e63]:
+        - button "Crear cuenta y agendar" [ref=e64] [cursor=pointer]
+        - link "Volver al catálogo" [ref=e65] [cursor=pointer]:
+          - /url: /servicios
+      - region "Panel de agendamiento" [ref=e66]:
+        - heading "Agendar esta consulta" [level=2] [ref=e67]
+        - paragraph [ref=e68]: "Paso 2 de 4: cuéntanos sobre tu consulta"
+        - list "Progreso de agendamiento" [ref=e69]:
+          - listitem [ref=e70]: Fecha y hora
+          - listitem [ref=e71]: Información
+          - listitem [ref=e72]: Resumen
+          - listitem [ref=e73]: Confirmación
+        - generic [ref=e135]:
+          - paragraph [ref=e136]: Cuéntanos sobre tu consulta para que la especialista pueda preparar mejor tu sesión.
+          - generic [ref=e137]:
+            - generic [ref=e138]: Tema principal (opcional)
+            - textbox "Tema principal (opcional)" [ref=e139]:
+              - /placeholder: Amor, trabajo, familia...
+          - generic [ref=e140]:
+            - generic [ref=e141]: Pregunta específica (opcional)
+            - textbox "Pregunta específica (opcional)" [ref=e142]:
+              - /placeholder: Describe brevemente lo que te gustaría explorar en la sesión...
+          - generic [ref=e143]:
+            - button "Volver" [ref=e144] [cursor=pointer]
+            - button "Revisar resumen" [ref=e145] [cursor=pointer]
+  - contentinfo [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic "TarotEstrellas" [ref=e27]:
+          - img [ref=e28]
+          - generic [ref=e30]: TarotEstrellas
+        - paragraph [ref=e31]: Lecturas espirituales online con acompañamiento personalizado.
+      - navigation "Enlaces del sitio" [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Servicios" [level=4] [ref=e34]
+          - link "Ver catálogo" [ref=e35] [cursor=pointer]:
+            - /url: /servicios
+          - link "Tarot" [ref=e36] [cursor=pointer]:
+            - /url: /servicios?categoria=tarot
+          - link "Astrología" [ref=e37] [cursor=pointer]:
+            - /url: /servicios?categoria=astrologia
+        - generic [ref=e38]:
+          - heading "Cuenta" [level=4] [ref=e39]
+          - button "Iniciar sesión" [ref=e40] [cursor=pointer]
+        - generic [ref=e41]:
+          - heading "Legal" [level=4] [ref=e42]
+          - link "Términos y condiciones" [ref=e43] [cursor=pointer]:
+            - /url: /legal/terminos
+          - link "Política de privacidad" [ref=e44] [cursor=pointer]:
+            - /url: /legal/privacidad
+          - link "Política de cookies" [ref=e45] [cursor=pointer]:
+            - /url: /legal/cookies
+          - link "Política de reembolsos" [ref=e46] [cursor=pointer]:
+            - /url: /legal/reembolsos
+    - paragraph [ref=e48]: © 2026 TarotEstrellas · Todos los derechos reservados

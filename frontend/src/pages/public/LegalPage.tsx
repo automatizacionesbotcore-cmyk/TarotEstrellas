@@ -19,9 +19,7 @@ const META: Record<Slug, { eyebrow: string; pageTitle: string }> = {
 
 const VALID_SLUGS: Slug[] = ['terminos', 'privacidad', 'cookies', 'reembolsos'];
 
-const BASE = import.meta.env.PROD
-  ? '/tarotEstrella/tarotestrellas/frontend/dist/'
-  : '/';
+const BASE = '/';
 
 export function LegalPage() {
   const { slug = '' } = useParams<{ slug: string }>();

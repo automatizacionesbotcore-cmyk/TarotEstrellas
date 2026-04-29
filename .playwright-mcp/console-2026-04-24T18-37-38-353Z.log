@@ -1,0 +1,25 @@
+[     799ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:14090
+[   39343ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "username"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:5173/:0
+[  311261ms] Error: Objects are not valid as a React child (found: object with keys {total, monto_centavos}). If you meant to render a collection of children, use an array instead.
+    at throwOnInvalidObjectTypeImpl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:3293:10)
+    at throwOnInvalidObjectType (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:3297:105)
+    at reconcileChildFibersImpl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:3610:6)
+    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:3622:28
+    at reconcileChildren (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:5139:114)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:5953:1569)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:604:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:8182:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:8078:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:8062:6)
+[  311260ms] [WARNING] %s
+
+%s
+ An error occurred in the <span> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2a9f4c0f:5010
+[  585131ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
+[  586280ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
+[  588394ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
+[  592858ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
+[  596992ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/preferencias-notificacion:0
+[  598575ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/preferencias-notificacion:0
+[12064633ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968

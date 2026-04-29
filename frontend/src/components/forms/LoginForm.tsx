@@ -57,7 +57,7 @@ export function LoginForm({ onSuccess, onSwitchMode, onForgotPassword }: Props) 
       const backendMessage    = error?.response?.data?.message;
       const validationMessage = error?.response?.data?.errors?.email?.[0];
       setErrorMessage(
-        backendMessage ?? validationMessage ?? 'No se pudo iniciar sesion. Revisa tus credenciales.',
+        backendMessage ?? validationMessage ?? 'No se pudo iniciar sesión. Revisa tus credenciales.',
       );
     } finally {
       setSubmitting(false);

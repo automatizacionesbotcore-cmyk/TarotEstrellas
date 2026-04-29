@@ -1,0 +1,45 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "TarotEstrellas — inicio" [ref=e5] [cursor=pointer]:
+      - /url: /app
+      - generic "TarotEstrellas" [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]: TarotEstrellas
+    - navigation "Navegación de la app" [ref=e10]:
+      - link "Dashboard" [ref=e11] [cursor=pointer]:
+        - /url: /app
+      - link "Mis consultas" [ref=e12] [cursor=pointer]:
+        - /url: /app/mis-consultas
+      - link "Membresía" [ref=e13] [cursor=pointer]:
+        - /url: /app/membresia
+      - link "Mi cuenta" [ref=e14] [cursor=pointer]:
+        - /url: /app/mi-cuenta
+      - link "Administración" [ref=e15] [cursor=pointer]:
+        - /url: /app/admin
+      - button "Modo claro" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e23]: Modo claro
+      - button "Salir" [ref=e24] [cursor=pointer]
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: ✦ Bienvenida de regreso
+        - heading "Hola, Admin TarotEstrellas" [level=1] [ref=e30]
+        - paragraph [ref=e31]: El universo tiene algo para ti hoy.
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: "0"
+          - generic [ref=e35]: Consultas totales
+        - generic [ref=e36]:
+          - generic [ref=e37]: "0"
+          - generic [ref=e38]: Próximas citas
+      - generic [ref=e39]:
+        - link "Agendar consulta" [ref=e40] [cursor=pointer]:
+          - /url: /servicios
+        - link "Ver mis consultas" [ref=e41] [cursor=pointer]:
+          - /url: /app/mis-consultas
+      - generic [ref=e42]:
+        - generic [ref=e43]: 🔮
+        - paragraph [ref=e44]: Aún no tienes consultas agendadas.
+        - link "Explorar servicios" [ref=e45] [cursor=pointer]:
+          - /url: /servicios

@@ -39,9 +39,7 @@ type LegalModalType = 'terminos' | 'privacidad';
 type LegalDocument  = { title: string; version: string; paragraphs: string[] };
 type PasswordRule   = { label: string; passed: boolean };
 
-const LEGAL_BASE_PATH = import.meta.env.PROD
-  ? '/tarotEstrella/tarotestrellas/frontend/dist/'
-  : '/';
+const LEGAL_BASE_PATH = '/';
 
 const LEGAL_URLS: Record<LegalModalType, string> = {
   terminos:   `${LEGAL_BASE_PATH}legal/terminos.json`,

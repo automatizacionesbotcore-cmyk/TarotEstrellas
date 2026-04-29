@@ -1,0 +1,107 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "TarotEstrellas — inicio" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic "TarotEstrellas" [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]: TarotEstrellas
+    - navigation "Navegación principal" [ref=e10]:
+      - link "Servicios" [ref=e11] [cursor=pointer]:
+        - /url: /servicios
+      - button "Ingresar" [ref=e12] [cursor=pointer]
+      - button "Modo oscuro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Modo oscuro
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - paragraph [ref=e20]: ✦ Lecturas y guía espiritual
+      - heading "Catálogo de Servicios" [level=1] [ref=e21]
+      - paragraph [ref=e22]: Elige el servicio que mejor resuene con tu momento.
+    - region "Filtros del catálogo" [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - text: Buscar servicio
+          - searchbox "Buscar servicio" [ref=e26]
+        - generic [ref=e27]:
+          - text: Categoría
+          - combobox "Categoría" [ref=e28]:
+            - option "Todas" [selected]
+            - option "Tarot y mancias"
+            - option "Astrología"
+            - option "Otros"
+        - generic [ref=e29]:
+          - text: Duración
+          - combobox "Duración" [ref=e30]:
+            - option "Cualquiera" [selected]
+            - option "Hasta 30 min"
+            - option "60 min"
+            - option "90 min"
+            - option "120 min o más"
+        - generic [ref=e31]:
+          - text: Datos natales
+          - combobox "Datos natales" [ref=e32]:
+            - option "Indistinto" [selected]
+            - option "Requiere datos natales"
+            - option "No requiere datos natales"
+        - generic [ref=e33]:
+          - text: Precio mínimo
+          - spinbutton "Precio mínimo" [ref=e34]
+        - generic [ref=e35]:
+          - text: Precio máximo
+          - spinbutton "Precio máximo" [ref=e36]
+      - button "Limpiar filtros" [ref=e38] [cursor=pointer]
+    - region "Servicios disponibles" [ref=e70]:
+      - article [ref=e71]:
+        - heading "Lectura de Tarot" [level=3] [ref=e72]
+        - paragraph [ref=e73]: Lectura integral de situacion actual y camino proximo.
+        - generic [ref=e75]: 🎉 10% primera consulta
+        - strong [ref=e76]: $45.000
+        - generic [ref=e77]: 60 min
+        - link "Ver detalle" [ref=e78] [cursor=pointer]:
+          - /url: /servicios/tarot
+      - article [ref=e79]:
+        - heading "Cartas Espanolas" [level=3] [ref=e80]
+        - paragraph [ref=e81]: Consulta enfocada en decisiones practicas y panorama cercano.
+        - generic [ref=e83]: 🎉 10% primera consulta
+        - strong [ref=e84]: $35.000
+        - generic [ref=e85]: 45 min
+        - link "Ver detalle" [ref=e86] [cursor=pointer]:
+          - /url: /servicios/cartas-espanolas
+      - article [ref=e87]:
+        - heading "Carta Astral" [level=3] [ref=e88]
+        - paragraph [ref=e89]: Analisis astrologico con fecha, hora y lugar de nacimiento.
+        - generic [ref=e91]: 🎉 10% primera consulta
+        - strong [ref=e92]: $65.000
+        - generic [ref=e93]: 90 min
+        - link "Ver detalle" [ref=e94] [cursor=pointer]:
+          - /url: /servicios/carta-astral
+  - contentinfo [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic "TarotEstrellas" [ref=e44]:
+          - img [ref=e45]
+          - generic [ref=e47]: TarotEstrellas
+        - paragraph [ref=e48]: Lecturas espirituales online con acompañamiento personalizado.
+      - navigation "Enlaces del sitio" [ref=e49]:
+        - generic [ref=e50]:
+          - heading "Servicios" [level=4] [ref=e51]
+          - link "Ver catálogo" [ref=e52] [cursor=pointer]:
+            - /url: /servicios
+          - link "Tarot" [ref=e53] [cursor=pointer]:
+            - /url: /servicios?categoria=tarot
+          - link "Astrología" [ref=e54] [cursor=pointer]:
+            - /url: /servicios?categoria=astrologia
+        - generic [ref=e55]:
+          - heading "Cuenta" [level=4] [ref=e56]
+          - button "Iniciar sesión" [ref=e57] [cursor=pointer]
+        - generic [ref=e58]:
+          - heading "Legal" [level=4] [ref=e59]
+          - link "Términos y condiciones" [ref=e60] [cursor=pointer]:
+            - /url: /legal/terminos
+          - link "Política de privacidad" [ref=e61] [cursor=pointer]:
+            - /url: /legal/privacidad
+          - link "Política de cookies" [ref=e62] [cursor=pointer]:
+            - /url: /legal/cookies
+          - link "Política de reembolsos" [ref=e63] [cursor=pointer]:
+            - /url: /legal/reembolsos
+    - paragraph [ref=e65]: © 2026 TarotEstrellas · Todos los derechos reservados

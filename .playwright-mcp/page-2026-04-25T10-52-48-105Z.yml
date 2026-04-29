@@ -1,0 +1,132 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "TarotEstrellas — inicio" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic "TarotEstrellas" [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]: TarotEstrellas
+    - navigation "Navegación principal" [ref=e10]:
+      - link "Servicios" [ref=e11] [cursor=pointer]:
+        - /url: /servicios
+      - link "Mi panel" [ref=e12] [cursor=pointer]:
+        - /url: /app
+      - button "Modo claro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e20]: Modo claro
+  - main [ref=e22]:
+    - region "Hero TarotEstrellas" [ref=e23]:
+      - generic [ref=e24]:
+        - paragraph [ref=e25]: ✦ Lecturas espirituales online ✦
+        - heading "Claridad para tus decisiones más importantes" [level=1] [ref=e26]:
+          - text: Claridad para tus
+          - generic [ref=e27]: decisiones más importantes
+        - paragraph [ref=e28]:
+          - text: Tarot, astrología y carta astral en videollamada.
+          - text: Historial personal, recordatorios y guía continua con nuestra especialista.
+        - generic [ref=e29]:
+          - link "Ver servicios" [ref=e30] [cursor=pointer]:
+            - /url: /servicios
+          - button "Crear cuenta gratis" [ref=e31] [cursor=pointer]
+    - paragraph [ref=e32]: ——✦——
+    - region "Por qué TarotEstrellas" [ref=e33]:
+      - article [ref=e34]:
+        - generic [ref=e35]: 🌙
+        - heading "Sobre nuestra especialista" [level=3] [ref=e36]
+        - paragraph [ref=e37]: Más de 20 años guiando procesos personales con enfoque humano y práctico. Especialista en tarot, astrología natal y lectura de runas.
+      - article [ref=e38]:
+        - generic [ref=e39]: ✨
+        - heading "Cómo funciona" [level=3] [ref=e40]
+        - paragraph [ref=e41]: Elige tu servicio, agenda una fecha y realiza tu consulta por videollamada. Tu historial queda guardado para seguimiento continuo.
+      - article [ref=e42]:
+        - generic [ref=e43]: 🔮
+        - heading "Privacidad total" [level=3] [ref=e44]
+        - paragraph [ref=e45]: Tus datos y lecturas son completamente confidenciales. Te acompañamos con respeto, sin juicios y con absoluta discreción.
+    - paragraph [ref=e46]: ——✦——
+    - region "Servicios destacados" [ref=e47]:
+      - generic [ref=e48]:
+        - heading "Servicios más consultados" [level=2] [ref=e49]
+        - paragraph [ref=e50]: Elige el que mejor resuene con tu momento actual.
+        - generic [ref=e51]:
+          - article [ref=e52]:
+            - generic [ref=e53]: tarot
+            - heading "Tarot General" [level=3] [ref=e54]
+            - paragraph [ref=e55]: Una lectura completa para obtener claridad sobre tu situación actual y los caminos que se abren ante ti.
+            - generic [ref=e56]: ⏱ 60 min
+            - link "Ver detalle" [ref=e57] [cursor=pointer]:
+              - /url: /servicios/tarot-general
+          - article [ref=e58]:
+            - generic [ref=e59]: astrologia
+            - heading "Carta Astral" [level=3] [ref=e60]
+            - paragraph [ref=e61]: "Análisis profundo de tu carta natal: planetas, casas y aspectos que definen tu esencia y propósito de vida."
+            - generic [ref=e62]: ⏱ 90 min
+            - link "Ver detalle" [ref=e63] [cursor=pointer]:
+              - /url: /servicios/carta-astral
+          - article [ref=e64]:
+            - generic [ref=e65]: tarot
+            - heading "Tarot Amor y Relaciones" [level=3] [ref=e66]
+            - paragraph [ref=e67]: Lectura enfocada en tu vida afectiva, vínculos presentes y patrones emocionales que buscan sanar.
+            - generic [ref=e68]: ⏱ 45 min
+            - link "Ver detalle" [ref=e69] [cursor=pointer]:
+              - /url: /servicios/tarot-amor
+        - link "Ver todos los servicios" [ref=e71] [cursor=pointer]:
+          - /url: /servicios
+    - paragraph [ref=e72]: ——✦——
+    - region "Preguntas frecuentes" [ref=e73]:
+      - generic [ref=e74]:
+        - heading "Preguntas frecuentes" [level=2] [ref=e75]
+        - paragraph [ref=e76]: Todo lo que necesitas saber antes de tu primera consulta.
+        - generic [ref=e77]:
+          - button "¿Cómo funciona una consulta por videollamada?" [ref=e79] [cursor=pointer]:
+            - generic [ref=e80]: ¿Cómo funciona una consulta por videollamada?
+            - generic [ref=e81]: ▾
+          - button "¿Necesito experiencia previa con el tarot o la astrología?" [ref=e83] [cursor=pointer]:
+            - generic [ref=e84]: ¿Necesito experiencia previa con el tarot o la astrología?
+            - generic [ref=e85]: ▾
+          - button "¿Mis datos y lecturas son privados?" [ref=e87] [cursor=pointer]:
+            - generic [ref=e88]: ¿Mis datos y lecturas son privados?
+            - generic [ref=e89]: ▾
+          - button "¿Cómo se realiza el pago?" [ref=e91] [cursor=pointer]:
+            - generic [ref=e92]: ¿Cómo se realiza el pago?
+            - generic [ref=e93]: ▾
+          - button "¿Puedo reagendar o cancelar mi cita?" [ref=e95] [cursor=pointer]:
+            - generic [ref=e96]: ¿Puedo reagendar o cancelar mi cita?
+            - generic [ref=e97]: ▾
+    - paragraph [ref=e98]: ——✦——
+    - region "Llamada a la acción" [ref=e99]:
+      - heading "¿Lista para tu primera lectura?" [level=2] [ref=e100]
+      - paragraph [ref=e101]: Crea tu cuenta gratis y agenda cuando quieras.
+      - generic [ref=e102]:
+        - button "Comenzar ahora" [ref=e103] [cursor=pointer]
+        - link "Explorar servicios" [ref=e104] [cursor=pointer]:
+          - /url: /servicios
+  - contentinfo [ref=e105]:
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic "TarotEstrellas" [ref=e108]:
+          - img [ref=e109]
+          - generic [ref=e111]: TarotEstrellas
+        - paragraph [ref=e112]: Lecturas espirituales online con acompañamiento personalizado.
+      - navigation "Enlaces del sitio" [ref=e113]:
+        - generic [ref=e114]:
+          - heading "Servicios" [level=4] [ref=e115]
+          - link "Ver catálogo" [ref=e116] [cursor=pointer]:
+            - /url: /servicios
+          - link "Tarot" [ref=e117] [cursor=pointer]:
+            - /url: /servicios?categoria=tarot
+          - link "Astrología" [ref=e118] [cursor=pointer]:
+            - /url: /servicios?categoria=astrologia
+        - generic [ref=e119]:
+          - heading "Cuenta" [level=4] [ref=e120]
+          - link "Mi panel" [ref=e121] [cursor=pointer]:
+            - /url: /app
+        - generic [ref=e122]:
+          - heading "Legal" [level=4] [ref=e123]
+          - link "Términos y condiciones" [ref=e124] [cursor=pointer]:
+            - /url: /legal/terminos
+          - link "Política de privacidad" [ref=e125] [cursor=pointer]:
+            - /url: /legal/privacidad
+          - link "Política de cookies" [ref=e126] [cursor=pointer]:
+            - /url: /legal/cookies
+          - link "Política de reembolsos" [ref=e127] [cursor=pointer]:
+            - /url: /legal/reembolsos
+    - paragraph [ref=e129]: © 2026 TarotEstrellas · Todos los derechos reservados

@@ -14,7 +14,7 @@ if (useAuthStore.getState().token) {
 }
 
 const queryClient = new QueryClient();
-const routerBaseName = import.meta.env.PROD ? '/tarotEstrella/tarotestrellas/frontend/dist' : '/';
+const routerBaseName = '/';
 
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>

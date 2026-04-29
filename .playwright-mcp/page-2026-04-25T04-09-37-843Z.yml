@@ -1,0 +1,139 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "TarotEstrellas — inicio" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic "TarotEstrellas" [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]: TarotEstrellas
+    - navigation "Navegación principal" [ref=e10]:
+      - link "Servicios" [ref=e11] [cursor=pointer]:
+        - /url: /servicios
+      - button "Ingresar" [ref=e12] [cursor=pointer]
+      - button "Modo claro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e20]: Modo claro
+  - main [ref=e22]:
+    - generic [ref=e49]:
+      - paragraph [ref=e50]: ✦ Detalle del servicio
+      - heading "Lectura de Tarot" [level=1] [ref=e51]
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: Lectura integral de situacion actual y camino proximo.
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Duracion: 60 minutos"
+            - generic [ref=e58]: "Precio: $45.000"
+            - generic [ref=e59]: No requiere datos natales
+        - complementary [ref=e60]:
+          - heading "Próximos horarios" [level=2] [ref=e61]
+          - paragraph [ref=e62]: Sin horarios visibles por ahora.
+      - generic [ref=e63]:
+        - button "Crear cuenta y agendar" [ref=e64] [cursor=pointer]
+        - link "Volver al catálogo" [ref=e65] [cursor=pointer]:
+          - /url: /servicios
+      - region "Panel de agendamiento" [ref=e66]:
+        - heading "Agendar esta consulta" [level=2] [ref=e67]
+        - paragraph [ref=e68]: "Paso 1 de 4: elige fecha y horario"
+        - list "Progreso de agendamiento" [ref=e69]:
+          - listitem [ref=e70]: Fecha y hora
+          - listitem [ref=e71]: Información
+          - listitem [ref=e72]: Resumen
+          - listitem [ref=e73]: Confirmación
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - group "Selecciona una fecha" [ref=e77]:
+              - generic [ref=e78]:
+                - button "Mes anterior" [disabled] [ref=e79]: ‹
+                - generic [ref=e80]: Abril 2026
+                - button "Mes siguiente" [ref=e81] [cursor=pointer]: ›
+              - generic [ref=e82]:
+                - generic [ref=e83]: Lu
+                - generic [ref=e84]: Ma
+                - generic [ref=e85]: Mi
+                - generic [ref=e86]: Ju
+                - generic [ref=e87]: Vi
+                - generic [ref=e88]: Sá
+                - generic [ref=e89]: Do
+              - generic [ref=e90]:
+                - button "2026-04-01" [disabled] [ref=e91]: "1"
+                - button "2026-04-02" [disabled] [ref=e92]: "2"
+                - button "2026-04-03" [disabled] [ref=e93]: "3"
+                - button "2026-04-04" [disabled] [ref=e94]: "4"
+                - button "2026-04-05" [disabled] [ref=e95]: "5"
+                - button "2026-04-06" [disabled] [ref=e96]: "6"
+                - button "2026-04-07" [disabled] [ref=e97]: "7"
+                - button "2026-04-08" [disabled] [ref=e98]: "8"
+                - button "2026-04-09" [disabled] [ref=e99]: "9"
+                - button "2026-04-10" [disabled] [ref=e100]: "10"
+                - button "2026-04-11" [disabled] [ref=e101]: "11"
+                - button "2026-04-12" [disabled] [ref=e102]: "12"
+                - button "2026-04-13" [disabled] [ref=e103]: "13"
+                - button "2026-04-14" [disabled] [ref=e104]: "14"
+                - button "2026-04-15" [disabled] [ref=e105]: "15"
+                - button "2026-04-16" [disabled] [ref=e106]: "16"
+                - button "2026-04-17" [disabled] [ref=e107]: "17"
+                - button "2026-04-18" [disabled] [ref=e108]: "18"
+                - button "2026-04-19" [disabled] [ref=e109]: "19"
+                - button "2026-04-20" [disabled] [ref=e110]: "20"
+                - button "2026-04-21" [disabled] [ref=e111]: "21"
+                - button "2026-04-22" [disabled] [ref=e112]: "22"
+                - button "2026-04-23" [disabled] [ref=e113]: "23"
+                - button "2026-04-24" [disabled] [ref=e114]: "24"
+                - button "2026-04-25" [pressed] [ref=e115] [cursor=pointer]: "25"
+                - button "2026-04-26" [ref=e116] [cursor=pointer]: "26"
+                - button "2026-04-27" [ref=e117] [cursor=pointer]: "27"
+                - button "2026-04-28" [ref=e118] [cursor=pointer]: "28"
+                - button "2026-04-29" [ref=e119] [cursor=pointer]: "29"
+                - button "2026-04-30" [ref=e120] [cursor=pointer]: "30"
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - text: Zona horaria
+                - combobox "Zona horaria" [ref=e123]:
+                  - option "America/Santiago (detectada)" [selected]
+                  - option "America/Bogota"
+                  - option "America/Lima"
+                  - option "America/Buenos_Aires"
+                  - option "America/Mexico_City"
+                  - option "America/New_York"
+                  - option "Europe/Madrid"
+                  - option "UTC"
+              - generic [ref=e124]:
+                - button "10:00 a. m." [active] [ref=e125] [cursor=pointer]
+                - button "11:00 a. m." [ref=e126] [cursor=pointer]
+                - button "12:00 p. m." [ref=e127] [cursor=pointer]
+                - button "01:00 p. m." [ref=e128] [cursor=pointer]
+                - button "02:00 p. m." [ref=e129] [cursor=pointer]
+                - button "03:00 p. m." [ref=e130] [cursor=pointer]
+                - button "04:00 p. m." [ref=e131] [cursor=pointer]
+                - button "05:00 p. m." [ref=e132] [cursor=pointer]
+          - button "Continuar" [ref=e134] [cursor=pointer]
+  - contentinfo [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic "TarotEstrellas" [ref=e27]:
+          - img [ref=e28]
+          - generic [ref=e30]: TarotEstrellas
+        - paragraph [ref=e31]: Lecturas espirituales online con acompañamiento personalizado.
+      - navigation "Enlaces del sitio" [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Servicios" [level=4] [ref=e34]
+          - link "Ver catálogo" [ref=e35] [cursor=pointer]:
+            - /url: /servicios
+          - link "Tarot" [ref=e36] [cursor=pointer]:
+            - /url: /servicios?categoria=tarot
+          - link "Astrología" [ref=e37] [cursor=pointer]:
+            - /url: /servicios?categoria=astrologia
+        - generic [ref=e38]:
+          - heading "Cuenta" [level=4] [ref=e39]
+          - button "Iniciar sesión" [ref=e40] [cursor=pointer]
+        - generic [ref=e41]:
+          - heading "Legal" [level=4] [ref=e42]
+          - link "Términos y condiciones" [ref=e43] [cursor=pointer]:
+            - /url: /legal/terminos
+          - link "Política de privacidad" [ref=e44] [cursor=pointer]:
+            - /url: /legal/privacidad
+          - link "Política de cookies" [ref=e45] [cursor=pointer]:
+            - /url: /legal/cookies
+          - link "Política de reembolsos" [ref=e46] [cursor=pointer]:
+            - /url: /legal/reembolsos
+    - paragraph [ref=e48]: © 2026 TarotEstrellas · Todos los derechos reservados

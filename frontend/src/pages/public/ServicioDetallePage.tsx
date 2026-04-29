@@ -233,7 +233,7 @@ export function ServicioDetallePage() {
     }
 
     const title = `${servicio.nombre} | TarotEstrellas`;
-    const description = `${servicio.descripcion} Agenda tu sesion de ${servicio.duracion_minutos} minutos en TarotEstrellas.`;
+    const description = `${servicio.descripcion} Agenda tu sesión de ${servicio.duracion_minutos} minutos en TarotEstrellas.`;
 
     document.title = title;
 
@@ -407,7 +407,7 @@ export function ServicioDetallePage() {
             <div>
               <p>{servicio.descripcion}</p>
               <div className="detail-meta-row">
-                <span>Duracion: {servicio.duracion_minutos} minutos</span>
+                <span>Duración: {servicio.duracion_minutos} minutos</span>
                 <span>Precio: {formatPrice(servicio.precio_referencial_centavos, servicio.moneda)}</span>
                 <span>{servicio.requiere_datos_natales ? 'Requiere datos natales' : 'No requiere datos natales'}</span>
               </div>

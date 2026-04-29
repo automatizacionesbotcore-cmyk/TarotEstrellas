@@ -68,8 +68,8 @@ async function fetchTipos(filters: TipoConsultaFilters): Promise<TiposResponse> 
   return response.data as TiposResponse;
 }
 
-function formatPrice(value: number | null, currency: string) {
-  if (value === null) return 'Consultar precio';
+function formatPrice(value: number | null | undefined, currency: string) {
+  if (value == null || isNaN(value)) return 'Consultar precio';
   const amount = value / 100;
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',

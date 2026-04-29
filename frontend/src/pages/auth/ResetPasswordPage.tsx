@@ -36,7 +36,7 @@ export function ResetPasswordPage() {
     }
 
     if (!isPasswordStrong || !passwordsMatch) {
-      setErrorMessage('Revisa la seguridad de la contrasena y confirma que ambas coincidan.');
+      setErrorMessage('Revisa la seguridad de la contraseña y confirma que ambas coincidan.');
       return;
     }
 
@@ -52,7 +52,7 @@ export function ResetPasswordPage() {
         password_confirmation: passwordConfirmation,
       });
 
-      setSuccessMessage(response.data?.message ?? 'Contrasena actualizada correctamente.');
+      setSuccessMessage(response.data?.message ?? 'Contraseña actualizada correctamente.');
       setPassword('');
       setPasswordConfirmation('');
     } catch (error: any) {
@@ -62,7 +62,7 @@ export function ResetPasswordPage() {
         | undefined;
       const validationMessage = firstValidationError?.[0];
 
-      setErrorMessage(backendMessage ?? validationMessage ?? 'No se pudo actualizar la contrasena.');
+      setErrorMessage(backendMessage ?? validationMessage ?? 'No se pudo actualizar la contraseña.');
     } finally {
       setSubmitting(false);
     }
@@ -70,8 +70,8 @@ export function ResetPasswordPage() {
 
   return (
     <div className="auth-card-content">
-      <h1>Nueva contrasena</h1>
-      <p>Define una contrasena segura para continuar.</p>
+      <h1>Nueva contraseña</h1>
+      <p>Define una contraseña segura para continuar.</p>
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <label>
@@ -86,7 +86,7 @@ export function ResetPasswordPage() {
         </label>
 
         <label>
-          Token de recuperacion
+          Token de recuperación
           <input
             type="text"
             value={token}
@@ -97,7 +97,7 @@ export function ResetPasswordPage() {
         </label>
 
         <label>
-          Nueva contrasena
+          Nueva contraseña
           <input
             type="password"
             value={password}
@@ -107,25 +107,25 @@ export function ResetPasswordPage() {
           />
           <ul className="password-rules" aria-live="polite">
             <li className={passwordChecks.minLength ? 'password-rule-ok' : 'password-rule-ko'}>
-              Minimo 8 caracteres
+              Mínimo 8 caracteres
             </li>
             <li className={passwordChecks.uppercase ? 'password-rule-ok' : 'password-rule-ko'}>
-              Al menos una mayuscula
+              Al menos una mayúscula
             </li>
             <li className={passwordChecks.lowercase ? 'password-rule-ok' : 'password-rule-ko'}>
-              Al menos una minuscula
+              Al menos una minúscula
             </li>
             <li className={passwordChecks.number ? 'password-rule-ok' : 'password-rule-ko'}>
-              Al menos un numero
+              Al menos un número
             </li>
             <li className={passwordChecks.symbol ? 'password-rule-ok' : 'password-rule-ko'}>
-              Al menos un simbolo
+              Al menos un símbolo
             </li>
           </ul>
         </label>
 
         <label>
-          Confirmar contrasena
+          Confirmar contraseña
           <input
             type="password"
             value={passwordConfirmation}
@@ -135,12 +135,12 @@ export function ResetPasswordPage() {
           />
           {passwordConfirmation.length > 0 ? (
             passwordsMatch ? (
-              <span className="field-success">Las contrasenas coinciden.</span>
+              <span className="field-success">Las contraseñas coinciden.</span>
             ) : (
-              <span className="field-error">Las contrasenas no coinciden.</span>
+              <span className="field-error">Las contraseñas no coinciden.</span>
             )
           ) : (
-            <span className="field-hint">Repite la nueva contrasena para confirmar.</span>
+            <span className="field-hint">Repite la nueva contraseña para confirmar.</span>
           )}
         </label>
 
@@ -148,11 +148,11 @@ export function ResetPasswordPage() {
         {successMessage ? <p className="form-success">{successMessage}</p> : null}
 
         <button className="btn-primary" type="submit" disabled={submitting || !isPasswordStrong || !passwordsMatch}>
-          {submitting ? 'Actualizando...' : 'Actualizar contrasena'}
+          {submitting ? 'Actualizando...' : 'Actualizar contraseña'}
         </button>
 
         <Link to="/auth/login" className="auth-link-inline">
-          Volver a iniciar sesion
+          Volver a iniciar sesión
         </Link>
       </form>
     </div>
