@@ -1,7 +1,0 @@
-[     279ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=25518b8d:14090
-[     982ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
-[    2085ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
-[    4178ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
-[    8326ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
-[  253583ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0
-[  254665ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost/tarotEstrella/tarotestrellas/backend/public/index.php/api/membresia:0

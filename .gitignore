@@ -1,0 +1,14 @@
+# Secrets / entornos locales
+.env
+.env.*
+!.env.example
+
+# Artefactos de pruebas / herramientas locales
+.playwright-mcp/
+.claude/settings.local.json
+.claude/cache/
+.claude/.cache/
+
+# Sistema
+.DS_Store
+Thumbs.db
