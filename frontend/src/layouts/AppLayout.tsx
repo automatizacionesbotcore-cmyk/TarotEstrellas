@@ -37,7 +37,7 @@ export function AppLayout() {
   const handleResend = async () => {
     setResending(true);
     try {
-      await api.post('/auth/email/resend');
+      await api.post('/auth/resend-verification');
       toast.success('Enlace de verificación enviado. Revisa tu correo.');
     } catch {
       toast.error('No se pudo enviar el enlace. Intenta más tarde.');
