@@ -53,6 +53,9 @@ return [
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
         'summary_model' => env('ANTHROPIC_SUMMARY_MODEL', 'claude-3-5-haiku-latest'),
+        'agente_model' => env('ANTHROPIC_AGENT_MODEL', 'claude-3-5-sonnet-latest'),
+        'agente_max_sesiones' => (int) env('ANTHROPIC_AGENT_MAX_SESIONES', 20),
+        'agente_max_tokens' => (int) env('ANTHROPIC_AGENT_MAX_TOKENS', 1024),
     ],
 
     'google' => [

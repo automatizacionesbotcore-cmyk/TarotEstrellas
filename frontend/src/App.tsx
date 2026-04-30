@@ -21,6 +21,7 @@ import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { MembresiaPage } from './pages/app/MembresiaPage';
+import { AsistenteIAPage } from './pages/app/AsistenteIAPage';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
 
@@ -42,6 +43,7 @@ const AdminDisponibilidadPage   = lazy(() => import('./pages/app/admin/AdminDisp
 const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspecialistasPage').then((m) => ({ default: m.AdminEspecialistasPage })));
 const AdminReportesPage         = lazy(() => import('./pages/app/admin/AdminReportesPage').then((m) => ({ default: m.AdminReportesPage })));
 const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/EspecialistaMisCitasPage').then((m) => ({ default: m.EspecialistaMisCitasPage })));
+const AdminAsistenteIAPage      = lazy(() => import('./pages/app/admin/AdminAsistenteIAPage').then((m) => ({ default: m.AdminAsistenteIAPage })));
 
 function PageLoader() {
   return (
@@ -115,6 +117,7 @@ export function App() {
           element={<Suspense fallback={<PageLoader />}><PagarSaldoPage /></Suspense>}
         />
         <Route path="membresia" element={<MembresiaPage />} />
+        <Route path="asistente-ia" element={<AsistenteIAPage />} />
         <Route
           path="sala/:uuid"
           element={<Suspense fallback={<PageLoader />}><SalaVideoPage /></Suspense>}
@@ -143,6 +146,7 @@ export function App() {
           <Route path="reportes"             element={<Suspense fallback={<PageLoader />}><AdminReportesPage         /></Suspense>} />
           <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
+          <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
         </Route>
       </Route>
 

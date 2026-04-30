@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminDisponibilidadController;
+use App\Http\Controllers\Api\AgenteController;
 use App\Http\Controllers\Api\PublicEspecialistasController;
 use App\Http\Controllers\Api\SuperAdminEspecialistasController;
 use App\Http\Controllers\Api\AdminMetricasController;
@@ -189,6 +190,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Membresía
     Route::get('membresia', [MembresiaController::class, 'show']);
     Route::post('citas/{uuid}/aplicar-membresia', [MembresiaController::class, 'aplicar']);
+
+    // Agente IA conversacional
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::post('me/agente/consultar', [AgenteController::class, 'consultarSelf']);
+        Route::get('me/agente/conversaciones', [AgenteController::class, 'indexSelf']);
+        Route::middleware('admin')->group(function () {
+            Route::post('agente/consultar', [AgenteController::class, 'consultarAdmin']);
+            Route::get('agente/conversaciones', [AgenteController::class, 'indexAdmin']);
+        });
+    });
 
     Route::get('user', function (Request $request) {
         return $request->user()->load(['profile', 'roles']);

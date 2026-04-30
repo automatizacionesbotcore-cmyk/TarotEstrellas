@@ -12,6 +12,7 @@ const BASE_ITEMS = [
   { to: '/app/admin/especialistas',  label: 'Especialistas',  end: false, superAdminOnly: true,  especialistaOnly: false },
   { to: '/app/admin/reportes',       label: 'Reportes',       end: false, superAdminOnly: true,  especialistaOnly: false },
   { to: '/app/admin/settings',       label: 'Ajustes',        end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/asistente-ia',   label: 'Asistente IA',   end: false, superAdminOnly: false, especialistaOnly: false },
 ];
 
 export function AdminLayout() {
