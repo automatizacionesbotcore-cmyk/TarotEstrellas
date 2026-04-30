@@ -253,12 +253,14 @@ class AuthController extends Controller
 
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
+            \Log::error('Google OAuth callback failed: '.$e->getMessage());
             return redirect($frontendUrl.'/auth/login?error=google_failed');
         }
 
         $clienteRole = Role::query()->where('nombre', 'cliente')->first();
         if (! $clienteRole) {
+            \Log::error('Google OAuth: rol cliente no encontrado');
             return redirect($frontendUrl.'/auth/login?error=google_failed');
         }
 

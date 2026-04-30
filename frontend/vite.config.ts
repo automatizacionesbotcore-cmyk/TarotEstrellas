@@ -6,4 +6,8 @@ export default defineConfig(({ command }) => ({
   // Dev: WAMP subdirectory. Build: root path for Hostinger (tarotestrellas.cl).
   base: command === 'build' ? '/' : '/',
   plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
 }));
