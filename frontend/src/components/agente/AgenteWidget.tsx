@@ -21,7 +21,7 @@ interface Msg {
   meta?: { modelo?: string | null; tokens_in?: number | null; tokens_out?: number | null; latencia_ms?: number | null };
 }
 
-const HIDDEN_PATHS = [/^\/auth(\/|$)/, /^\/app\/sala\//];
+const HIDDEN_PATHS = [/^\/auth(\/|$)/, /^\/app\/sala\//, /^\/app\/asistente-ia(\/|$)/, /^\/app\/admin\/asistente-ia(\/|$)/];
 
 const SALUDOS_PUBLICO = [
   '✨ Hola, soy Astrea, tu guía estelar en TarotEstrellas. ¿Sobre qué quieres saber hoy?',
