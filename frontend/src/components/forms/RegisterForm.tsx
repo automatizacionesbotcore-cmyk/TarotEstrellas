@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { sanitizeNombre, sanitizeDigits, validateTelefonoCL, validateTelefonoGenerico } from '../../lib/formValidators';
 
 function googleAuthUrl() {
   return `${api.defaults.baseURL}/auth/google`;
@@ -182,14 +183,20 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
         <div className="auth-grid">
           <label>
             Nombre
-            <input type="text" required value={form.nombre}
-              onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))} />
+            <input type="text" required maxLength={60}
+              pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{2,60}"
+              title="Solo letras (2 a 60 caracteres)"
+              value={form.nombre}
+              onChange={(e) => setForm((p) => ({ ...p, nombre: sanitizeNombre(e.target.value, 60) }))} />
           </label>
 
           <label>
             Apellido
-            <input type="text" value={form.apellido}
-              onChange={(e) => setForm((p) => ({ ...p, apellido: e.target.value }))} />
+            <input type="text" maxLength={60}
+              pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{0,60}"
+              title="Solo letras"
+              value={form.apellido}
+              onChange={(e) => setForm((p) => ({ ...p, apellido: sanitizeNombre(e.target.value, 60) }))} />
           </label>
 
           <label className="auth-span-2">
@@ -217,8 +224,18 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
 
           <label className="auth-phone-field">
             Celular
-            <input type="tel" inputMode="numeric" placeholder="912345678" value={numeroCelular}
-              onChange={(e) => setNumeroCelular(e.target.value.replace(/[^\d\s()-]/g, ''))} />
+            <input type="tel" inputMode="numeric"
+              placeholder={prefijoCelular === '+56' ? '912345678' : '3001234567'}
+              value={numeroCelular}
+              minLength={prefijoCelular === '+56' ? 9 : 7}
+              maxLength={prefijoCelular === '+56' ? 9 : 15}
+              pattern={prefijoCelular === '+56' ? '9[0-9]{8}' : '[0-9]{7,15}'}
+              title={prefijoCelular === '+56' ? 'En Chile el celular comienza con 9 y tiene 9 dígitos' : 'Solo dígitos (7 a 15)'}
+              onChange={(e) => setNumeroCelular(sanitizeDigits(e.target.value, prefijoCelular === '+56' ? 9 : 15))} />
+            {numeroCelular.length > 0 && (() => {
+              const err = prefijoCelular === '+56' ? validateTelefonoCL(numeroCelular) : validateTelefonoGenerico(numeroCelular);
+              return err ? <span className="field-error">{err}</span> : null;
+            })()}
           </label>
 
           <div className="auth-password-row auth-span-2">

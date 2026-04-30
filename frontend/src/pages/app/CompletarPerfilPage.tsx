@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import { toast } from '../../stores/toastStore';
+import {
+  sanitizeNombre,
+  sanitizeDigits,
+  validateTelefonoCL,
+  validateTelefonoGenerico,
+} from '../../lib/formValidators';
 
 const PAISES_RESIDENCIA = [
   'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'Cuba',
@@ -58,6 +64,17 @@ export function CompletarPerfilPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Validación cliente: teléfono según país
+    const telError = telefonoPais === '+56'
+      ? validateTelefonoCL(telefono)
+      : validateTelefonoGenerico(telefono);
+    if (telError) {
+      setErrors({ telefono: [telError] });
+      setErrorMessage(telError);
+      return;
+    }
+
     setSubmitting(true);
     setErrors({});
     setErrorMessage(null);
@@ -138,12 +155,26 @@ export function CompletarPerfilPage() {
             <div className="auth-grid">
               <label>
                 <span>Nombre <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} />
+                <input
+                  value={nombre}
+                  onChange={(e) => setNombre(sanitizeNombre(e.target.value, 60))}
+                  required
+                  maxLength={60}
+                  pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{2,60}"
+                  title="Solo letras, espacios, apóstrofo o guión (2 a 60 caracteres)"
+                />
                 {errors.nombre?.[0] && <em className="field-error">{errors.nombre[0]}</em>}
               </label>
               <label>
                 <span>Apellido <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input value={apellido} onChange={(e) => setApellido(e.target.value)} required maxLength={120} />
+                <input
+                  value={apellido}
+                  onChange={(e) => setApellido(sanitizeNombre(e.target.value, 60))}
+                  required
+                  maxLength={60}
+                  pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{2,60}"
+                  title="Solo letras, espacios, apóstrofo o guión (2 a 60 caracteres)"
+                />
                 {errors.apellido?.[0] && <em className="field-error">{errors.apellido[0]}</em>}
               </label>
             </div>
@@ -161,20 +192,22 @@ export function CompletarPerfilPage() {
                   inputMode="numeric"
                   value={telefono}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '');
+                    const digits = sanitizeDigits(e.target.value, telefonoPais === '+56' ? 9 : 15);
+                    setTelefono(digits);
+                    // Validación viva
                     if (telefonoPais === '+56') {
-                      let v = digits.slice(0, 9);
-                      if (v.length > 0 && v[0] !== '9') v = '9' + v.slice(0, 8);
-                      setTelefono(v);
+                      const err = validateTelefonoCL(digits);
+                      setErrors((prev) => ({ ...prev, telefono: err ? [err] : [] }));
                     } else {
-                      setTelefono(digits.slice(0, 15));
+                      setErrors((prev) => ({ ...prev, telefono: [] }));
                     }
                   }}
                   required
+                  minLength={telefonoPais === '+56' ? 9 : 7}
                   maxLength={telefonoPais === '+56' ? 9 : 15}
                   placeholder={telefonoPais === '+56' ? '912345678' : '3001234567'}
-                  pattern={telefonoPais === '+56' ? '9[0-9]{8}' : undefined}
-                  title={telefonoPais === '+56' ? 'En Chile el celular comienza con 9 y tiene 9 dígitos' : undefined}
+                  pattern={telefonoPais === '+56' ? '9[0-9]{8}' : '[0-9]{7,15}'}
+                  title={telefonoPais === '+56' ? 'En Chile el celular comienza con 9 y tiene 9 dígitos' : 'Solo dígitos (7 a 15)'}
                   style={{ flex: 1, maxWidth: 'none' }}
                 />
               </div>

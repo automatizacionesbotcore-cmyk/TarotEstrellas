@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../../lib/api';
+import { sanitizeNombre, sanitizeDigits } from '../../lib/formValidators';
 import { useAuthStore } from '../../stores/authStore';
 import { toast } from '../../stores/toastStore';
 
@@ -327,11 +328,21 @@ export function MiCuentaPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <label>
                     Nombre
-                    <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="given-name" required />
+                    <input type="text" value={nombre}
+                      onChange={(e) => setNombre(sanitizeNombre(e.target.value, 60))}
+                      maxLength={60}
+                      pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{2,60}"
+                      title="Solo letras"
+                      autoComplete="given-name" required />
                   </label>
                   <label>
                     Apellido
-                    <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} autoComplete="family-name" />
+                    <input type="text" value={apellido}
+                      onChange={(e) => setApellido(sanitizeNombre(e.target.value, 60))}
+                      maxLength={60}
+                      pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'\-]{0,60}"
+                      title="Solo letras"
+                      autoComplete="family-name" />
                   </label>
                 </div>
                 <label>
@@ -340,7 +351,12 @@ export function MiCuentaPage() {
                 </label>
                 <label>
                   Teléfono
-                  <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} autoComplete="tel" placeholder="+56 9 1234 5678" />
+                  <input type="tel" inputMode="numeric" value={telefono}
+                    onChange={(e) => setTelefono(sanitizeDigits(e.target.value, 15))}
+                    maxLength={15}
+                    pattern="[0-9]{7,15}"
+                    title="Solo dígitos (7 a 15)"
+                    autoComplete="tel" placeholder="912345678" />
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <label>
