@@ -42,7 +42,7 @@ export function CompletarPerfilPage() {
 
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [telefonoPais, setTelefonoPais] = useState('+57');
+  const [telefonoPais, setTelefonoPais] = useState('+56');
   const [telefono, setTelefono] = useState('');
   const [paisResidencia, setPaisResidencia] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
@@ -158,11 +158,23 @@ export function CompletarPerfilPage() {
                 </select>
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    if (telefonoPais === '+56') {
+                      let v = digits.slice(0, 9);
+                      if (v.length > 0 && v[0] !== '9') v = '9' + v.slice(0, 8);
+                      setTelefono(v);
+                    } else {
+                      setTelefono(digits.slice(0, 15));
+                    }
+                  }}
                   required
-                  maxLength={30}
-                  placeholder="3001234567"
+                  maxLength={telefonoPais === '+56' ? 9 : 15}
+                  placeholder={telefonoPais === '+56' ? '912345678' : '3001234567'}
+                  pattern={telefonoPais === '+56' ? '9[0-9]{8}' : undefined}
+                  title={telefonoPais === '+56' ? 'En Chile el celular comienza con 9 y tiene 9 dígitos' : undefined}
                   style={{ flex: 1, maxWidth: 'none' }}
                 />
               </div>

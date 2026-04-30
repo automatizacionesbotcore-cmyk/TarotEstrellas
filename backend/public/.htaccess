@@ -11,13 +11,13 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    # CORS: refleja Origin si pertenece a la lista permitida (dev + prod)
+    # CORS preflight only (Laravel HandleCors maneja el resto). Refleja Origin permitido.
     SetEnvIf Origin "^(https?://localhost(:\d+)?|https?://127\.0\.0\.1(:\d+)?|https://(www\.)?tarotestrellas\.com)$" CORS_ALLOW_ORIGIN=$0
-    Header always set Access-Control-Allow-Origin "%{CORS_ALLOW_ORIGIN}e" env=CORS_ALLOW_ORIGIN
-    Header always set Vary "Origin"
+    Header always set Access-Control-Allow-Origin "%{CORS_ALLOW_ORIGIN}e" "expr=%{REQUEST_STATUS} == 204 && reqenv('CORS_ALLOW_ORIGIN') != ''"
+    Header always set Vary "Origin" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, X-XSRF-TOKEN" "expr=%{REQUEST_STATUS} == 204"
-    Header always set Access-Control-Allow-Credentials "true" env=CORS_ALLOW_ORIGIN
+    Header always set Access-Control-Allow-Credentials "true" "expr=%{REQUEST_STATUS} == 204"
 </IfModule>
 
 <IfModule mod_rewrite.c>
