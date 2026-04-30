@@ -12,11 +12,15 @@ export function AsistenteIAPage() {
   return (
     <main className="page-content asistente-page">
       <div className="asistente-page__hero">
+        <div className="asistente-page__cosmos" aria-hidden="true" />
         <div className="asistente-page__stars" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
           <span /><span /><span /><span /><span /><span />
         </div>
         <div className="asistente-page__hero-content">
           <div className="asistente-page__avatar" aria-hidden="true">
+            <span className="asistente-page__avatar-halo" />
+            <span className="asistente-page__avatar-halo asistente-page__avatar-halo--delay" />
             <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
               <path d="M12 2.5l2.6 6.5 7 .6-5.3 4.6 1.7 6.8L12 17.4l-6 3.6 1.7-6.8L2.4 9.6l7-.6L12 2.5z" />
             </svg>
