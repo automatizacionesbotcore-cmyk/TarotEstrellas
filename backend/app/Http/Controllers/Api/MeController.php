@@ -128,28 +128,10 @@ class MeController extends Controller
 
     public function consultaTranscripcion(Request $request, string $uuid): JsonResponse
     {
-        $cita = $this->findUserCita($request, $uuid);
-        if (! $cita) {
-            return response()->json([
-                'message' => 'Consulta no encontrada.',
-            ], 404);
-        }
-
-        $grabacion = $this->latestGrabacion($cita);
-
-        if (! $grabacion || ! $grabacion->transcripcion) {
-            return response()->json([
-                'message' => 'Transcripcion no disponible para esta consulta.',
-            ], 404);
-        }
-
+        // Permisos: el cliente NO accede al texto crudo. Se le redirige al resumen.
         return response()->json([
-            'data' => [
-                'cita_uuid' => $cita->uuid,
-                'grabacion_id' => $grabacion->id,
-                'transcripcion' => $grabacion->transcripcion,
-            ],
-        ]);
+            'message' => 'La transcripcion completa solo esta disponible para administradores. Consulta el resumen de tu sesion.',
+        ], 403);
     }
 
     public function consultaResumen(Request $request, string $uuid): JsonResponse

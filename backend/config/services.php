@@ -35,7 +35,13 @@ return [
     ],
 
     'daily' => [
+        'api_key' => env('DAILY_API_KEY'),
+        'domain' => env('DAILY_DOMAIN'),
+        'base_url' => env('DAILY_BASE_URL', 'https://api.daily.co/v1'),
         'webhook_secret' => env('DAILY_WEBHOOK_SECRET'),
+        'default_room_expiry_minutes' => (int) env('DAILY_ROOM_EXPIRY_MINUTES', 90),
+        'enable_transcription' => filter_var(env('DAILY_ENABLE_TRANSCRIPTION', true), FILTER_VALIDATE_BOOLEAN),
+        'recording_retention_days' => (int) env('DAILY_RECORDING_RETENTION_DAYS', 90),
     ],
 
     'whatsapp' => [

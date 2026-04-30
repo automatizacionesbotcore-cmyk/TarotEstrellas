@@ -27,6 +27,8 @@ class Grabacion extends Model
         'total_descargas',
         'transcripcion_procesada_en',
         'resumen_generado_en',
+        'expira_en',
+        'borrada_en',
         'metadata',
     ];
 
@@ -35,6 +37,8 @@ class Grabacion extends Model
         return [
             'transcripcion_procesada_en' => 'datetime',
             'resumen_generado_en' => 'datetime',
+            'expira_en' => 'datetime',
+            'borrada_en' => 'datetime',
             'descargada_por_cliente' => 'boolean',
             'primera_descarga_en' => 'datetime',
             'ultima_descarga_en' => 'datetime',

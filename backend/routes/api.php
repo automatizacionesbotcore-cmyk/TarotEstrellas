@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\PagoController;
 use App\Http\Controllers\Api\PublicTipoConsultaController;
 use App\Http\Controllers\Api\ReembolsoController;
 use App\Http\Controllers\Api\GrabacionController;
+use App\Http\Controllers\Api\VideollamadaController;
+use App\Http\Controllers\Api\AdminTranscripcionController;
 use App\Http\Controllers\Api\ResenaController;
 use App\Http\Controllers\Api\EspecialistaDashboardController;
 use App\Http\Controllers\Api\AdminReportesController;
@@ -113,6 +115,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('citas/{uuid}/pagar/transferencia/comprobante', [CitaController::class, 'subirComprobanteTransferencia']);
     Route::get('grabaciones/{uuid}/url', [GrabacionController::class, 'obtenerUrlFirmada']);
     Route::post('grabaciones/{uuid}/descarga', [GrabacionController::class, 'registrarDescarga']);
+
+    // Daily.co videollamadas
+    Route::get('me/citas/{uuid}/sala-video', [VideollamadaController::class, 'entrar']);
+    Route::post('me/citas/{uuid}/sala-video/grabacion/iniciar', [VideollamadaController::class, 'iniciarGrabacion']);
+    Route::post('me/citas/{uuid}/sala-video/grabacion/detener', [VideollamadaController::class, 'detenerGrabacion']);
+
+    // Admin transcripciones (texto crudo)
+    Route::get('admin/citas/{uuid}/transcripcion', [AdminTranscripcionController::class, 'show']);
+    Route::get('admin/citas/{uuid}/transcripcion/descargar', [AdminTranscripcionController::class, 'descargar']);
 
     Route::get('pagos', [PagoController::class, 'index']);
     Route::get('pagos/comprobantes', [ComprobanteTransferenciaController::class, 'index']);

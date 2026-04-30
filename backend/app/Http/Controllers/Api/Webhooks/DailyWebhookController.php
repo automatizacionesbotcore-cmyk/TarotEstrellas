@@ -122,6 +122,7 @@ class DailyWebhookController extends Controller
             'url_grabacion' => $recordingUrl !== '' ? $recordingUrl : $grabacion->url_grabacion,
             'estado' => 'pendiente_transcripcion',
             'metadata' => $event,
+            'expira_en' => now()->addDays((int) config('services.daily.recording_retention_days', 90)),
         ]);
         $grabacion->save();
 

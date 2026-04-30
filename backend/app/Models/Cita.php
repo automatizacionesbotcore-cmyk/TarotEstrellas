@@ -60,6 +60,10 @@ class Cita extends Model
         'zona_horaria_cliente',
         'estado',
         'canal_pago',
+        'daily_room_url',
+        'daily_room_name',
+        'grabacion_solicitada',
+        'grabacion_extra_centavos',
         'precio_total_centavos',
         'precio_final_centavos',
         'moneda',
@@ -91,6 +95,8 @@ class Cita extends Model
             'finalizada_en' => 'datetime',
             'cancelada_en' => 'datetime',
             'es_primera_consulta' => 'boolean',
+            'grabacion_solicitada' => 'boolean',
+            'grabacion_extra_centavos' => 'integer',
             'deleted_at' => 'datetime',
         ];
     }

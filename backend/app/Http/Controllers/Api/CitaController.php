@@ -175,18 +175,50 @@ class CitaController extends Controller
             ->where('cliente_id', $user->id)
             ->firstOrFail();
 
-        $roomName = 'cita-'.$cita->uuid;
+        $now = now();
+        $abre = $cita->inicio_utc?->copy()->subMinutes(15);
+        $cierra = $cita->fin_utc?->copy()->addMinutes(30);
+        $enHorario = $abre && $cierra && $now->gte($abre) && $now->lte($cierra);
+
+        $pagoCompletado = in_array($cita->estado_pago, ['pagado', 'aprobado'], true)
+            || in_array($cita->estado, ['pagada', 'confirmada', 'en_curso'], true);
+
+        $url = (string) ($cita->daily_room_url ?? '');
+        $token = '';
+        $salaCreada = false;
+
+        if ($pagoCompletado && $enHorario) {
+            try {
+                /** @var \App\Services\DailyRoomService $daily */
+                $daily = app(\App\Services\DailyRoomService::class);
+                $sala = $daily->crearSala($cita);
+                $cita->refresh();
+                $url = $sala['room_url'];
+                $token = $daily->crearMeetingToken($cita, $user, isOwner: false);
+                $salaCreada = true;
+            } catch (\Throwable $e) {
+                $salaCreada = false;
+            }
+        }
 
         return response()->json([
             'data' => [
-                'cita_uuid' => $cita->uuid,
-                'room_name' => $roomName,
-                'join_url' => sprintf('https://daily.co/tarotestrellas-%s', $cita->uuid),
-                'recording_enabled' => true,
-                'requires_recording_consent' => true,
-                'duracion_minutos' => (int) $cita->duracion_minutos,
-                'inicio_utc' => optional($cita->inicio_utc)->toIso8601String(),
-                'fin_utc' => optional($cita->fin_utc)->toIso8601String(),
+                'url' => $url,
+                'token' => $token,
+                'sala_creada' => $salaCreada,
+                'pago_completado' => $pagoCompletado,
+                'en_horario' => $enHorario,
+                'recording_enabled' => (bool) $cita->grabacion_solicitada,
+                'requires_recording_consent' => (bool) $cita->grabacion_solicitada,
+                'cita' => [
+                    'uuid' => $cita->uuid,
+                    'inicio_utc' => optional($cita->inicio_utc)->toIso8601String(),
+                    'fin_utc' => optional($cita->fin_utc)->toIso8601String(),
+                    'tipo_consulta' => $cita->tipoConsulta ? [
+                        'nombre' => $cita->tipoConsulta->nombre,
+                        'duracion_minutos' => (int) $cita->tipoConsulta->duracion_minutos,
+                    ] : null,
+                ],
             ],
         ]);
     }
@@ -363,6 +395,7 @@ class CitaController extends Controller
             'tema_principal'      => ['nullable', 'string', 'max:50'],
             'notas_cliente'       => ['nullable', 'string', 'max:2000'],
             'especialista_id'     => ['nullable', 'integer', 'exists:users,id'],
+            'grabacion_solicitada' => ['nullable', 'boolean'],
         ]);
 
         /** @var User $user */
@@ -389,7 +422,13 @@ class CitaController extends Controller
             ]);
         }
 
-        $price = (int) $tipo->precio_referencial_centavos;
+        $moneda = strtoupper($validated['moneda'] ?? $tipo->moneda ?? 'CLP');
+        $basePrice = (int) $tipo->precio_referencial_centavos;
+        $grabacionSolicitada = (bool) ($validated['grabacion_solicitada'] ?? false);
+        $extraGrabacion = $grabacionSolicitada
+            ? \App\Support\GrabacionPricing::extraCentavos((int) $tipo->duracion_minutos, $moneda)
+            : 0;
+        $price = $basePrice + $extraGrabacion;
         $isPrimeraConsulta = ! Cita::query()->where('cliente_id', $user->id)->exists();
 
         $cita = Cita::query()->create([
@@ -404,9 +443,11 @@ class CitaController extends Controller
             'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
             'estado' => 'pendiente_abono',
             'canal_pago' => $validated['canal_pago'],
+            'grabacion_solicitada' => $grabacionSolicitada,
+            'grabacion_extra_centavos' => $extraGrabacion,
             'precio_total_centavos' => $price,
             'precio_final_centavos' => $price,
-            'moneda' => strtoupper($validated['moneda'] ?? $tipo->moneda ?? 'CLP'),
+            'moneda' => $moneda,
             'tema_principal' => $validated['tema_principal'] ?? null,
             'notas_cliente' => $validated['notas_cliente'] ?? null,
             'reservada_hasta' => now()->addMinutes(

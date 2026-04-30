@@ -88,6 +88,7 @@ async function reservarCita(payload: {
   especialista_id?: number;
   tema_principal?: string;
   notas_cliente?: string;
+  grabacion_solicitada?: boolean;
 }): Promise<CitaResponse> {
   const response = await api.post('/citas', payload);
   return response.data as CitaResponse;
@@ -158,6 +159,7 @@ export function ServicioDetallePage() {
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [temaPrincipal, setTemaPrincipal] = useState('');
   const [pregunta, setPregunta] = useState('');
+  const [grabarSesion, setGrabarSesion] = useState(false);
   const [selectedEspecialistaId, setSelectedEspecialistaId] = useState<number | null>(null);
   const [canalPago, setCanalPago] = useState<'stripe' | 'transferencia'>('stripe');
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
@@ -350,6 +352,7 @@ export function ServicioDetallePage() {
       especialista_id: selectedEspecialistaId ?? undefined,
       tema_principal: temaPrincipal || undefined,
       notas_cliente: pregunta || undefined,
+      grabacion_solicitada: grabarSesion,
     });
   };
 
@@ -678,6 +681,23 @@ export function ServicioDetallePage() {
                   <p><strong>Tema</strong> {temaPrincipal || '—'}</p>
                   {pregunta && <p className="booking-summary-full"><strong>Pregunta</strong> {pregunta}</p>}
                 </div>
+
+                <label className="consent-check" style={{ marginTop: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={grabarSesion}
+                    onChange={(e) => setGrabarSesion(e.target.checked)}
+                  />
+                  <span>
+                    <strong>Grabar mi sesión (opcional)</strong>
+                    <br />
+                    <small>
+                      Recibirás el video después de la sesión. Costo adicional según duración:
+                      30 min $2.500 / 60 min $3.990 / 90 min $5.990 CLP. La grabación estará
+                      disponible 90 días en tu historial. La transcripción IA está incluida sin costo.
+                    </small>
+                  </span>
+                </label>
 
                 {!isAuthenticated && (
                   <p className="form-warning">Debes iniciar sesión para confirmar la reserva.</p>

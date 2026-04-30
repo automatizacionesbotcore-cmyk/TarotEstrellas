@@ -55,6 +55,20 @@ export function AdminCitasPage() {
     URL.revokeObjectURL(url);
   };
 
+  const descargarTranscripcion = async (uuid: string) => {
+    try {
+      const res = await api.get(`/admin/citas/${uuid}/transcripcion/descargar`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transcripcion-${uuid.slice(0, 8)}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('No hay transcripción disponible para esta cita.');
+    }
+  };
+
   const columns: Column<Cita>[] = [
     { key: 'uuid',    label: 'UUID',    render: (r) => r.uuid.slice(0, 8) + '…' },
     { key: 'tipo',    label: 'Tipo',    render: (r) => r.tipo_consulta?.nombre ?? '—' },
@@ -62,9 +76,18 @@ export function AdminCitasPage() {
     { key: 'inicio',  label: 'Inicio',  render: (r) => new Date(r.inicio_utc).toLocaleString('es-CL') },
     { key: 'cliente', label: 'Cliente', render: (r) => r.cliente_email ?? '—' },
     { key: 'accion',  label: '',        render: (r) => (
-      r.estado === 'reservada' || r.estado === 'confirmada'
-        ? <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); setTargetUuid(r.uuid); }}>Marcar no-show</button>
-        : null
+      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        {(r.estado === 'reservada' || r.estado === 'confirmada') && (
+          <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); setTargetUuid(r.uuid); }}>Marcar no-show</button>
+        )}
+        <button
+          className="btn-secondary"
+          title="Descargar transcripción cruda (admin)"
+          onClick={(e) => { e.stopPropagation(); descargarTranscripcion(r.uuid); }}
+        >
+          📝 Transcripción
+        </button>
+      </div>
     ) },
   ];
 
