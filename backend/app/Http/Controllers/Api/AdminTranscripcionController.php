@@ -16,6 +16,10 @@ class AdminTranscripcionController extends Controller
      */
     public function show(Request $request, string $uuid): JsonResponse
     {
+        if (! $request->user()?->isAdmin()) {
+            return response()->json(['message' => 'Solo administradores pueden ver la transcripcion cruda.'], 403);
+        }
+
         $cita = Cita::query()
             ->with(['cliente:id,email', 'transcripciones', 'resumenes', 'grabaciones'])
             ->where('uuid', $uuid)
@@ -58,6 +62,8 @@ class AdminTranscripcionController extends Controller
      */
     public function descargar(Request $request, string $uuid): StreamedResponse
     {
+        abort_unless($request->user()?->isAdmin(), 403, 'Solo administradores pueden descargar la transcripcion cruda.');
+
         $formato = strtolower((string) $request->query('formato', 'txt'));
         $cita = Cita::query()->with('cliente:id,email')->where('uuid', $uuid)->firstOrFail();
         $transcripcion = $cita->transcripciones()->latest('id')->first();

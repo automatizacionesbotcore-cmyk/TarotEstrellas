@@ -104,8 +104,7 @@ class MeConsultasDetalleTest extends TestCase
             ->assertJsonPath('data.uuid', $cita->uuid);
 
         $this->getJson('/api/me/consultas/'.$cita->uuid.'/transcripcion')
-            ->assertOk()
-            ->assertJsonPath('data.transcripcion.contenido', 'Transcripcion detalle cliente.');
+            ->assertStatus(403);
 
         $this->getJson('/api/me/consultas/'.$cita->uuid.'/resumen')
             ->assertOk()

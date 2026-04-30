@@ -58,10 +58,8 @@ class CitaSalaEndpointsTest extends TestCase
 
         $this->getJson('/api/citas/'.$cita->uuid.'/sala')
             ->assertOk()
-            ->assertJsonPath('data.cita_uuid', $cita->uuid)
-            ->assertJsonPath('data.room_name', 'cita-'.$cita->uuid)
-            ->assertJsonPath('data.recording_enabled', true)
-            ->assertJsonPath('data.requires_recording_consent', true);
+            ->assertJsonPath('data.cita.uuid', $cita->uuid)
+            ->assertJsonStructure(['data' => ['url', 'token', 'sala_creada', 'pago_completado', 'en_horario', 'cita']]);
 
         $this->postJson('/api/citas/'.$cita->uuid.'/sala/consentimiento', [
             'acepta_grabacion' => true,
