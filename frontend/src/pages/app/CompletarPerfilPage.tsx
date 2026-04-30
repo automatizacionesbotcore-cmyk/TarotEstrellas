@@ -49,6 +49,8 @@ export function CompletarPerfilPage() {
   const [genero, setGenero] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.nombre && !nombre) setNombre(user.nombre);
@@ -58,6 +60,8 @@ export function CompletarPerfilPage() {
     e.preventDefault();
     setSubmitting(true);
     setErrors({});
+    setErrorMessage(null);
+    setSuccessMessage(null);
     try {
       await api.post('/me/completar-perfil', {
         nombre,
@@ -69,13 +73,19 @@ export function CompletarPerfilPage() {
         genero: genero || null,
       });
       await refreshUser();
+      setSuccessMessage('¡Perfil completado! Las estrellas ya conocen tu camino ✨');
       toast.success('¡Perfil completado! ✨');
-      navigate('/app', { replace: true });
-    } catch (err: any) {
-      if (err?.response?.data?.errors) {
-        setErrors(err.response.data.errors);
+      setTimeout(() => navigate('/app', { replace: true }), 900);
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } };
+      if (e?.response?.data?.errors) {
+        setErrors(e.response.data.errors);
+        setErrorMessage('Revisa los campos marcados.');
       } else {
-        toast.error('No pudimos guardar tu perfil. Intenta de nuevo.');
+        const msg = e?.response?.data?.message
+          ?? `No pudimos guardar tu perfil${e?.response?.status ? ` (${e.response.status})` : ''}. Intenta de nuevo.`;
+        setErrorMessage(msg);
+        toast.error(msg);
       }
     } finally {
       setSubmitting(false);
@@ -84,144 +94,125 @@ export function CompletarPerfilPage() {
 
   const nombreCorto = (user?.nombre ?? '').split(' ')[0];
   const saludo = nombreCorto
-    ? `Hola ${nombreCorto}, soy Astrea, asistente IA de TarotEstrellas ✨`
-    : 'Hola, soy Astrea, asistente IA de TarotEstrellas ✨';
+    ? `Hola ${nombreCorto}, soy Astrea`
+    : 'Hola viajero, soy Astrea';
 
   return (
-    <main className="page-content" style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1rem' }}>
-      <div
-        style={{
-          background: 'var(--card)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 16,
-          padding: '1.5rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            background: 'var(--gradient-gold, linear-gradient(135deg, #fbbf24, #f59e0b))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            fontSize: 28,
-          }}
-        >
-          ✨
+    <main className="page-content asistente-page">
+      <div className="asistente-page__hero" style={{ marginBottom: '1.5rem' }}>
+        <div className="asistente-page__cosmos" aria-hidden="true" />
+        <div className="asistente-page__stars" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
+          <span /><span /><span /><span /><span /><span />
         </div>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{saludo}</h2>
-          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Necesito unos datos más para acompañarte mejor en tu camino. Solo tomará un minuto.
-          </p>
+        <div className="asistente-page__hero-content">
+          <div className="asistente-page__avatar" aria-hidden="true">
+            <span className="asistente-page__avatar-halo" />
+            <span className="asistente-page__avatar-halo asistente-page__avatar-halo--delay" />
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+              <path d="M12 2.5l2.6 6.5 7 .6-5.3 4.6 1.7 6.8L12 17.4l-6 3.6 1.7-6.8L2.4 9.6l7-.6L12 2.5z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="asistente-page__title">{saludo} ✨</h1>
+            <p className="asistente-page__subtitle">
+              Necesito unos datos más para acompañarte mejor en tu camino. Solo tomará un minuto.
+            </p>
+          </div>
         </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          background: 'var(--card)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 16,
-          padding: '1.5rem',
-          display: 'grid',
-          gap: '1rem',
-        }}
-      >
-        <Field label="Nombre" required error={errors.nombre?.[0]}>
-          <input value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} />
-        </Field>
+      <div className="auth-card">
+        <div className="auth-card-content">
+          {errorMessage && (
+            <div className="form-error" role="alert">
+              <strong>✦ </strong>{errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div className="form-success" role="status">
+              <strong>✨ </strong>{successMessage}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
+            <div className="auth-grid">
+              <label>
+                <span>Nombre <span style={{ color: 'var(--accent)' }}>*</span></span>
+                <input value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} />
+                {errors.nombre?.[0] && <em className="field-error">{errors.nombre[0]}</em>}
+              </label>
+              <label>
+                <span>Apellido <span style={{ color: 'var(--accent)' }}>*</span></span>
+                <input value={apellido} onChange={(e) => setApellido(e.target.value)} required maxLength={120} />
+                {errors.apellido?.[0] && <em className="field-error">{errors.apellido[0]}</em>}
+              </label>
+            </div>
 
-        <Field label="Apellido" required error={errors.apellido?.[0]}>
-          <input value={apellido} onChange={(e) => setApellido(e.target.value)} required maxLength={120} />
-        </Field>
+            <label className="auth-phone-field">
+              <span>Teléfono <span style={{ color: 'var(--accent)' }}>*</span></span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select value={telefonoPais} onChange={(e) => setTelefonoPais(e.target.value)} style={{ width: 130, flexShrink: 0 }}>
+                  {CODIGOS_PAIS.map((c) => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  required
+                  maxLength={30}
+                  placeholder="3001234567"
+                  style={{ flex: 1, maxWidth: 'none' }}
+                />
+              </div>
+              {(errors.telefono?.[0] || errors.telefono_pais?.[0]) && (
+                <em className="field-error">{errors.telefono?.[0] ?? errors.telefono_pais?.[0]}</em>
+              )}
+            </label>
 
-        <Field label="Teléfono" required error={errors.telefono?.[0] ?? errors.telefono_pais?.[0]}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <select value={telefonoPais} onChange={(e) => setTelefonoPais(e.target.value)} style={{ width: 130 }}>
-              {CODIGOS_PAIS.map((c) => (
-                <option key={c.code} value={c.code}>{c.label}</option>
-              ))}
-            </select>
-            <input
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              required
-              maxLength={30}
-              placeholder="3001234567"
-              style={{ flex: 1 }}
-            />
-          </div>
-        </Field>
+            <div className="auth-grid">
+              <label>
+                <span>País de residencia <span style={{ color: 'var(--accent)' }}>*</span></span>
+                <select value={paisResidencia} onChange={(e) => setPaisResidencia(e.target.value)} required>
+                  <option value="">— Selecciona —</option>
+                  {PAISES_RESIDENCIA.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+                {errors.pais_residencia?.[0] && <em className="field-error">{errors.pais_residencia[0]}</em>}
+              </label>
+              <label>
+                <span>Fecha de nacimiento <span style={{ color: 'var(--accent)' }}>*</span></span>
+                <input
+                  type="date"
+                  value={fechaNacimiento}
+                  onChange={(e) => setFechaNacimiento(e.target.value)}
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                />
+                {errors.fecha_nacimiento_publica?.[0] && <em className="field-error">{errors.fecha_nacimiento_publica[0]}</em>}
+              </label>
+            </div>
 
-        <Field label="País de residencia" required error={errors.pais_residencia?.[0]}>
-          <select value={paisResidencia} onChange={(e) => setPaisResidencia(e.target.value)} required>
-            <option value="">— Selecciona —</option>
-            {PAISES_RESIDENCIA.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </Field>
+            <label>
+              <span>Género (opcional)</span>
+              <select value={genero} onChange={(e) => setGenero(e.target.value)}>
+                <option value="">— Prefiero no decir —</option>
+                <option value="femenino">Femenino</option>
+                <option value="masculino">Masculino</option>
+                <option value="no_binario">No binario</option>
+                <option value="prefiero_no_decir">Prefiero no decir</option>
+              </select>
+              {errors.genero?.[0] && <em className="field-error">{errors.genero[0]}</em>}
+            </label>
 
-        <Field label="Fecha de nacimiento" required error={errors.fecha_nacimiento_publica?.[0]}>
-          <input
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-            required
-            max={new Date().toISOString().slice(0, 10)}
-          />
-        </Field>
-
-        <Field label="Género (opcional)" error={errors.genero?.[0]}>
-          <select value={genero} onChange={(e) => setGenero(e.target.value)}>
-            <option value="">— Prefiero no decir —</option>
-            <option value="femenino">Femenino</option>
-            <option value="masculino">Masculino</option>
-            <option value="no_binario">No binario</option>
-            <option value="prefiero_no_decir">Prefiero no decir</option>
-          </select>
-        </Field>
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="btn-primary"
-          style={{ marginTop: '0.5rem' }}
-        >
-          {submitting ? 'Guardando…' : 'Completar perfil ✨'}
-        </button>
-      </form>
+            <button type="submit" disabled={submitting} className="btn-primary">
+              {submitting ? 'Guardando…' : 'Completar perfil ✨'}
+            </button>
+          </form>
+        </div>
+      </div>
     </main>
-  );
-}
-
-function Field({
-  label,
-  required,
-  error,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label style={{ display: 'grid', gap: '0.35rem' }}>
-      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-        {label} {required && <span style={{ color: 'var(--accent)' }}>*</span>}
-      </span>
-      {children}
-      {error && <span style={{ fontSize: '0.8rem', color: '#ef4444' }}>{error}</span>}
-    </label>
   );
 }
