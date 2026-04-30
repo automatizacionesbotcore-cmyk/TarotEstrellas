@@ -47,6 +47,8 @@ const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspe
 const AdminReportesPage         = lazy(() => import('./pages/app/admin/AdminReportesPage').then((m) => ({ default: m.AdminReportesPage })));
 const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/EspecialistaMisCitasPage').then((m) => ({ default: m.EspecialistaMisCitasPage })));
 const AdminAsistenteIAPage      = lazy(() => import('./pages/app/admin/AdminAsistenteIAPage').then((m) => ({ default: m.AdminAsistenteIAPage })));
+const AdminClientesPage         = lazy(() => import('./pages/app/admin/AdminClientesPage').then((m) => ({ default: m.AdminClientesPage })));
+const AdminClienteDetallePage   = lazy(() => import('./pages/app/admin/AdminClienteDetallePage').then((m) => ({ default: m.AdminClienteDetallePage })));
 
 function PageLoader() {
   return (
@@ -153,6 +155,8 @@ export function App() {
           <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
           <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
+          <Route path="clientes"             element={<Suspense fallback={<PageLoader />}><AdminClientesPage         /></Suspense>} />
+          <Route path="clientes/:uuid"       element={<Suspense fallback={<PageLoader />}><AdminClienteDetallePage   /></Suspense>} />
         </Route>
         </Route>
       </Route>

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminDisponibilidadController;
 use App\Http\Controllers\Api\AgenteController;
+use App\Http\Controllers\Api\AdminClientesController;
 use App\Http\Controllers\Api\PublicEspecialistasController;
 use App\Http\Controllers\Api\SuperAdminEspecialistasController;
 use App\Http\Controllers\Api\AdminMetricasController;
@@ -214,6 +215,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('agente/consultar', [AgenteController::class, 'consultarAdmin']);
             Route::get('agente/conversaciones', [AgenteController::class, 'indexAdmin']);
         });
+    });
+
+    // Admin: gestion de clientes
+    Route::middleware('admin')->prefix('admin/clientes')->group(function () {
+        Route::get('/', [AdminClientesController::class, 'index']);
+        Route::get('{uuid}', [AdminClientesController::class, 'show']);
+        Route::get('{uuid}/estadisticas', [AdminClientesController::class, 'estadisticas']);
+        Route::patch('{uuid}/notas', [AdminClientesController::class, 'actualizarNotas']);
+        Route::middleware('throttle:20,1')->get('{uuid}/briefing', [AdminClientesController::class, 'briefing']);
     });
 
     Route::get('user', function (Request $request) {

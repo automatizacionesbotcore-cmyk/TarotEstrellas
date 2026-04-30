@@ -7,6 +7,7 @@ const BASE_ITEMS = [
   { to: '/app/admin/reembolsos',     label: 'Reembolsos',     end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/comprobantes',   label: 'Comprobantes',   end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/citas',          label: 'Citas',          end: false, superAdminOnly: false, especialistaOnly: false },
+  { to: '/app/admin/clientes',       label: 'Clientes',       end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/servicios',      label: 'Servicios',      end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/disponibilidad', label: 'Disponibilidad', end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/especialistas',  label: 'Especialistas',  end: false, superAdminOnly: true,  especialistaOnly: false },

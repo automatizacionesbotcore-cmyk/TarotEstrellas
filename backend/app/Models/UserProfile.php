@@ -23,12 +23,16 @@ class UserProfile extends Model
         'fecha_nacimiento_publica',
         'avatar_url',
         'biografia',
+        'notas_admin',
+        'notas_admin_actualizadas_por',
+        'notas_admin_actualizadas_en',
         'perfil_completado_en',
     ];
 
     protected $casts = [
         'fecha_nacimiento_publica' => 'date',
         'perfil_completado_en' => 'datetime',
+        'notas_admin_actualizadas_en' => 'datetime',
     ];
 
     public const CAMPOS_REQUERIDOS = [
