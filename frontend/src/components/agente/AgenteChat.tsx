@@ -67,6 +67,7 @@ export function AgenteChat({ mode, clienteUuid }: Props) {
         </label>
         <textarea
           id="agente-pregunta"
+          className="agente-chat__textarea"
           value={pregunta}
           onChange={(e) => setPregunta(e.target.value)}
           rows={3}
@@ -74,36 +75,47 @@ export function AgenteChat({ mode, clienteUuid }: Props) {
           placeholder="¿Qué temas recurrentes aparecen en mis sesiones?"
           disabled={mutation.isPending}
         />
-        <button type="submit" className="btn-primary" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Consultando…' : 'Preguntar'}
-        </button>
+        <div className="agente-chat__form-actions">
+          <span className="agente-chat__counter">{pregunta.length}/2000</span>
+          <button type="submit" className="btn-primary agente-chat__submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Consultando…' : 'Preguntar ✨'}
+          </button>
+        </div>
       </form>
 
       {mutation.data && (
         <article className="agente-chat__respuesta-actual" aria-live="polite">
-          <header><strong>Última respuesta</strong></header>
-          <p style={{ whiteSpace: 'pre-wrap' }}>{mutation.data.respuesta}</p>
-          <small style={{ color: 'var(--text-muted)' }}>
+          <header className="agente-chat__respuesta-header">
+            <span className="agente-chat__badge">✨ Última respuesta</span>
+          </header>
+          <p className="agente-chat__respuesta-texto">{mutation.data.respuesta}</p>
+          <small className="agente-chat__meta">
             {mutation.data.modelo} · {mutation.data.tokens_in ?? '?'} in / {mutation.data.tokens_out ?? '?'} out · {mutation.data.latencia_ms ?? '?'} ms · contexto: {mutation.data.contexto_sesiones ?? 0} sesiones
           </small>
         </article>
       )}
 
-      <div className="agente-chat__historial" style={{ marginTop: '1.5rem' }}>
-        <h3>Conversaciones previas</h3>
-        {listQuery.isLoading && <p style={{ color: 'var(--text-muted)' }}>Cargando…</p>}
-        {listQuery.isError && <p style={{ color: 'var(--text-error)' }}>No se pudo cargar el historial.</p>}
-        {!listQuery.isLoading && conversaciones.length === 0 && (
-          <p style={{ color: 'var(--text-muted)' }}>Aún no hay preguntas registradas.</p>
+      <div className="agente-chat__historial">
+        <h3 className="agente-chat__historial-title">Conversaciones previas</h3>
+        {listQuery.isLoading && <p className="agente-chat__hint">Cargando…</p>}
+        {listQuery.isError && <p className="agente-chat__hint agente-chat__hint--error">No se pudo cargar el historial.</p>}
+        {!listQuery.isLoading && !listQuery.isError && conversaciones.length === 0 && (
+          <p className="agente-chat__hint">Aún no hay preguntas registradas.</p>
         )}
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="agente-chat__lista">
           {conversaciones.map((c) => (
-            <li key={c.uuid} style={{ borderTop: '1px solid var(--border)', padding: '0.75rem 0' }}>
-              <p style={{ margin: 0 }}><strong>P:</strong> {c.pregunta}</p>
-              <p style={{ margin: '0.25rem 0 0', whiteSpace: 'pre-wrap' }}>
-                <strong>R:</strong> {c.respuesta ?? <em style={{ color: 'var(--text-error)' }}>(sin respuesta)</em>}
-              </p>
-              <small style={{ color: 'var(--text-muted)' }}>
+            <li key={c.uuid} className="agente-chat__item">
+              <div className="agente-chat__bubble agente-chat__bubble--user">
+                <span className="agente-chat__bubble-label">Tú</span>
+                <p>{c.pregunta}</p>
+              </div>
+              <div className="agente-chat__bubble agente-chat__bubble--bot">
+                <span className="agente-chat__bubble-label">Astrea ✨</span>
+                <p>
+                  {c.respuesta ?? <em className="agente-chat__hint--error">(sin respuesta)</em>}
+                </p>
+              </div>
+              <small className="agente-chat__meta">
                 {c.created_at ? new Date(c.created_at).toLocaleString() : ''} · {c.autor?.name ?? c.autor_rol}
               </small>
             </li>
