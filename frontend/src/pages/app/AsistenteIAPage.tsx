@@ -3,7 +3,11 @@ import { useAuthStore } from '../../stores/authStore';
 
 export function AsistenteIAPage() {
   const user = useAuthStore((s) => s.user);
-  const nombre = user?.nombre?.split(' ')[0] ?? 'viajero estelar';
+  const nombre = user?.nombre?.split(' ')[0] ?? '';
+
+  const saludo = nombre
+    ? `Hola ${nombre}, soy Astrea, asistente IA de TarotEstrellas.`
+    : 'Hola, soy Astrea, asistente IA de TarotEstrellas.';
 
   return (
     <main className="page-content asistente-page">
@@ -20,8 +24,8 @@ export function AsistenteIAPage() {
           <div>
             <h1 className="asistente-page__title">Astrea ✨</h1>
             <p className="asistente-page__subtitle">
-              Hola {nombre}, soy tu guía estelar. Pregúntame sobre tu propio historial de consultas:
-              sintetizo tus sesiones previas y te ayudo a recordar lo conversado.
+              {saludo} Pregúntame sobre tu propio historial de consultas: sintetizo tus sesiones
+              previas y te ayudo a recordar lo conversado.
             </p>
           </div>
         </div>

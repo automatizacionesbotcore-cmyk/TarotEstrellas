@@ -82,7 +82,10 @@ export function CompletarPerfilPage() {
     }
   }
 
-  const nombreCorto = (user?.nombre ?? '').split(' ')[0] || 'viajero estelar';
+  const nombreCorto = (user?.nombre ?? '').split(' ')[0];
+  const saludo = nombreCorto
+    ? `Hola ${nombreCorto}, soy Astrea, asistente IA de TarotEstrellas ✨`
+    : 'Hola, soy Astrea, asistente IA de TarotEstrellas ✨';
 
   return (
     <main className="page-content" style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1rem' }}>
@@ -114,7 +117,7 @@ export function CompletarPerfilPage() {
           ✨
         </div>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Hola {nombreCorto}, soy Astrea ✨</h2>
+          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{saludo}</h2>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             Necesito unos datos más para acompañarte mejor en tu camino. Solo tomará un minuto.
           </p>
