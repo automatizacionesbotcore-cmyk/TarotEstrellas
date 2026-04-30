@@ -11,6 +11,31 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    public function completarPerfil(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nombre'                  => ['required', 'string', 'max:100'],
+            'apellido'                => ['required', 'string', 'max:120'],
+            'telefono'                => ['required', 'string', 'max:30'],
+            'telefono_pais'           => ['required', 'string', 'max:5'],
+            'pais_residencia'         => ['required', 'string', 'max:80'],
+            'fecha_nacimiento_publica' => ['required', 'date', 'before:today'],
+            'zona_horaria'            => ['nullable', 'string', 'timezone'],
+            'genero'                  => ['nullable', 'in:masculino,femenino,no_binario,prefiero_no_decir'],
+        ]);
+
+        $user = $request->user();
+        $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
+        $profile->fill($validated);
+        $profile->perfil_completado_en = now();
+        $profile->save();
+
+        return response()->json([
+            'message' => 'Perfil completado correctamente.',
+            'data' => $profile->fresh(),
+        ]);
+    }
+
     public function updateProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([

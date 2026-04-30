@@ -71,6 +71,10 @@ export function AgenteWidget() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [teaserVisible, setTeaserVisible] = useState(false);
+  const [teaserDismissed, setTeaserDismissed] = useState(() => {
+    return sessionStorage.getItem('astrea-teaser-dismissed') === '1';
+  });
   const [pregunta, setPregunta] = useState('');
   const [mensajes, setMensajes] = useState<Msg[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -199,8 +203,43 @@ export function AgenteWidget() {
       ? `Modo administradora · ${user?.nombre?.split(' ')[0] ?? ''}`.trim()
       : `Acompañándote, ${user?.nombre?.split(' ')[0] ?? ''}`;
 
+  const nombreCorto = user?.nombre?.split(' ')[0] ?? '';
+  const teaserMensaje = user
+    ? `Hola ${nombreCorto} ✨ ¿Te ayudo con algo?`
+    : 'Hola ✨ ¿Tienes alguna duda? Pregúntame.';
+
+  useEffect(() => {
+    if (open || teaserDismissed) return;
+    const t1 = setTimeout(() => setTeaserVisible(true), 3500);
+    const t2 = setTimeout(() => setTeaserVisible(false), 14000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [open, teaserDismissed, user?.uuid]);
+
+  function dismissTeaser() {
+    setTeaserVisible(false);
+    setTeaserDismissed(true);
+    sessionStorage.setItem('astrea-teaser-dismissed', '1');
+  }
+
   return (
     <>
+      {!open && teaserVisible && (
+        <div className="astrea-teaser" role="status" aria-live="polite">
+          <button
+            type="button"
+            className="astrea-teaser__close"
+            onClick={dismissTeaser}
+            aria-label="Cerrar invitación"
+          >×</button>
+          <button
+            type="button"
+            className="astrea-teaser__bubble"
+            onClick={() => { setOpen(true); dismissTeaser(); }}
+          >
+            {teaserMensaje}
+          </button>
+        </div>
+      )}
       {!open && (
         <button
           type="button"

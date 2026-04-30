@@ -137,6 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('admin/settings/transfer-validation', [AdminTransferValidationSettingController::class, 'update']);
 
     Route::put('account/profile', [AccountController::class, 'updateProfile']);
+    Route::post('me/completar-perfil', [AccountController::class, 'completarPerfil']);
     Route::delete('me/account', [MeController::class, 'deleteAccount']);
     Route::get('preferencias-notificacion', [AccountController::class, 'getNotificationPrefs']);
     Route::put('preferencias-notificacion', [AccountController::class, 'updateNotificationPrefs']);
@@ -205,6 +206,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('user', function (Request $request) {
-        return $request->user()->load(['profile', 'roles']);
+        $user = $request->user()->load(['profile', 'roles']);
+        $arr = $user->toArray();
+        $arr['perfil_completo'] = $user->profile ? $user->profile->estaCompleto() : false;
+        return $arr;
     });
 });

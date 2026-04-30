@@ -7,6 +7,7 @@ export type User = {
   nombre?: string | null;
   email_verified_at?: string | null;
   roles?: string[];
+  perfil_completo?: boolean;
 };
 
 type AuthState = {
@@ -37,6 +38,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
     nombre: (profile?.nombre as string) ?? (raw.name as string) ?? null,
     email_verified_at: (raw.email_verified_at as string) ?? null,
     roles: normalizeRoles(raw.roles),
+    perfil_completo: Boolean(raw.perfil_completo),
   };
 }
 

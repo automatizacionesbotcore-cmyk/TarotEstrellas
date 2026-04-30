@@ -6,6 +6,7 @@ export function GoogleCallbackPage() {
   const [params]   = useSearchParams();
   const navigate   = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
+  const refreshUser = useAuthStore((s) => s.refreshUser);
 
   useEffect(() => {
     const token   = params.get('token');
@@ -20,7 +21,7 @@ export function GoogleCallbackPage() {
     try {
       const user = JSON.parse(decodeURIComponent(userRaw));
       setSession(token, user);
-      navigate('/app', { replace: true });
+      refreshUser().finally(() => navigate('/app', { replace: true }));
     } catch {
       navigate('/auth/login?error=google', { replace: true });
     }

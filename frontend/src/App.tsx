@@ -22,6 +22,8 @@ import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { MembresiaPage } from './pages/app/MembresiaPage';
 import { AsistenteIAPage } from './pages/app/AsistenteIAPage';
+import { CompletarPerfilPage } from './pages/app/CompletarPerfilPage';
+import { ProfileCompleteGuard } from './components/guards/ProfileCompleteGuard';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
 import { AgenteWidget } from './components/agente/AgenteWidget';
@@ -108,6 +110,8 @@ export function App() {
           </AuthOnly>
         }
       >
+        <Route path="completar-perfil" element={<CompletarPerfilPage />} />
+        <Route element={<ProfileCompleteGuard />}>
         <Route index element={<DashboardPage />} />
         <Route path="mis-consultas" element={<MisConsultasPage />} />
         <Route
@@ -149,6 +153,7 @@ export function App() {
           <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
           <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
+        </Route>
         </Route>
       </Route>
 
