@@ -316,6 +316,45 @@ export function AgenteWidget() {
             )}
           </div>
 
+          {(() => {
+            const sugerenciasPub = [
+              '¿Qué servicios ofrecen?',
+              '¿Cómo agendar una consulta?',
+              '¿Quiénes son sus especialistas?',
+            ];
+            const sugerenciasSelf = [
+              '¿Cuál fue mi última consulta?',
+              'Resume mis sesiones recientes',
+              '¿Qué temas trato más?',
+            ];
+            const sugerenciasAdm = [
+              'Resume las consultas de hoy',
+              '¿Qué clientes tienen seguimiento pendiente?',
+              'Dame un patrón emocional general',
+            ];
+            const sugs = mode === 'publico' ? sugerenciasPub : mode === 'admin' ? sugerenciasAdm : sugerenciasSelf;
+            const mostrar = mensajes.length <= 1 && !mutation.isPending;
+            if (!mostrar) return null;
+            return (
+              <div className="astrea-widget__suggestions" role="group" aria-label="Sugerencias">
+                {sugs.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="astrea-widget__chip"
+                    onClick={() => {
+                      setPregunta('');
+                      setMensajes((prev) => [...prev, { id: `q-${Date.now()}`, role: 'user', text: s }]);
+                      mutation.mutate(s);
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
+
           <form className="astrea-widget__form" onSubmit={submit}>
             <input
               type="text"
