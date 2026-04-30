@@ -25,16 +25,16 @@ const HIDDEN_PATHS = [/^\/auth(\/|$)/, /^\/app\/sala\//];
 
 const SALUDOS_PUBLICO = [
   '✨ Hola, soy Astrea, tu guía estelar en TarotEstrellas. ¿Sobre qué quieres saber hoy?',
-  '✨ Bienvenido. Soy Astrea. Puedo contarte sobre nuestros servicios, especialistas o cómo agendar tu consulta.',
-  '✨ Las estrellas te dan la bienvenida. Soy Astrea, ¿en qué puedo ayudarte?',
+  '✨ Hola, bienvenido. Soy Astrea. Puedo contarte sobre nuestros servicios, especialistas o cómo agendar tu consulta.',
+  '✨ Hola, las estrellas te saludan. Soy Astrea, pregúntame lo que quieras.',
 ];
 
 function saludoCliente(nombre: string): string[] {
   const primer = nombre.split(' ')[0] || '';
   return [
     `✨ ¡Hola, ${primer}! Soy Astrea. ¿Qué quieres consultar hoy?`,
-    `✨ Bienvenido de vuelta, ${primer}. Soy Astrea, recuerdo tus sesiones previas. ¿En qué te acompaño?`,
-    `✨ ${primer}, las estrellas te saludan. Soy Astrea, pregúntame lo que quieras.`,
+    `✨ Hola ${primer}, bienvenido de vuelta. Soy Astrea, recuerdo tus sesiones previas. ¿En qué te acompaño?`,
+    `✨ Hola ${primer}, las estrellas te saludan. Soy Astrea, pregúntame lo que quieras.`,
   ];
 }
 
@@ -42,7 +42,8 @@ function saludoAdmin(nombre?: string): string[] {
   const primer = nombre?.split(' ')[0] ?? 'Chachita';
   return [
     `✨ Hola ${primer}. Soy Astrea. ¿Sobre qué cliente o tema quieres saber?`,
-    `✨ ${primer}, lista para asistirte. Pregúntame por la plataforma o por cualquier cliente.`,
+    `✨ Hola ${primer}, lista para asistirte. Pregúntame por la plataforma o por cualquier cliente.`,
+    `✨ Hola ${primer}, las estrellas alinean tu jornada. Soy Astrea, ¿qué necesitas?`,
   ];
 }
 
@@ -236,6 +237,21 @@ export function AgenteWidget() {
           </header>
 
           <div className="astrea-widget__body" ref={scrollRef}>
+            <div className="astrea-constellation" aria-hidden="true">
+              <span className="astrea-star astrea-star--1" />
+              <span className="astrea-star astrea-star--2" />
+              <span className="astrea-star astrea-star--3" />
+              <span className="astrea-star astrea-star--4" />
+              <span className="astrea-star astrea-star--5" />
+              <span className="astrea-star astrea-star--6" />
+              <span className="astrea-star astrea-star--7" />
+              <span className="astrea-star astrea-star--8" />
+              <svg className="astrea-constellation__lines" viewBox="0 0 300 500" preserveAspectRatio="none">
+                <polyline points="40,60 90,110 160,80 220,150 270,90" fill="none" stroke="currentColor" strokeWidth="0.6" strokeOpacity="0.35" />
+                <polyline points="60,300 130,260 180,330 250,310" fill="none" stroke="currentColor" strokeWidth="0.6" strokeOpacity="0.3" />
+                <polyline points="40,440 100,400 170,460 240,420" fill="none" stroke="currentColor" strokeWidth="0.6" strokeOpacity="0.3" />
+              </svg>
+            </div>
             {mensajes.map((m) => (
               <div key={m.id} className={`astrea-msg astrea-msg--${m.role}`}>
                 {m.role === 'assistant' && (

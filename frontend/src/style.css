@@ -3969,7 +3969,7 @@ gap: 0.65rem;
 background: rgba(250, 246, 240, 0.92);
 }
 
-.astrea-msg { display: flex; gap: 0.4rem; align-items: flex-end; }
+.astrea-msg { display: flex; gap: 0.4rem; align-items: flex-end; position: relative; z-index: 1; }
 .astrea-msg--user { justify-content: flex-end; }
 .astrea-msg--assistant { justify-content: flex-start; }
 .astrea-msg__icon {
