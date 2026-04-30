@@ -195,14 +195,6 @@ export function AgenteWidget() {
     navigate(isAdmin ? '/app/admin/asistente-ia' : '/app/asistente-ia');
   };
 
-  if (shouldHideOnRoute(location.pathname)) return null;
-
-  const subtitulo = mode === 'publico'
-    ? 'Tu guía estelar'
-    : mode === 'admin'
-      ? `Modo administradora · ${user?.nombre?.split(' ')[0] ?? ''}`.trim()
-      : `Acompañándote, ${user?.nombre?.split(' ')[0] ?? ''}`;
-
   const nombreCorto = user?.nombre?.split(' ')[0] ?? '';
   const teaserMensaje = user
     ? `Hola ${nombreCorto} ✨ ¿Te ayudo con algo?`
@@ -220,6 +212,14 @@ export function AgenteWidget() {
     setTeaserDismissed(true);
     sessionStorage.setItem('astrea-teaser-dismissed', '1');
   }
+
+  if (shouldHideOnRoute(location.pathname)) return null;
+
+  const subtitulo = mode === 'publico'
+    ? 'Tu guía estelar'
+    : mode === 'admin'
+      ? `Modo administradora · ${user?.nombre?.split(' ')[0] ?? ''}`.trim()
+      : `Acompañándote, ${user?.nombre?.split(' ')[0] ?? ''}`;
 
   return (
     <>
