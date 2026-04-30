@@ -23,8 +23,43 @@ interface Msg {
 
 const HIDDEN_PATHS = [/^\/auth(\/|$)/, /^\/app\/sala\//];
 
+const SALUDOS_PUBLICO = [
+  '✨ Hola, soy Astrea, tu guía estelar en TarotEstrellas. ¿Sobre qué quieres saber hoy?',
+  '✨ Bienvenido. Soy Astrea. Puedo contarte sobre nuestros servicios, especialistas o cómo agendar tu consulta.',
+  '✨ Las estrellas te dan la bienvenida. Soy Astrea, ¿en qué puedo ayudarte?',
+];
+
+function saludoCliente(nombre: string): string[] {
+  const primer = nombre.split(' ')[0] || '';
+  return [
+    `✨ ¡Hola, ${primer}! Soy Astrea. ¿Qué quieres consultar hoy?`,
+    `✨ Bienvenido de vuelta, ${primer}. Soy Astrea, recuerdo tus sesiones previas. ¿En qué te acompaño?`,
+    `✨ ${primer}, las estrellas te saludan. Soy Astrea, pregúntame lo que quieras.`,
+  ];
+}
+
+function saludoAdmin(nombre?: string): string[] {
+  const primer = nombre?.split(' ')[0] ?? 'Chachita';
+  return [
+    `✨ Hola ${primer}. Soy Astrea. ¿Sobre qué cliente o tema quieres saber?`,
+    `✨ ${primer}, lista para asistirte. Pregúntame por la plataforma o por cualquier cliente.`,
+  ];
+}
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function shouldHideOnRoute(pathname: string): boolean {
   return HIDDEN_PATHS.some((rx) => rx.test(pathname));
+}
+
+function StarIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2.5l2.6 6.5 7 .6-5.3 4.6 1.7 6.8L12 17.4l-6 3.6 1.7-6.8L2.4 9.6l7-.6L12 2.5z" />
+    </svg>
+  );
 }
 
 export function AgenteWidget() {
@@ -57,26 +92,23 @@ export function AgenteWidget() {
     enabled: open && queryKey !== null,
   });
 
-  // Hidratar mensajes con historial al abrir (solo si la lista de mensajes esta vacia)
+  const buildSaludo = (): string => {
+    if (mode === 'publico') return pickRandom(SALUDOS_PUBLICO);
+    if (mode === 'admin') return pickRandom(saludoAdmin(user?.nombre ?? undefined));
+    return pickRandom(saludoCliente(user?.nombre ?? ''));
+  };
+
+  // Hidratar mensajes con historial al abrir
   useEffect(() => {
     if (!open) return;
     if (mensajes.length > 0) return;
     const hist = historialQuery.data?.data ?? [];
-    if (hist.length === 0) {
-      setMensajes([
-        {
-          id: 'welcome',
-          role: 'assistant',
-          text: user
-            ? `¡Hola, ${user.nombre?.split(' ')[0] ?? ''}! Soy el asistente de TarotEstrellas. ¿En qué puedo ayudarte hoy?`
-            : '¡Hola! Soy el asistente de TarotEstrellas. Pregúntame lo que quieras saber sobre nuestras consultas, especialistas o cómo agendar.',
-        },
-      ]);
+    if (hist.length === 0 || mode === 'publico') {
+      setMensajes([{ id: `welcome-${Date.now()}`, role: 'assistant', text: buildSaludo() }]);
       return;
     }
-    // Mostrar las ultimas 10 conversaciones (orden cronologico ascendente)
     const ordered = [...hist].reverse().slice(-10);
-    const expanded: Msg[] = [];
+    const expanded: Msg[] = [{ id: `welcome-${Date.now()}`, role: 'assistant', text: buildSaludo() }];
     ordered.forEach((c) => {
       expanded.push({ id: `q-${c.uuid}`, role: 'user', text: c.pregunta });
       if (c.respuesta) {
@@ -94,7 +126,8 @@ export function AgenteWidget() {
       }
     });
     setMensajes(expanded);
-  }, [open, historialQuery.data, mensajes.length, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, historialQuery.data, mode, user?.nombre]);
 
   useEffect(() => {
     if (open && scrollRef.current) {
@@ -149,15 +182,7 @@ export function AgenteWidget() {
   };
 
   const nuevoChat = () => {
-    setMensajes([
-      {
-        id: `welcome-${Date.now()}`,
-        role: 'assistant',
-        text: user
-          ? `Nuevo chat iniciado. ¿En qué puedo ayudarte, ${user.nombre?.split(' ')[0] ?? ''}?`
-          : 'Nuevo chat iniciado. ¿En qué puedo ayudarte?',
-      },
-    ]);
+    setMensajes([{ id: `welcome-${Date.now()}`, role: 'assistant', text: buildSaludo() }]);
   };
 
   const expandir = () => {
@@ -167,45 +192,59 @@ export function AgenteWidget() {
 
   if (shouldHideOnRoute(location.pathname)) return null;
 
+  const subtitulo = mode === 'publico'
+    ? 'Tu guía estelar'
+    : mode === 'admin'
+      ? `Modo administradora · ${user?.nombre?.split(' ')[0] ?? ''}`.trim()
+      : `Acompañándote, ${user?.nombre?.split(' ')[0] ?? ''}`;
+
   return (
     <>
       {!open && (
         <button
           type="button"
-          className="agente-fab"
-          aria-label="Abrir asistente IA"
+          className="astrea-fab"
+          aria-label="Abrir asistente Astrea"
           onClick={() => setOpen(true)}
         >
-          <span aria-hidden="true">🤖</span>
+          <span className="astrea-fab__star" aria-hidden="true">
+            <StarIcon size={26} />
+          </span>
+          <span className="astrea-fab__pulse" aria-hidden="true" />
         </button>
       )}
 
       {open && (
-        <div className="agente-widget" role="dialog" aria-label="Asistente IA TarotEstrellas">
-          <header className="agente-widget__header">
-            <div className="agente-widget__title">
-              <span className="agente-widget__avatar" aria-hidden="true">🤖</span>
-              <div>
-                <strong>Asistente TarotEstrellas</strong>
-                <small>{mode === 'publico' ? 'Visitante' : mode === 'admin' ? 'Modo administradora' : `Hola, ${user?.nombre ?? ''}`}</small>
+        <div className="astrea-widget" role="dialog" aria-label="Astrea — Asistente de TarotEstrellas">
+          <header className="astrea-widget__header">
+            <div className="astrea-widget__title">
+              <span className="astrea-widget__avatar" aria-hidden="true">
+                <StarIcon size={22} />
+              </span>
+              <div className="astrea-widget__name">
+                <strong>Astrea</strong>
+                <small>{subtitulo}</small>
               </div>
             </div>
-            <div className="agente-widget__actions">
+            <div className="astrea-widget__actions">
               <button type="button" onClick={nuevoChat} title="Nuevo chat" aria-label="Nuevo chat">＋</button>
               {(mode === 'self' || mode === 'admin') && (
-                <button type="button" onClick={expandir} title="Ver pantalla completa" aria-label="Pantalla completa">⛶</button>
+                <button type="button" onClick={expandir} title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
               )}
               <button type="button" onClick={() => setOpen(false)} title="Cerrar" aria-label="Cerrar">×</button>
             </div>
           </header>
 
-          <div className="agente-widget__body" ref={scrollRef}>
+          <div className="astrea-widget__body" ref={scrollRef}>
             {mensajes.map((m) => (
-              <div key={m.id} className={`agente-msg agente-msg--${m.role}`}>
-                <div className="agente-msg__bubble">
+              <div key={m.id} className={`astrea-msg astrea-msg--${m.role}`}>
+                {m.role === 'assistant' && (
+                  <span className="astrea-msg__icon" aria-hidden="true"><StarIcon size={14} /></span>
+                )}
+                <div className="astrea-msg__bubble">
                   <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{m.text}</p>
                   {m.meta && m.role === 'assistant' && (
-                    <small className="agente-msg__meta">
+                    <small className="astrea-msg__meta">
                       {m.meta.modelo} · {m.meta.tokens_in ?? '?'}/{m.meta.tokens_out ?? '?'} tk · {m.meta.latencia_ms ?? '?'} ms
                     </small>
                   )}
@@ -213,26 +252,27 @@ export function AgenteWidget() {
               </div>
             ))}
             {mutation.isPending && (
-              <div className="agente-msg agente-msg--assistant">
-                <div className="agente-msg__bubble agente-msg__bubble--typing">
+              <div className="astrea-msg astrea-msg--assistant">
+                <span className="astrea-msg__icon" aria-hidden="true"><StarIcon size={14} /></span>
+                <div className="astrea-msg__bubble astrea-msg__bubble--typing">
                   <span /><span /><span />
                 </div>
               </div>
             )}
           </div>
 
-          <form className="agente-widget__form" onSubmit={submit}>
+          <form className="astrea-widget__form" onSubmit={submit}>
             <input
               type="text"
               value={pregunta}
               onChange={(e) => setPregunta(e.target.value)}
-              placeholder={mode === 'admin' ? 'Pregunta sobre cualquier cliente o la plataforma…' : 'Escribe tu mensaje…'}
+              placeholder={mode === 'admin' ? 'Pregunta sobre cualquier cliente o la plataforma…' : 'Escribe tu pregunta a Astrea…'}
               maxLength={2000}
               disabled={mutation.isPending}
-              aria-label="Pregunta al asistente"
+              aria-label="Pregunta para Astrea"
             />
             <button type="submit" disabled={mutation.isPending} aria-label="Enviar">
-              ➤
+              <StarIcon size={16} />
             </button>
           </form>
         </div>
@@ -240,4 +280,3 @@ export function AgenteWidget() {
     </>
   );
 }
-
