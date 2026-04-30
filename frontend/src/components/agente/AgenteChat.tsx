@@ -24,7 +24,7 @@ export function AgenteChat({ mode, clienteUuid }: Props) {
     queryFn: () =>
       mode === 'self'
         ? listConversacionesSelf()
-        : listConversacionesAdmin(clienteUuid as string),
+        : listConversacionesAdmin(20, clienteUuid as string),
     enabled: mode === 'self' || Boolean(clienteUuid),
   });
 
@@ -32,7 +32,7 @@ export function AgenteChat({ mode, clienteUuid }: Props) {
     mutationFn: async (q) =>
       mode === 'self'
         ? consultarAgenteSelf(q)
-        : consultarAgenteAdmin(clienteUuid as string, q),
+        : consultarAgenteAdmin(q, clienteUuid as string),
     onSuccess: () => {
       setPregunta('');
       queryClient.invalidateQueries({ queryKey });

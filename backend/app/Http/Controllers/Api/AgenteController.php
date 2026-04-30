@@ -18,18 +18,41 @@ class AgenteController extends Controller
     }
 
     /**
+     * POST /api/agente/publico  (visitantes anonimos, solo conocimiento de plataforma)
+     */
+    public function consultarPublico(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'pregunta' => ['required', 'string', 'min:3', 'max:2000'],
+        ]);
+
+        try {
+            $resultado = $this->agente->responder(
+                cliente: null,
+                autor: null,
+                autorRol: 'publico',
+                pregunta: $data['pregunta'],
+            );
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => 'El agente IA no esta disponible.', 'detalle' => $e->getMessage()], 502);
+        }
+
+        return response()->json($this->serialize($resultado['conversacion']), 201);
+    }
+
+    /**
      * POST /api/agente/consultar  (admin)
-     * Body: { cliente_uuid, pregunta }
+     * Body: { pregunta, cliente_uuid? }
      */
     public function consultarAdmin(ConsultarAgenteRequest $request): JsonResponse
     {
-        $request->validate([
-            'cliente_uuid' => ['required', 'string', 'uuid'],
-        ]);
-
-        $cliente = User::query()->where('uuid', $request->string('cliente_uuid'))->first();
-        if (! $cliente) {
-            return response()->json(['message' => 'Cliente no encontrado.'], 404);
+        $clienteUuid = (string) $request->string('cliente_uuid');
+        $cliente = null;
+        if ($clienteUuid !== '') {
+            $cliente = User::query()->where('uuid', $clienteUuid)->first();
+            if (! $cliente) {
+                return response()->json(['message' => 'Cliente no encontrado.'], 404);
+            }
         }
 
         try {
@@ -73,19 +96,26 @@ class AgenteController extends Controller
     public function indexAdmin(Request $request): JsonResponse
     {
         $request->validate([
-            'cliente_uuid' => ['required', 'string', 'uuid'],
+            'cliente_uuid' => ['sometimes', 'string', 'uuid'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $cliente = User::query()->where('uuid', $request->string('cliente_uuid'))->first();
-        if (! $cliente) {
-            return response()->json(['message' => 'Cliente no encontrado.'], 404);
+        $query = AgenteConversacion::query()
+            ->with(['autor:id,uuid,name,email', 'cliente:id,uuid,name,email']);
+
+        $clienteUuid = (string) $request->string('cliente_uuid');
+        if ($clienteUuid !== '') {
+            $cliente = User::query()->where('uuid', $clienteUuid)->first();
+            if (! $cliente) {
+                return response()->json(['message' => 'Cliente no encontrado.'], 404);
+            }
+            $query->where('cliente_id', $cliente->id);
+        } else {
+            // Por defecto: conversaciones autoradas por el admin actual.
+            $query->where('autor_user_id', $request->user()->id);
         }
 
-        $rows = AgenteConversacion::query()
-            ->where('cliente_id', $cliente->id)
-            ->with('autor:id,uuid,name,email')
-            ->orderByDesc('created_at')
+        $rows = $query->orderByDesc('created_at')
             ->paginate((int) $request->integer('per_page', 20));
 
         return response()->json([
@@ -134,6 +164,10 @@ class AgenteController extends Controller
             'autor' => $c->relationLoaded('autor') && $c->autor ? [
                 'uuid' => $c->autor->uuid,
                 'name' => $c->autor->name,
+            ] : null,
+            'cliente' => $c->relationLoaded('cliente') && $c->cliente ? [
+                'uuid' => $c->cliente->uuid,
+                'name' => $c->cliente->name,
             ] : null,
             'pregunta' => $c->pregunta,
             'respuesta' => $c->respuesta,

@@ -14,13 +14,18 @@ use Throwable;
 class AgenteIAService
 {
     /**
-     * Responde una pregunta sobre el historial de un cliente.
+     * Responde una pregunta del agente IA.
+     *
+     * Modos:
+     *  - publico:  $cliente=null, $autor=null, $autorRol='publico'  -> solo plataforma.
+     *  - cliente:  $cliente=usuario, $autor=usuario, $autorRol='cliente' -> perfil + propio historial + plataforma.
+     *  - admin:    $cliente=null|target, $autor=admin, $autorRol='admin' -> plataforma + (opcional) historial cliente target.
      *
      * @return array{conversacion: AgenteConversacion}
      *
-     * @throws RuntimeException si la API key no está configurada o Anthropic falla.
+     * @throws RuntimeException
      */
-    public function responder(User $cliente, User $autor, string $autorRol, string $pregunta): array
+    public function responder(?User $cliente, ?User $autor, string $autorRol, string $pregunta): array
     {
         $apiKey = (string) config('services.anthropic.api_key', '');
         if ($apiKey === '') {
@@ -31,10 +36,12 @@ class AgenteIAService
         $maxSesiones = (int) config('services.anthropic.agente_max_sesiones', 20);
         $maxTokens = (int) config('services.anthropic.agente_max_tokens', 1024);
 
-        [$contexto, $contextoSesiones] = $this->construirContexto($cliente, $maxSesiones);
+        [$historial, $contextoSesiones] = $cliente
+            ? $this->construirHistorial($cliente, $maxSesiones)
+            : ['', 0];
 
-        $systemPrompt = $this->systemPrompt($cliente, $autorRol);
-        $userMessage = $this->userMessage($contexto, $pregunta);
+        $systemPrompt = $this->systemPrompt($cliente, $autor, $autorRol);
+        $userMessage = $this->userMessage($cliente, $historial, $pregunta);
 
         $start = microtime(true);
         $respuestaTexto = null;
@@ -79,8 +86,8 @@ class AgenteIAService
         $latenciaMs = (int) round((microtime(true) - $start) * 1000);
 
         $conversacion = AgenteConversacion::query()->create([
-            'cliente_id' => $cliente->id,
-            'autor_user_id' => $autor->id,
+            'cliente_id' => $cliente?->id,
+            'autor_user_id' => $autor?->id,
             'autor_rol' => $autorRol,
             'pregunta' => $pregunta,
             'respuesta' => $respuestaTexto,
@@ -103,7 +110,7 @@ class AgenteIAService
     /**
      * @return array{0: string, 1: int}
      */
-    private function construirContexto(User $cliente, int $maxSesiones): array
+    private function construirHistorial(User $cliente, int $maxSesiones): array
     {
         $resumenes = Resumen::query()
             ->whereHas('cita', fn ($q) => $q->where('cliente_id', $cliente->id))
@@ -142,24 +149,40 @@ class AgenteIAService
         return [implode("\n\n---\n\n", $bloques), $resumenes->count() + $transcripcionesExtra->count()];
     }
 
-    private function systemPrompt(User $cliente, string $autorRol): string
+    private function systemPrompt(?User $cliente, ?User $autor, string $autorRol): string
     {
-        $rolDescripcion = $autorRol === 'admin'
-            ? "Tu interlocutor es la especialista esoterica que atiende al cliente. Habla de forma profesional y sintetica, ayudando a preparar la proxima sesion."
-            : "Tu interlocutor es el propio cliente consultando su historial. Habla en segunda persona, con tono empatico y respetuoso.";
+        $rol = match ($autorRol) {
+            'admin'   => "Tu interlocutor es la administradora (Chachita) de la plataforma. Habla de forma profesional y sintetica; puede preguntarte por cualquier cliente. Si necesita el historial de un cliente que no esta en el contexto, indicale que abra el panel admin del cliente o te pase su nombre/email.",
+            'cliente' => "Tu interlocutor es ".($cliente?->name ?? 'el cliente').". Trato en segunda persona, calido y empatico. Puedes referirte a su historial cuando sea relevante.",
+            default   => "Tu interlocutor es un visitante anonimo de la plataforma. No tienes acceso a datos personales suyos. Responde dudas generales y, si conviene, invitalo a registrarse para obtener acompanamiento personalizado.",
+        };
+
+        $perfil = '';
+        if ($cliente) {
+            $perfil = "\nDatos del cliente actual:\n- Nombre: {$cliente->name}\n- Email: {$cliente->email}";
+            if ($cliente->created_at) {
+                $perfil .= "\n- Cliente desde: ".$cliente->created_at->toDateString();
+            }
+        }
 
         return implode("\n", [
-            "Eres el asistente IA de TarotEstrellas, una plataforma de consultas esotericas.",
-            "Respondes en espanol neutro, claro y empatico, sin inventar datos.",
-            "Solo usas la informacion del HISTORIAL provisto. Si no hay datos suficientes, lo dices explicitamente.",
-            "Cliente sobre el que se consulta: {$cliente->name}.",
-            $rolDescripcion,
-            "Nunca reveles contenido textual literal de otras personas; resume y sintetiza.",
+            "Eres el Asistente IA de TarotEstrellas.",
+            "Responde en espanol neutro, calido, claro y conciso. Nunca inventes datos.",
+            "Cuando uses el historial, sintetiza; nunca cites textualmente conversaciones de terceros.",
+            "Si no tienes informacion suficiente, dilo y sugiere a quien preguntar (Chachita o soporte).",
+            $rol,
+            $perfil,
+            "",
+            AgentePlataformaContext::knowledge(),
         ]);
     }
 
-    private function userMessage(string $contexto, string $pregunta): string
+    private function userMessage(?User $cliente, string $historial, string $pregunta): string
     {
-        return "HISTORIAL DEL CLIENTE:\n\n{$contexto}\n\n---\n\nPREGUNTA: {$pregunta}";
+        if ($cliente && $historial !== '') {
+            return "HISTORIAL DEL CLIENTE ({$cliente->name}):\n\n{$historial}\n\n---\n\nPREGUNTA: {$pregunta}";
+        }
+
+        return "PREGUNTA: {$pregunta}";
     }
 }

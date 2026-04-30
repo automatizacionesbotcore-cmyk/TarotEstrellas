@@ -20,15 +20,20 @@ export interface AgenteListResponse {
   meta: { current_page: number; last_page: number; per_page: number; total: number };
 }
 
+export async function consultarAgentePublico(pregunta: string): Promise<AgenteConversacion> {
+  const { data } = await api.post<AgenteConversacion>('/agente/publico', { pregunta });
+  return data;
+}
+
 export async function consultarAgenteSelf(pregunta: string): Promise<AgenteConversacion> {
   const { data } = await api.post<AgenteConversacion>('/me/agente/consultar', { pregunta });
   return data;
 }
 
-export async function consultarAgenteAdmin(clienteUuid: string, pregunta: string): Promise<AgenteConversacion> {
+export async function consultarAgenteAdmin(pregunta: string, clienteUuid?: string): Promise<AgenteConversacion> {
   const { data } = await api.post<AgenteConversacion>('/agente/consultar', {
-    cliente_uuid: clienteUuid,
     pregunta,
+    ...(clienteUuid ? { cliente_uuid: clienteUuid } : {}),
   });
   return data;
 }
@@ -40,9 +45,9 @@ export async function listConversacionesSelf(perPage = 20): Promise<AgenteListRe
   return data;
 }
 
-export async function listConversacionesAdmin(clienteUuid: string, perPage = 20): Promise<AgenteListResponse> {
+export async function listConversacionesAdmin(perPage = 20, clienteUuid?: string): Promise<AgenteListResponse> {
   const { data } = await api.get<AgenteListResponse>('/agente/conversaciones', {
-    params: { cliente_uuid: clienteUuid, per_page: perPage },
+    params: { per_page: perPage, ...(clienteUuid ? { cliente_uuid: clienteUuid } : {}) },
   });
   return data;
 }

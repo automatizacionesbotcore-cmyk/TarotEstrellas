@@ -24,6 +24,7 @@ import { MembresiaPage } from './pages/app/MembresiaPage';
 import { AsistenteIAPage } from './pages/app/AsistenteIAPage';
 import { useAuthStore } from './stores/authStore';
 import { AuthCardModal } from './components/ui/AuthCardModal';
+import { AgenteWidget } from './components/agente/AgenteWidget';
 
 // Lazy-load heavy pages (Stripe, Daily.co, R3F) para reducir el bundle inicial
 const PagarCitaPage  = lazy(() => import('./pages/app/PagarCitaPage').then((m) => ({ default: m.PagarCitaPage })));
@@ -68,6 +69,7 @@ export function App() {
     <>
     <AuthCardModal />
     <Toaster />
+    <AgenteWidget />
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />

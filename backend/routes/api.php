@@ -61,6 +61,9 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+// Agente IA publico (sin auth, throttle estricto contra abuso)
+Route::middleware('throttle:10,1')->post('agente/publico', [AgenteController::class, 'consultarPublico']);
+
 Route::prefix('public')->group(function () {
     Route::get('tipos-consulta', [PublicTipoConsultaController::class, 'index']);
     Route::get('tipos-consulta/{slug}', [PublicTipoConsultaController::class, 'show']);

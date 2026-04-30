@@ -32,6 +32,22 @@ class AgenteIATest extends TestCase
         ]);
     }
 
+    public function test_publico_endpoint_no_requires_auth(): void
+    {
+        Http::fake([
+            'https://api.anthropic.com/v1/messages' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'TarotEstrellas es una plataforma de consultas esotericas.']],
+                'usage' => ['input_tokens' => 100, 'output_tokens' => 30],
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/agente/publico', ['pregunta' => '¿Que es TarotEstrellas?']);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('autor_rol', 'publico')
+            ->assertJsonPath('cliente_id', null);
+    }
+
     public function test_unauthenticated_returns_401(): void
     {
         $this->postJson('/api/me/agente/consultar', ['pregunta' => 'Hola'])
