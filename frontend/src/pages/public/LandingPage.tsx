@@ -46,6 +46,7 @@ type FeaturedServicio = {
   descripcion: string;
   duracion_minutos: number;
   precio_moneda: number | null;
+  precio_referencial_centavos?: number | null;
   moneda: string;
 };
 
@@ -91,13 +92,14 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.14 } },
 };
 
-function formatPrice(centavos: number | null, moneda: string) {
-  if (centavos === null) return null;
+function formatPrice(centavos: number | null | undefined, moneda: string) {
+  if (centavos === null || centavos === undefined || Number.isNaN(Number(centavos))) return null;
+  const monedaSafe = moneda || 'CLP';
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
-    currency: moneda,
-    maximumFractionDigits: moneda === 'CLP' ? 0 : 2,
-  }).format(centavos / 100);
+    currency: monedaSafe,
+    maximumFractionDigits: monedaSafe === 'CLP' ? 0 : 2,
+  }).format(Number(centavos) / 100);
 }
 
 export function LandingPage() {
@@ -236,7 +238,8 @@ export function LandingPage() {
 
           <motion.div className="cards-grid" variants={stagger}>
             {featuredServices.map((s, i) => {
-              const precio = formatPrice(s.precio_moneda, s.moneda);
+              const centavos = (s.precio_moneda ?? s.precio_referencial_centavos) ?? null;
+              const precio = formatPrice(centavos, s.moneda);
               return (
                 <motion.article
                   key={s.slug}
