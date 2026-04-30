@@ -11,11 +11,13 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    # Cabeceras CORS solo en preflights (204 de la regla anterior)
-    Header always set Access-Control-Allow-Origin "https://tarotestrellas.com" "expr=%{REQUEST_STATUS} == 204"
+    # CORS: refleja Origin si pertenece a la lista permitida (dev + prod)
+    SetEnvIf Origin "^(https?://localhost(:\d+)?|https?://127\.0\.0\.1(:\d+)?|https://(www\.)?tarotestrellas\.com)$" CORS_ALLOW_ORIGIN=$0
+    Header always set Access-Control-Allow-Origin "%{CORS_ALLOW_ORIGIN}e" env=CORS_ALLOW_ORIGIN
+    Header always set Vary "Origin"
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" "expr=%{REQUEST_STATUS} == 204"
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, X-XSRF-TOKEN" "expr=%{REQUEST_STATUS} == 204"
-    Header always set Access-Control-Allow-Credentials "true" "expr=%{REQUEST_STATUS} == 204"
+    Header always set Access-Control-Allow-Credentials "true" env=CORS_ALLOW_ORIGIN
 </IfModule>
 
 <IfModule mod_rewrite.c>
