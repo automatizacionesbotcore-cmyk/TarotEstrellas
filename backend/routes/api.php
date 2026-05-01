@@ -77,6 +77,10 @@ Route::prefix('auth')->group(function () {
 // Agente IA publico (sin auth, throttle estricto contra abuso)
 Route::middleware('throttle:10,1')->post('agente/publico', [AgenteController::class, 'consultarPublico']);
 
+// Confirmacion de asistencia via email (signed URL, sin auth)
+Route::get('citas/{uuid}/confirmar-asistencia', [CitaController::class, 'confirmarAsistencia'])
+    ->name('citas.confirmar-asistencia');
+
 Route::prefix('public')->group(function () {
     Route::get('tipos-consulta', [PublicTipoConsultaController::class, 'index']);
     Route::get('tipos-consulta/{slug}', [PublicTipoConsultaController::class, 'show']);

@@ -18,8 +18,11 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new ExpirarReservasJob())->everyMinute()->withoutOverlapping();
 Schedule::job(new ProcesarReembolsosPendientesJob())->everyFiveMinutes()->withoutOverlapping();
+// Recordatorios por email: 3 días, 1 día y 1 hora antes (con CTA para confirmar la cita)
+Schedule::job(new EnviarRecordatorioCitaJob(4320, 'email'))->hourly()->withoutOverlapping();
 Schedule::job(new EnviarRecordatorioCitaJob(1440, 'email'))->hourly()->withoutOverlapping();
-Schedule::job(new EnviarRecordatorioCitaJob(180, 'whatsapp'))->everyThirtyMinutes()->withoutOverlapping();
+Schedule::job(new EnviarRecordatorioCitaJob(60, 'email'))->everyFifteenMinutes()->withoutOverlapping();
+// Recordatorio WhatsApp 30 min antes (refuerzo)
 Schedule::job(new EnviarRecordatorioCitaJob(30, 'whatsapp'))->everyFifteenMinutes()->withoutOverlapping();
 Schedule::job(new AvisarEliminacionProximaJob(7))->dailyAt('08:00')->withoutOverlapping();
 Schedule::job(new LimpiarGrabacionesExpiradasJob())->dailyAt('03:00')->withoutOverlapping();

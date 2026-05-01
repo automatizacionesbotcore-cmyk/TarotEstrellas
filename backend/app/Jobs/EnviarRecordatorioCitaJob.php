@@ -46,7 +46,7 @@ class EnviarRecordatorioCitaJob implements ShouldQueue
                     return;
                 }
 
-                Mail::to($cita->cliente->email)->send(new RecordatorioCitaMail($cita));
+                Mail::to($cita->cliente->email)->send(new RecordatorioCitaMail($cita, $this->minutosAntes));
             });
     }
 }

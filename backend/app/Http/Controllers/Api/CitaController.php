@@ -979,6 +979,33 @@ class CitaController extends Controller
         ]);
     }
 
+    public function confirmarAsistencia(Request $request, string $uuid)
+    {
+        if (! $request->hasValidSignature()) {
+            return response()->view('emails.confirmacion-link-invalido', [], 403);
+        }
+
+        $cita = Cita::query()->where('uuid', $uuid)->first();
+        if (! $cita) {
+            return response()->view('emails.confirmacion-link-invalido', [], 404);
+        }
+
+        if (! in_array($cita->estado, ['confirmada', 'pagada', 'reservada'], true)) {
+            return response()->view('emails.confirmacion-resultado', [
+                'titulo' => 'No pudimos confirmar tu asistencia',
+                'mensaje' => 'Esta cita ya no está activa (estado: ' . $cita->estado . ').',
+            ]);
+        }
+
+        if (! $cita->cliente_confirmo_at) {
+            $cita->cliente_confirmo_at = now();
+            $cita->save();
+        }
+
+        $frontend = config('app.frontend_url') ?: rtrim(config('app.url'), '/');
+        return redirect()->away($frontend . '/app/citas/' . $cita->uuid . '?asistencia_confirmada=1');
+    }
+
     public function marcarNoShow(Request $request, string $uuid): JsonResponse
     {
         $validated = $request->validate([
