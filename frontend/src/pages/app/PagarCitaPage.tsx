@@ -24,13 +24,13 @@ type Cita = {
   tipo_consulta: { nombre: string; duracion_minutos: number } | null;
 };
 
-type DatosBancarios = {
+type CuentaBancaria = {
   banco: string;
-  titular: string;
-  cuenta: string;
   tipo_cuenta: string;
-  rut: string;
-  email: string | null;
+  numero_cuenta: string;
+  nombre_titular: string;
+  rut_titular: string;
+  orden: number;
 };
 
 type CuponValidacion = {
@@ -52,7 +52,7 @@ const fetchCita = (id: string) =>
 
 const fetchDatosTransferencia = (citaId: string) =>
   api.get(`/citas/${citaId}/pagar/transferencia/datos`)
-     .then((r) => (r.data as { data: { datos_bancarios: DatosBancarios } }).data.datos_bancarios);
+     .then((r) => (r.data as { data: { cuentas_bancarias: CuentaBancaria[] } }).data.cuentas_bancarias);
 
 const createFlowPayment = (citaId: string) =>
   api.post(`/citas/${citaId}/pagar/flow`).then((r) => r.data as { data: { redirect_url: string } });
@@ -234,7 +234,7 @@ function MembresiaCheckout({
 }
 
 // ── Transfer panel ───────────────────────────────────────────────────────────
-function TransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancarios: DatosBancarios | null }) {
+function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancarias: CuentaBancaria[] | null }) {
   const [seconds, setSeconds]     = useState(() => getRemainingSeconds(cita.reservada_hasta));
   const [extended, setExtended]   = useState(false);
   const [file, setFile]           = useState<File | null>(null);
@@ -293,23 +293,35 @@ function TransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancarios: D
         <strong className="ref-code">{cita.codigo_referencia}</strong>
       </div>
 
-      {datosBancarios ? (
+      {cuentasBancarias && cuentasBancarias.length > 0 ? (
         <div className="bank-details">
           <p className="pay-section-label">Datos para transferir</p>
-          <dl>
-            <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
-            <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
-            <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
-            <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
-            {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
-            {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
-          </dl>
+          {cuentasBancarias.map((cuenta, i) => (
+            <div key={i} style={{ marginBottom: i < cuentasBancarias.length - 1 ? '1rem' : 0 }}>
+              {cuentasBancarias.length > 1 && (
+                <p style={{ fontWeight: 600, marginBottom: '0.35rem', fontSize: '0.9rem' }}>
+                  Cuenta {i + 1}
+                </p>
+              )}
+              <dl>
+                <dt>Banco</dt>        <dd>{cuenta.banco}</dd>
+                <dt>Titular</dt>      <dd>{cuenta.nombre_titular}</dd>
+                <dt>N° de cuenta</dt> <dd>{cuenta.numero_cuenta}</dd>
+                <dt>Tipo de cuenta</dt><dd>{cuenta.tipo_cuenta}</dd>
+                {cuenta.rut_titular ? <><dt>RUT</dt><dd>{cuenta.rut_titular}</dd></> : null}
+              </dl>
+            </div>
+          ))}
           <p className="pay-abono-note">
             Monto a transferir: <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
           </p>
         </div>
-      ) : (
+      ) : cuentasBancarias === null ? (
         <p className="pay-section-label">Cargando datos bancarios…</p>
+      ) : (
+        <p className="pay-section-label" style={{ color: 'var(--text-muted)' }}>
+          El especialista aún no ha configurado sus cuentas bancarias. Contáctanos para completar el pago.
+        </p>
       )}
 
       {!uploaded ? (
@@ -427,7 +439,7 @@ export function PagarCitaPage() {
     enabled:  Boolean(id),
   });
 
-  const { data: datosBancarios = null } = useQuery<DatosBancarios | null>({
+  const { data: cuentasBancarias = null } = useQuery<CuentaBancaria[] | null>({
     queryKey: ['datos-transferencia', id],
     queryFn:  () => fetchDatosTransferencia(id),
     enabled:  Boolean(id) && method === 'transfer',
@@ -545,15 +557,16 @@ export function PagarCitaPage() {
               >
                 <p className="pay-section-label">¿Cómo deseas pagar?</p>
                 <div className="pay-method-grid">
-                  <button
-                    type="button"
-                    className="pay-method-card"
-                    onClick={() => handleSelectMethod('flow')}
-                  >
+                  {/* Flow.cl — FASE 2: desactivado temporalmente */}
+                  <div className="pay-method-card pay-method-card--disabled" title="Próximamente disponible">
                     <span className="pay-method-icon">💳</span>
                     <span className="pay-method-name">Tarjeta chilena (Flow)</span>
                     <span className="pay-method-sub">Webpay, débito y crédito Chile</span>
-                  </button>
+                    <span style={{
+                      fontSize: '0.65rem', padding: '2px 8px', borderRadius: '99px',
+                      background: 'var(--accent, #7c3aed)', color: '#fff', marginTop: '0.3rem',
+                    }}>Próximamente</span>
+                  </div>
                   <button
                     type="button"
                     className="pay-method-card"
@@ -625,7 +638,7 @@ export function PagarCitaPage() {
                 ) : null}
 
                 {method === 'transfer' ? (
-                  <TransferPanel cita={cita} datosBancarios={datosBancarios} />
+                  <TransferPanel cita={cita} cuentasBancarias={cuentasBancarias} />
                 ) : null}
               </motion.div>
             )}

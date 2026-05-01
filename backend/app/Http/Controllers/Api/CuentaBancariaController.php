@@ -7,6 +7,7 @@ use App\Models\CuentaBancaria;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class CuentaBancariaController extends Controller
@@ -48,7 +49,7 @@ class CuentaBancariaController extends Controller
 
         if ($count >= self::MAX_CUENTAS) {
             return response()->json([
-                'message' => 'No puedes agregar más de ' . self::MAX_CUENTAS . ' cuentas bancarias.',
+                'message' => 'Ya tienes el máximo de 3 cuentas bancarias configuradas.',
             ], 422);
         }
 
@@ -119,7 +120,7 @@ class CuentaBancariaController extends Controller
     }
 
     /** DELETE /api/admin/cuentas-bancarias/{id} */
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(Request $request, int $id): Response
     {
         /** @var User $user */
         $user = $request->user();
@@ -131,6 +132,6 @@ class CuentaBancariaController extends Controller
 
         $cuenta->delete();
 
-        return response()->json(['message' => 'Cuenta bancaria eliminada.']);
+        return response()->noContent();
     }
 }

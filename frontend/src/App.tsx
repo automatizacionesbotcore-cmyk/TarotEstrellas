@@ -58,6 +58,7 @@ const AdminPaquetesPage         = lazy(() => import('./pages/app/admin/AdminPaqu
 const AdminPlantillasPage       = lazy(() => import('./pages/app/admin/AdminPlantillasPage').then((m) => ({ default: m.AdminPlantillasPage })));
 const AdminNotificacionesPage   = lazy(() => import('./pages/app/admin/AdminNotificacionesPage').then((m) => ({ default: m.AdminNotificacionesPage })));
 const AdminAuditPage            = lazy(() => import('./pages/app/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
+const AdminCuentasBancariasPage = lazy(() => import('./pages/app/admin/AdminCuentasBancariasPage').then((m) => ({ default: m.AdminCuentasBancariasPage })));
 
 function PageLoader() {
   return (
@@ -178,6 +179,7 @@ export function App() {
           <Route path="plantillas"           element={<Suspense fallback={<PageLoader />}><AdminPlantillasPage       /></Suspense>} />
           <Route path="notificaciones"       element={<Suspense fallback={<PageLoader />}><AdminNotificacionesPage   /></Suspense>} />
           <Route path="audit-log"            element={<Suspense fallback={<PageLoader />}><AdminAuditPage            /></Suspense>} />
+          <Route path="cuentas-bancarias"    element={<Suspense fallback={<PageLoader />}><AdminCuentasBancariasPage /></Suspense>} />
         </Route>
         </Route>
       </Route>
