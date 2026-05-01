@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\ValidarComprobanteJob;
 use App\Mail\CitaCanceladaMail;
+use App\Mail\NuevoComprobanteRecibidoMail;
 use App\Models\Cita;
 use App\Models\ComprobanteTransferencia;
 use App\Models\Consentimiento;
@@ -12,6 +13,7 @@ use App\Models\AppSetting;
 use App\Models\Pago;
 use App\Models\Reagendamiento;
 use App\Models\Reembolso;
+use App\Models\Role;
 use App\Models\TipoConsulta;
 use App\Models\User;
 use App\Models\ValidacionAgente;
@@ -529,6 +531,20 @@ class CitaController extends Controller
         ]);
 
         ValidarComprobanteJob::dispatch($comprobante->id);
+
+        // Notificar a admins que hay un nuevo comprobante pendiente de revisión
+        $adminRoleIds = Role::query()
+            ->whereIn('nombre', ['super_admin', 'admin_especialista'])
+            ->pluck('id');
+
+        $admins = User::query()
+            ->whereHas('roles', fn ($q) => $q->whereIn('roles.id', $adminRoleIds))
+            ->get();
+
+        foreach ($admins as $admin) {
+            Mail::to($admin->email)
+                ->send(new NuevoComprobanteRecibidoMail($comprobante->load('cita.tipoConsulta'), $user));
+        }
 
         return response()->json([
             'message' => 'Comprobante subido correctamente.',

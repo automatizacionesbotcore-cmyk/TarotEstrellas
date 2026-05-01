@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\NuevoComprobanteRecibidoMail;
 use App\Mail\TransferenciaAprobadaMail;
 use App\Mail\TransferenciaRechazadaMail;
 use App\Models\Cita;
@@ -11,7 +12,9 @@ use App\Models\Role;
 use App\Models\TipoConsulta;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -209,5 +212,72 @@ class ComprobanteEmailFlowTest extends TestCase
             ->assertForbidden();
 
         Mail::assertNothingSent();
+    }
+
+    public function test_subir_comprobante_notifica_admins_por_email(): void
+    {
+        Storage::fake('local');
+
+        $admin   = $this->makeAdmin();
+        $cliente = $this->makeCliente();
+        Sanctum::actingAs($cliente);
+
+        $tipo = TipoConsulta::query()->where('slug', 'tarot')->firstOrFail();
+        $cita = Cita::query()->create([
+            'uuid'                  => (string) Str::uuid(),
+            'codigo_referencia'     => 'TE-NOTIFY-' . Str::upper(Str::random(4)),
+            'cliente_id'            => $cliente->id,
+            'especialista_id'       => null,
+            'tipo_consulta_id'      => $tipo->id,
+            'inicio_utc'            => now()->addDays(5),
+            'fin_utc'               => now()->addDays(5)->addMinutes(120),
+            'duracion_minutos'      => 120,
+            'zona_horaria_cliente'  => 'America/Santiago',
+            'estado'                => 'pendiente_abono',
+            'canal_pago'            => 'transferencia',
+            'precio_total_centavos' => 50000,
+            'precio_final_centavos' => 50000,
+            'moneda'                => 'CLP',
+            'es_primera_consulta'   => false,
+        ]);
+
+        Pago::query()->create([
+            'uuid'           => (string) Str::uuid(),
+            'cita_id'        => $cita->id,
+            'tipo'           => 'abono_20',
+            'canal'          => 'transferencia',
+            'monto_centavos' => 10000,
+            'moneda'         => 'CLP',
+            'estado'         => 'pendiente',
+        ]);
+
+        $file = UploadedFile::fake()->create('comprobante.pdf', 200, 'application/pdf');
+
+        $this->postJson("/api/citas/{$cita->uuid}/pagar/transferencia/comprobante", [
+            'comprobante' => $file,
+        ])->assertCreated();
+
+        // Admin debe recibir notificación
+        Mail::assertSent(NuevoComprobanteRecibidoMail::class, function ($mail) use ($admin) {
+            return $mail->hasTo($admin->email);
+        });
+    }
+
+    public function test_email_rechazo_incluye_link_directo_a_pagar(): void
+    {
+        $admin   = $this->makeAdmin();
+        $cliente = $this->makeCliente();
+        Sanctum::actingAs($admin);
+
+        [$cita,, $comprobante] = $this->makeComprobanteConCita($cliente, 'pendiente_abono', 'abono_20');
+
+        $this->postJson("/api/admin/comprobantes/{$comprobante->id}/rechazar", [
+            'razon_rechazo' => 'Monto incorrecto.',
+        ])->assertOk();
+
+        Mail::assertSent(TransferenciaRechazadaMail::class, function ($mail) use ($cita) {
+            // Verificar que el comprobante tiene la cita cargada (para que la vista pueda usar el UUID)
+            return $mail->comprobante->cita_id === $cita->id;
+        });
     }
 }

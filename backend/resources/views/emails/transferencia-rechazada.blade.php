@@ -56,10 +56,13 @@
             ⚠️ <strong>Importante:</strong> Debes adjuntar un nuevo comprobante válido. Si no lo haces dentro del plazo establecido, tu cita quedará <strong>anulada automáticamente</strong>.
         </div>
 
-        <p>Por favor ingresa a tu cuenta, selecciona la cita afectada y sube un nuevo comprobante de transferencia.</p>
+        <p>Haz clic en el botón de abajo para adjuntar un nuevo comprobante directamente en tu cita.</p>
 
         <div class="cta">
-            <a href="{{ rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/') }}/mis-citas" class="btn">Subir nuevo comprobante</a>
+            @php
+                $pagarUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/') . '/app/citas/' . ($cita?->uuid ?? '') . '/pagar';
+            @endphp
+            <a href="{{ $pagarUrl }}" class="btn">Subir nuevo comprobante</a>
         </div>
 
         <p style="font-size:13px; color:#888;">¿Tienes dudas? Escríbenos a contacto@tarotestrellas.com</p>
