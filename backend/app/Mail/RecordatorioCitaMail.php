@@ -26,6 +26,14 @@ class RecordatorioCitaMail extends Mailable
 
         return $this
             ->subject("Recordatorio: tu cita es {$cuando} — TarotEstrellas")
+            ->withSymfonyMessage(function ($message) {
+                $message->getHeaders()->addTextHeader('X-Notif-Tipo', 'recordatorio_cita');
+                $message->getHeaders()->addTextHeader('X-Notif-Plantilla', 'recordatorio_cita');
+                if ($this->cita->cliente_id) {
+                    $message->getHeaders()->addTextHeader('X-Notif-User-Id', (string) $this->cita->cliente_id);
+                }
+                $message->getHeaders()->addTextHeader('X-Notif-Cita-Id', (string) $this->cita->id);
+            })
             ->view('emails.recordatorio-cita', [
                 'cita' => $this->cita,
                 'cuando' => $cuando,

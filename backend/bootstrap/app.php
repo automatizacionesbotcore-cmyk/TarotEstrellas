@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin'       => \App\Http\Middleware\EnsureAdmin::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'audit'       => \App\Http\Middleware\LogAdminActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

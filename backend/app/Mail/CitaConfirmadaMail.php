@@ -9,7 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class CitaConfirmadaMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, \App\Mail\Concerns\TaggedMail;
 
     public function __construct(public Cita $cita) {}
 
@@ -17,6 +17,7 @@ class CitaConfirmadaMail extends Mailable
     {
         return $this
             ->subject('Cita confirmada — TarotEstrellas')
+            ->tagNotif('cita_confirmada', $this->cita->cliente_id, $this->cita->id)
             ->view('emails.cita-confirmada', ['cita' => $this->cita]);
     }
 }

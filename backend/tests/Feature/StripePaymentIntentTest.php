@@ -23,13 +23,16 @@ class StripePaymentIntentTest extends TestCase
 
     public function test_client_can_create_payment_intent_for_abono_20(): void
     {
-        config(['services.stripe.secret' => 'sk_test_123']);
+        config([
+            'services.flow.api_key'    => 'flow_api_test',
+            'services.flow.secret_key' => 'flow_secret_test',
+        ]);
 
         Http::fake([
-            'https://api.stripe.com/v1/payment_intents' => Http::response([
-                'id' => 'pi_test_123',
-                'client_secret' => 'pi_test_123_secret_abc',
-                'status' => 'requires_payment_method',
+            '*' => Http::response([
+                'url'       => 'https://www.flow.cl/app/web/pay.php',
+                'token'     => 'flow_token_abc123',
+                'flowOrder' => 12345,
             ], 200),
         ]);
 
@@ -49,7 +52,7 @@ class StripePaymentIntentTest extends TestCase
             'duracion_minutos' => 120,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'pendiente_abono',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',
@@ -57,34 +60,29 @@ class StripePaymentIntentTest extends TestCase
             'es_primera_consulta' => true,
         ]);
 
-        $response = $this->postJson('/api/citas/'.$cita->uuid.'/pagar/stripe', [
+        $response = $this->postJson('/api/citas/'.$cita->uuid.'/pagar/flow', [
             'tipo' => 'abono_20',
         ]);
 
         $response
             ->assertCreated()
-            ->assertJsonPath('data.payment_intent_id', 'pi_test_123')
             ->assertJsonPath('data.tipo', 'abono_20')
             ->assertJsonPath('data.monto_centavos', 10000);
 
         $this->assertDatabaseHas('pagos', [
             'cita_id' => $cita->id,
-            'tipo' => 'abono_20',
-            'canal' => 'stripe',
-            'estado' => 'pendiente',
-            'stripe_payment_intent_id' => 'pi_test_123',
+            'tipo'    => 'abono_20',
+            'canal'   => 'flow',
+            'estado'  => 'pendiente',
         ]);
-
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://api.stripe.com/v1/payment_intents'
-                && (string) data_get($request->data(), 'amount') === '10000'
-                && data_get($request->data(), 'metadata.cita_uuid') !== null;
-        });
     }
 
-    public function test_payment_intent_endpoint_rejects_non_stripe_cita(): void
+    public function test_payment_intent_endpoint_rejects_non_flow_cita(): void
     {
-        config(['services.stripe.secret' => 'sk_test_123']);
+        config([
+            'services.flow.api_key'    => 'flow_api_test',
+            'services.flow.secret_key' => 'flow_secret_test',
+        ]);
 
         $cliente = User::factory()->create();
         Sanctum::actingAs($cliente);
@@ -110,7 +108,7 @@ class StripePaymentIntentTest extends TestCase
             'es_primera_consulta' => true,
         ]);
 
-        $this->postJson('/api/citas/'.$cita->uuid.'/pagar/stripe', [
+        $this->postJson('/api/citas/'.$cita->uuid.'/pagar/flow', [
             'tipo' => 'abono_20',
         ])->assertStatus(422);
     }

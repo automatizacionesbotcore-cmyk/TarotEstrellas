@@ -54,7 +54,7 @@ class DailyWebhookController extends Controller
             ]);
         }
 
-        if ($eventType === 'recording.ready') {
+        if ($eventType === 'recording.ready-to-download') {
             $this->handleRecordingReady($storedEvent, $event);
         }
 

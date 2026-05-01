@@ -9,7 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ResumenListoMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, \App\Mail\Concerns\TaggedMail;
 
     public Resumen $resumen;
 
@@ -22,6 +22,7 @@ class ResumenListoMail extends Mailable
     {
         return $this
             ->subject('Tu resumen de TarotEstrellas esta listo')
+            ->tagNotif('resumen_listo', $this->resumen->cita?->cliente_id, $this->resumen->cita_id)
             ->view('emails.resumen-listo', [
                 'resumen' => $this->resumen,
                 'cita' => $this->resumen->cita,

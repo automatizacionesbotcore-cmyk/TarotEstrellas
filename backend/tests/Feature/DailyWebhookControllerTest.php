@@ -27,7 +27,7 @@ class DailyWebhookControllerTest extends TestCase
 
         $payload = json_encode([
             'id' => 'evt_daily_invalid',
-            'type' => 'recording.ready',
+            'type' => 'recording.ready-to-download',
         ], JSON_THROW_ON_ERROR);
 
         $this->call('POST', '/api/webhooks/daily', [], [], [], [
@@ -55,7 +55,7 @@ class DailyWebhookControllerTest extends TestCase
             'duracion_minutos' => 120,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'confirmada',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',
@@ -64,7 +64,7 @@ class DailyWebhookControllerTest extends TestCase
 
         $payload = json_encode([
             'id' => 'evt_daily_123',
-            'type' => 'recording.ready',
+            'type' => 'recording.ready-to-download',
             'data' => [
                 'room' => 'room_1',
                 'recording_id' => 'rec_123',
@@ -83,7 +83,7 @@ class DailyWebhookControllerTest extends TestCase
         ], $payload)
             ->assertOk()
             ->assertJsonPath('received', true)
-            ->assertJsonPath('event_type', 'recording.ready');
+            ->assertJsonPath('event_type', 'recording.ready-to-download');
 
         $this->call('POST', '/api/webhooks/daily', [], [], [], [
             'CONTENT_TYPE' => 'application/json',
@@ -94,7 +94,7 @@ class DailyWebhookControllerTest extends TestCase
 
         $this->assertDatabaseHas('daily_webhook_events', [
             'event_id' => 'evt_daily_123',
-            'event_type' => 'recording.ready',
+            'event_type' => 'recording.ready-to-download',
         ]);
 
         $this->assertDatabaseHas('grabaciones', [
@@ -128,7 +128,7 @@ class DailyWebhookControllerTest extends TestCase
             'duracion_minutos' => 120,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'confirmada',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',
@@ -187,7 +187,7 @@ class DailyWebhookControllerTest extends TestCase
             'duracion_minutos' => 60,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'en_curso',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',
@@ -248,7 +248,7 @@ class DailyWebhookControllerTest extends TestCase
             'duracion_minutos' => 60,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'cancelada_cliente',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',
@@ -299,7 +299,7 @@ class DailyWebhookControllerTest extends TestCase
             'duracion_minutos' => 120,
             'zona_horaria_cliente' => 'America/Santiago',
             'estado' => 'confirmada',
-            'canal_pago' => 'stripe',
+            'canal_pago' => 'flow',
             'precio_total_centavos' => 50000,
             'precio_final_centavos' => 50000,
             'moneda' => 'CLP',

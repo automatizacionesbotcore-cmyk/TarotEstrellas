@@ -390,7 +390,7 @@ class CitaController extends Controller
             'tipo_consulta_slug'  => ['required', 'string', 'exists:tipos_consulta,slug'],
             'inicio_local'        => ['required', 'date_format:Y-m-d H:i:s'],
             'zona_horaria_cliente' => ['required', 'timezone'],
-            'canal_pago'          => ['required', 'in:stripe,transferencia'],
+            'canal_pago'          => ['required', 'in:flow,paypal,transferencia'],
             'moneda'              => ['nullable', 'string', 'size:3'],
             'tema_principal'      => ['nullable', 'string', 'max:50'],
             'notas_cliente'       => ['nullable', 'string', 'max:2000'],
@@ -601,7 +601,7 @@ class CitaController extends Controller
         ]);
     }
 
-    public function crearPaymentIntentStripe(Request $request, string $uuid): JsonResponse
+    public function crearPagoFlow(Request $request, string $uuid): JsonResponse
     {
         $validated = $request->validate([
             'tipo' => ['nullable', 'in:abono_20,saldo_80'],
@@ -615,29 +615,28 @@ class CitaController extends Controller
             ->where('cliente_id', $user->id)
             ->firstOrFail();
 
-        if ($cita->canal_pago !== 'stripe') {
+        if ($cita->canal_pago !== 'flow') {
             throw ValidationException::withMessages([
-                'uuid' => 'La cita no corresponde a flujo de pago con Stripe.',
+                'uuid' => 'La cita no corresponde a flujo de pago con Flow.',
             ]);
         }
 
-        $tipoEsperado = null;
+        $tipoEsperado  = null;
         $montoEsperado = 0;
-
         $abonoObjetivo = (int) round($cita->precio_final_centavos * 0.20);
         $saldoObjetivo = max(0, (int) $cita->precio_final_centavos - $abonoObjetivo);
 
         if ($cita->estado === 'pendiente_abono') {
-            $tipoEsperado = 'abono_20';
+            $tipoEsperado  = 'abono_20';
             $montoEsperado = $abonoObjetivo;
         } elseif ($cita->estado === 'reservada') {
-            $tipoEsperado = 'saldo_80';
+            $tipoEsperado  = 'saldo_80';
             $montoEsperado = $saldoObjetivo;
         }
 
         if (! $tipoEsperado || $montoEsperado <= 0) {
             throw ValidationException::withMessages([
-                'uuid' => 'La cita no esta en estado valido para crear PaymentIntent.',
+                'uuid' => 'La cita no está en estado válido para pagar.',
             ]);
         }
 
@@ -648,74 +647,263 @@ class CitaController extends Controller
             ]);
         }
 
-        $secretKey = (string) config('services.stripe.secret', '');
-        if ($secretKey === '') {
-            return response()->json([
-                'message' => 'Stripe no esta configurado.',
-            ], 503);
+        $flow = app(\App\Services\FlowService::class);
+
+        if (! $flow->estaConfigurado()) {
+            return response()->json(['message' => 'Flow.cl no está configurado.'], 503);
         }
 
-        $payload = [
-            'amount' => $montoEsperado,
-            'currency' => strtolower($cita->moneda),
-            'automatic_payment_methods' => ['enabled' => true],
-            'metadata' => [
-                'cita_uuid' => $cita->uuid,
-                'tipo_pago' => $tipoSolicitado,
-            ],
-            'description' => sprintf('TarotEstrellas %s %s', $tipoSolicitado, $cita->codigo_referencia),
-        ];
+        $frontendUrl   = rtrim((string) config('app.frontend_url', 'https://tarotestrellas.com'), '/');
+        $commerceOrder = sprintf('cita:%s:tipo:%s', $cita->uuid, $tipoSolicitado);
 
-        $response = Http::asForm()
-            ->withToken($secretKey)
-            ->withHeaders([
-                'Idempotency-Key' => sprintf('cita:%s:tipo:%s', $cita->uuid, $tipoSolicitado),
-            ])
-            ->post('https://api.stripe.com/v1/payment_intents', $payload);
-
-        if ($response->failed()) {
-            return response()->json([
-                'message' => (string) data_get($response->json(), 'error.message', 'No fue posible crear PaymentIntent en Stripe.'),
-            ], 502);
-        }
-
-        $intentId = (string) data_get($response->json(), 'id', '');
-        $clientSecret = (string) data_get($response->json(), 'client_secret', '');
-        $intentStatus = (string) data_get($response->json(), 'status', 'requires_payment_method');
-
-        if ($intentId === '' || $clientSecret === '') {
-            return response()->json([
-                'message' => 'Stripe respondio sin identificador de PaymentIntent.',
-            ], 502);
+        try {
+            $result = $flow->crearPago(
+                commerceOrder:   $commerceOrder,
+                subject:         sprintf('TarotEstrellas - %s', $tipoSolicitado === 'abono_20' ? 'Abono 20%' : 'Saldo 80%'),
+                amount:          $montoEsperado,
+                email:           $user->email,
+                urlConfirmation: url('/api/webhooks/flow'),
+                urlReturn:       $frontendUrl . '/pago-resultado?cita=' . $cita->uuid,
+                currency:        $cita->moneda,
+            );
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error al crear pago en Flow: ' . $e->getMessage()], 502);
         }
 
         $pago = $cita->pagos()->create([
-            'uuid' => (string) Str::uuid(),
-            'tipo' => $tipoSolicitado,
-            'canal' => 'stripe',
-            'monto_centavos' => $montoEsperado,
-            'moneda' => $cita->moneda,
-            'estado' => 'pendiente',
-            'stripe_payment_intent_id' => $intentId,
-            'referencia_externa' => $intentId,
-            'metadata' => [
-                'stripe_status' => $intentStatus,
+            'uuid'               => (string) Str::uuid(),
+            'tipo'               => $tipoSolicitado,
+            'canal'              => 'flow',
+            'monto_centavos'     => $montoEsperado,
+            'moneda'             => $cita->moneda,
+            'estado'             => 'pendiente',
+            'referencia_externa' => 'flow:' . $result['token'],
+            'metadata'           => [
+                'flow_token'     => $result['token'],
+                'flow_order'     => $result['flow_order'],
+                'commerce_order' => $commerceOrder,
             ],
         ]);
 
         return response()->json([
-            'message' => 'PaymentIntent creado correctamente.',
-            'data' => [
-                'cita_uuid' => $cita->uuid,
-                'pago_uuid' => $pago->uuid,
-                'tipo' => $tipoSolicitado,
+            'message' => 'Pago Flow creado correctamente.',
+            'data'    => [
+                'cita_uuid'      => $cita->uuid,
+                'pago_uuid'      => $pago->uuid,
+                'tipo'           => $tipoSolicitado,
                 'monto_centavos' => $montoEsperado,
-                'moneda' => $cita->moneda,
-                'payment_intent_id' => $intentId,
-                'client_secret' => $clientSecret,
-                'status' => $intentStatus,
+                'moneda'         => $cita->moneda,
+                'redirect_url'   => $result['redirect_url'],
+                'flow_token'     => $result['token'],
             ],
         ], 201);
+    }
+
+    public function crearPagoPaypal(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'tipo'   => ['nullable', 'in:abono_20,saldo_80'],
+            'moneda' => ['nullable', 'string', 'size:3'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        if ($cita->canal_pago !== 'paypal') {
+            throw ValidationException::withMessages([
+                'uuid' => 'La cita no corresponde a flujo de pago con PayPal.',
+            ]);
+        }
+
+        $tipoEsperado  = null;
+        $montoEsperado = 0;
+        $abonoObjetivo = (int) round($cita->precio_final_centavos * 0.20);
+        $saldoObjetivo = max(0, (int) $cita->precio_final_centavos - $abonoObjetivo);
+
+        if ($cita->estado === 'pendiente_abono') {
+            $tipoEsperado  = 'abono_20';
+            $montoEsperado = $abonoObjetivo;
+        } elseif ($cita->estado === 'reservada') {
+            $tipoEsperado  = 'saldo_80';
+            $montoEsperado = $saldoObjetivo;
+        }
+
+        if (! $tipoEsperado || $montoEsperado <= 0) {
+            throw ValidationException::withMessages([
+                'uuid' => 'La cita no está en estado válido para pagar.',
+            ]);
+        }
+
+        $tipoSolicitado = $validated['tipo'] ?? $tipoEsperado;
+        if ($tipoSolicitado !== $tipoEsperado) {
+            throw ValidationException::withMessages([
+                'tipo' => 'El tipo de pago no coincide con el estado actual de la cita.',
+            ]);
+        }
+
+        $paypal = app(\App\Services\PaypalService::class);
+
+        if (! $paypal->estaConfigurado()) {
+            return response()->json(['message' => 'PayPal no está configurado.'], 503);
+        }
+
+        $frontendUrl = rtrim((string) config('app.frontend_url', 'https://tarotestrellas.com'), '/');
+        $moneda      = strtoupper($validated['moneda'] ?? 'USD');
+        $amountUnits = $montoEsperado / 100;
+        $referenceId = sprintf('cita:%s:tipo:%s', $cita->uuid, $tipoSolicitado);
+
+        try {
+            $result = $paypal->crearOrden(
+                referenceId: $referenceId,
+                amount:      $amountUnits,
+                currency:    $moneda,
+                description: sprintf('TarotEstrellas - %s %s',
+                    $tipoSolicitado === 'abono_20' ? 'Abono 20%' : 'Saldo 80%',
+                    $cita->codigo_referencia),
+                returnUrl: $frontendUrl . '/pago-resultado?cita=' . $cita->uuid . '&canal=paypal',
+                cancelUrl: $frontendUrl . '/pagar-cita/' . $cita->uuid . '?cancelado=1',
+            );
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error al crear orden PayPal: ' . $e->getMessage()], 502);
+        }
+
+        $pago = $cita->pagos()->create([
+            'uuid'               => (string) Str::uuid(),
+            'tipo'               => $tipoSolicitado,
+            'canal'              => 'paypal',
+            'monto_centavos'     => $montoEsperado,
+            'moneda'             => $moneda,
+            'estado'             => 'pendiente',
+            'referencia_externa' => 'paypal:' . $result['order_id'],
+            'metadata'           => [
+                'paypal_order_id' => $result['order_id'],
+                'reference_id'    => $referenceId,
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'Orden PayPal creada correctamente.',
+            'data'    => [
+                'cita_uuid'      => $cita->uuid,
+                'pago_uuid'      => $pago->uuid,
+                'tipo'           => $tipoSolicitado,
+                'monto_centavos' => $montoEsperado,
+                'moneda'         => $moneda,
+                'approval_url'   => $result['approval_url'],
+                'order_id'       => $result['order_id'],
+            ],
+        ], 201);
+    }
+
+    public function confirmarPagoPaypal(Request $request, string $uuid): JsonResponse
+    {
+        $request->validate([
+            'order_id' => ['required', 'string'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->where('cliente_id', $user->id)
+            ->firstOrFail();
+
+        $orderId = (string) $request->input('order_id');
+
+        $existingPago = $cita->pagos()
+            ->where('referencia_externa', 'paypal:' . $orderId)
+            ->where('estado', 'completado')
+            ->first();
+
+        if ($existingPago) {
+            return response()->json([
+                'message' => 'Pago ya procesado.',
+                'data'    => ['pago_uuid' => $existingPago->uuid, 'estado' => 'completado'],
+            ]);
+        }
+
+        $paypal = app(\App\Services\PaypalService::class);
+
+        try {
+            $capture = $paypal->capturarOrden($orderId);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error al capturar orden PayPal: ' . $e->getMessage()], 502);
+        }
+
+        $captureStatus = (string) ($capture['status'] ?? '');
+
+        if ($captureStatus !== 'COMPLETED') {
+            return response()->json([
+                'message' => 'PayPal orden no completada. Estado: ' . $captureStatus,
+            ], 422);
+        }
+
+        $pago = $cita->pagos()
+            ->where('referencia_externa', 'paypal:' . $orderId)
+            ->where('estado', 'pendiente')
+            ->first();
+
+        $tipoPago  = $cita->estado === 'pendiente_abono' ? 'abono_20' : 'saldo_80';
+        $amount    = (float) data_get($capture, 'purchase_units.0.payments.captures.0.amount.value', 0);
+        $currency  = strtoupper((string) data_get($capture, 'purchase_units.0.payments.captures.0.amount.currency_code', $cita->moneda));
+        $captureId = (string) data_get($capture, 'purchase_units.0.payments.captures.0.id', '');
+
+        if ($pago) {
+            $pago->forceFill([
+                'estado'    => 'completado',
+                'pagado_en' => now(),
+                'metadata'  => array_merge($pago->metadata ?? [], [
+                    'paypal_capture_id' => $captureId,
+                    'paypal_status'     => $captureStatus,
+                ]),
+            ])->save();
+        } else {
+            $pago = $cita->pagos()->create([
+                'uuid'               => (string) Str::uuid(),
+                'tipo'               => $tipoPago,
+                'canal'              => 'paypal',
+                'monto_centavos'     => (int) round($amount * 100),
+                'moneda'             => $currency,
+                'estado'             => 'completado',
+                'referencia_externa' => 'paypal:' . $orderId,
+                'pagado_en'          => now(),
+                'metadata'           => [
+                    'paypal_order_id'   => $orderId,
+                    'paypal_capture_id' => $captureId,
+                ],
+            ]);
+            $tipoPago = $pago->tipo;
+        }
+
+        if ($tipoPago === 'abono_20' && $cita->estado === 'pendiente_abono') {
+            $cita->forceFill(['estado' => 'reservada'])->save();
+            $cita->load(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+            if ($cita->cliente?->email) {
+                Mail::to($cita->cliente->email)->send(new \App\Mail\CitaReservadaMail($cita));
+            }
+        } elseif ($tipoPago === 'saldo_80' && $cita->estado === 'reservada') {
+            $cita->forceFill(['estado' => 'confirmada', 'confirmada_en' => now()])->save();
+            $cita->load(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+            if ($cita->cliente?->email) {
+                Mail::to($cita->cliente->email)->send(new \App\Mail\CitaConfirmadaMail($cita));
+            }
+        }
+
+        return response()->json([
+            'message' => 'Pago PayPal confirmado.',
+            'data'    => [
+                'pago_uuid'      => $pago->uuid,
+                'estado'         => 'completado',
+                'monto_centavos' => $pago->monto_centavos,
+                'moneda'         => $pago->moneda,
+            ],
+        ]);
     }
 
     public function datosTransferencia(Request $request, string $uuid): JsonResponse

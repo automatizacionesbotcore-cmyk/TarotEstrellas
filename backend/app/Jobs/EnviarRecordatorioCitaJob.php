@@ -43,6 +43,20 @@ class EnviarRecordatorioCitaJob implements ShouldQueue
                         'telefono' => $cita->cliente->telefono ?? null,
                         'minutos_antes' => $this->minutosAntes,
                     ]);
+
+                    \App\Models\NotificacionEnviada::create([
+                        'uuid'         => (string) \Illuminate\Support\Str::uuid(),
+                        'user_id'      => $cita->cliente_id,
+                        'canal'        => 'whatsapp',
+                        'tipo'         => 'recordatorio_cita',
+                        'destinatario' => $cita->cliente->telefono,
+                        'asunto'       => null,
+                        'preview'      => "Recordatorio: tu cita en {$this->minutosAntes} min",
+                        'estado'       => 'enviado',
+                        'proveedor'    => 'stub',
+                        'metadata'     => ['cita_id' => $cita->id, 'minutos_antes' => $this->minutosAntes],
+                        'enviado_en'   => now(),
+                    ]);
                     return;
                 }
 

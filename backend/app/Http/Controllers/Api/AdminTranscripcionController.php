@@ -12,18 +12,36 @@ class AdminTranscripcionController extends Controller
 {
     /**
      * GET /api/admin/citas/{uuid}/transcripcion
-     * Devuelve JSON con texto crudo, resumen, metadatos. Solo admin.
+     * Ver transcripción cruda + resumen.
+     * Permisos:
+     *   super_admin      → cualquier cita.
+     *   admin_especialista → solo sus propias citas (cita.especialista_id == user.id).
+     *   cliente / otros  → 403.
      */
     public function show(Request $request, string $uuid): JsonResponse
     {
-        if (! $request->user()?->isAdmin()) {
+        $user        = $request->user();
+        $isSuperAdmin = (bool) $user?->hasRole('super_admin');
+        $isEspecialista = (bool) $user?->hasRole('admin_especialista');
+
+        if (! $isSuperAdmin && ! $isEspecialista) {
             return response()->json(['message' => 'Solo administradores pueden ver la transcripcion cruda.'], 403);
         }
 
-        $cita = Cita::query()
+        $query = Cita::query()
             ->with(['cliente:id,email', 'transcripciones', 'resumenes', 'grabaciones'])
-            ->where('uuid', $uuid)
-            ->firstOrFail();
+            ->where('uuid', $uuid);
+
+        // Especialista: solo sus citas asignadas.
+        if ($isEspecialista && ! $isSuperAdmin) {
+            $query->where('especialista_id', $user->id);
+        }
+
+        $cita = $query->first();
+        if (! $cita) {
+            // 403 (no 404) para no revelar si la cita existe.
+            return response()->json(['message' => 'No tienes acceso a esta cita.'], 403);
+        }
 
         $transcripcion = $cita->transcripciones()->latest('id')->first();
         $resumen = $cita->resumenes()->latest('id')->first();
@@ -58,11 +76,12 @@ class AdminTranscripcionController extends Controller
 
     /**
      * GET /api/admin/citas/{uuid}/transcripcion/descargar?formato=txt
-     * Descarga TXT de la transcripcion. Solo admin.
+     * Descarga TXT de la transcripción.
+     * Solo super_admin puede descargar. admin_especialista NO tiene acceso de descarga.
      */
     public function descargar(Request $request, string $uuid): StreamedResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403, 'Solo administradores pueden descargar la transcripcion cruda.');
+        abort_unless($request->user()?->hasRole('super_admin'), 403, 'Solo el super administrador puede descargar transcripciones.');
 
         $formato = strtolower((string) $request->query('formato', 'txt'));
         $cita = Cita::query()->with('cliente:id,email')->where('uuid', $uuid)->firstOrFail();

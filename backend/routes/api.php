@@ -51,6 +51,8 @@ Route::get('robots.txt', [SeoController::class, 'robots']);
 
 Route::prefix('webhooks')->group(function () {
     Route::post('stripe', StripeWebhookController::class);
+    Route::post('flow', \App\Http\Controllers\Api\Webhooks\FlowWebhookController::class);
+    Route::post('paypal', \App\Http\Controllers\Api\Webhooks\PaypalWebhookController::class);
     Route::post('daily', DailyWebhookController::class);
     Route::get('whatsapp', [WhatsappWebhookController::class, 'verify']);
     Route::post('whatsapp', WhatsappWebhookController::class);
@@ -129,7 +131,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('citas/{uuid}/resena', [ResenaController::class, 'miResena']);
     Route::post('citas', [CitaController::class, 'store']);
     Route::post('citas/{uuid}/extender-reserva', [CitaController::class, 'extenderReserva']);
-    Route::post('citas/{uuid}/pagar/stripe', [CitaController::class, 'crearPaymentIntentStripe']);
+    Route::post('citas/{uuid}/pagar/flow',            [CitaController::class, 'crearPagoFlow']);
+    Route::post('citas/{uuid}/pagar/paypal',           [CitaController::class, 'crearPagoPaypal']);
+    Route::post('citas/{uuid}/pagar/paypal/confirmar', [CitaController::class, 'confirmarPagoPaypal']);
     Route::get('citas/{uuid}/pagar/transferencia/datos', [CitaController::class, 'datosTransferencia']);
     Route::post('citas/{uuid}/pagar/transferencia/comprobante', [CitaController::class, 'subirComprobanteTransferencia']);
     Route::get('grabaciones/{uuid}/url', [GrabacionController::class, 'obtenerUrlFirmada']);
@@ -198,6 +202,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('{id}/toggle', [SuperAdminEspecialistasController::class, 'toggle']);
     });
 
+    // Super admin: dashboard de consumo de APIs externas (Anthropic, Daily, ...)
+    Route::middleware('super_admin')->group(function () {
+        Route::get('admin/api-usage',          [\App\Http\Controllers\Api\AdminApiUsageController::class, 'index']);
+        Route::patch('admin/api-usage/limits', [\App\Http\Controllers\Api\AdminApiUsageController::class, 'updateLimits']);
+        Route::post('admin/api-usage/check',   [\App\Http\Controllers\Api\AdminApiUsageController::class, 'check']);
+    });
+
     Route::middleware('admin')->prefix('admin/tipos-consulta')->group(function () {
         Route::get('/', [AdminTipoConsultaController::class, 'index']);
         Route::post('/', [AdminTipoConsultaController::class, 'store']);
@@ -243,6 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Admin: visor audit log
         Route::get('admin/audit-log', [AdminAuditLogController::class, 'index']);
+        Route::get('admin/audit-logs', [AdminAuditLogController::class, 'unified']);
     });
 
     // Cupones
@@ -260,6 +272,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('admin')->group(function () {
             Route::post('agente/consultar', [AgenteController::class, 'consultarAdmin']);
             Route::get('agente/conversaciones', [AgenteController::class, 'indexAdmin']);
+            Route::get('admin/agente/metrics', [\App\Http\Controllers\Api\AdminAgenteMetricsController::class, 'index']);
         });
     });
 

@@ -2,15 +2,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { loadStripe, type StripeCardElement } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { api } from '../../lib/api';
 import { generateIcs } from '../../lib/ics';
 
 const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
-
-// ── Stripe init ─────────────────────────────────────────────────────────────
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Cita = {
@@ -51,8 +46,6 @@ type Membresia = {
   fecha_vencimiento: string | null;
 };
 
-type PaymentIntentResponse = { client_secret: string };
-
 // ── API helpers ──────────────────────────────────────────────────────────────
 const fetchCita = (id: string) =>
   api.get(`/citas/${id}`).then((r) => (r.data as { data: Cita }).data);
@@ -61,8 +54,11 @@ const fetchDatosTransferencia = (citaId: string) =>
   api.get(`/citas/${citaId}/pagar/transferencia/datos`)
      .then((r) => (r.data as { data: { datos_bancarios: DatosBancarios } }).data.datos_bancarios);
 
-const createPaymentIntent = (citaId: string) =>
-  api.post(`/citas/${citaId}/pagar/stripe`).then((r) => r.data as PaymentIntentResponse);
+const createFlowPayment = (citaId: string) =>
+  api.post(`/citas/${citaId}/pagar/flow`).then((r) => r.data as { data: { redirect_url: string } });
+
+const createPaypalPayment = (citaId: string) =>
+  api.post(`/citas/${citaId}/pagar/paypal`).then((r) => r.data as { data: { approval_url: string } });
 
 const uploadComprobante = (citaId: string, file: File) => {
   const form = new FormData();
@@ -234,73 +230,6 @@ function MembresiaCheckout({
         <p className="form-error">No se pudo aplicar la membresía. Intenta de nuevo.</p>
       )}
     </motion.div>
-  );
-}
-
-// ── Stripe card form ─────────────────────────────────────────────────────────
-function StripeForm({
-  clientSecret,
-  cita,
-  onSuccess,
-}: {
-  clientSecret: string;
-  cita: Cita;
-  onSuccess: () => void;
-}) {
-  const stripe   = useStripe();
-  const elements = useElements();
-  const [error, setError]   = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    setLoading(true);
-    setError('');
-
-    const card = elements.getElement(CardElement) as StripeCardElement;
-    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card },
-    });
-
-    if (stripeError) {
-      setError(stripeError.message ?? 'Error al procesar el pago.');
-      setLoading(false);
-    } else if (paymentIntent?.status === 'succeeded') {
-      onSuccess();
-    } else {
-      setError('El pago no pudo completarse. Intenta nuevamente.');
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="stripe-form">
-      <p className="pay-section-label">Datos de tu tarjeta</p>
-      <div className="stripe-card-wrapper">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                color: '#f5e6d3',
-                fontFamily: 'Georgia, serif',
-                fontSize: '15px',
-                '::placeholder': { color: 'rgba(245,230,211,0.4)' },
-              },
-              invalid: { color: '#ffb3b3' },
-            },
-          }}
-        />
-      </div>
-      {error ? <p className="form-error">{error}</p> : null}
-      <p className="pay-abono-note">
-        Se cobrará el <strong>20% de abono</strong>:{' '}
-        <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
-      </p>
-      <button className="btn-primary btn-shimmer pay-submit" type="submit" disabled={loading || !stripe}>
-        {loading ? 'Procesando…' : `Pagar ${formatMoney(cita.precio_final_centavos, cita.moneda)}`}
-      </button>
-    </form>
   );
 }
 
@@ -486,10 +415,10 @@ export function PagarCitaPage() {
   const { id = '' } = useParams<{ id: string }>();
   const qc = useQueryClient();
 
-  const [method, setMethod]             = useState<'stripe' | 'transfer' | null>(null);
+  const [method, setMethod]             = useState<'flow' | 'paypal' | 'transfer' | null>(null);
   const [paid, setPaid]                 = useState(false);
   const [usedMembresia, setUsedMembresia] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
+  const [redirectError, setRedirectError] = useState('');
   const [citaOverride, setCitaOverride] = useState<Cita | null>(null);
 
   const { data: citaRaw, isLoading, isError } = useQuery({
@@ -505,21 +434,26 @@ export function PagarCitaPage() {
     retry:    false,
   });
 
-  const intentMutation = useMutation({
-    mutationFn: () => createPaymentIntent(id),
-    onSuccess:  (data) => setClientSecret(data.client_secret),
+  const flowMutation = useMutation({
+    mutationFn: () => createFlowPayment(id),
+    onSuccess:  (data) => { window.location.href = data.data.redirect_url; },
+    onError:    () => setRedirectError('No se pudo iniciar el pago con Flow. Intenta de nuevo.'),
   });
 
-  const handleSelectMethod = (m: 'stripe' | 'transfer') => {
+  const paypalMutation = useMutation({
+    mutationFn: () => createPaypalPayment(id),
+    onSuccess:  (data) => { window.location.href = data.data.approval_url; },
+    onError:    () => setRedirectError('No se pudo iniciar el pago con PayPal. Intenta de nuevo.'),
+  });
+
+  const handleSelectMethod = (m: 'flow' | 'paypal' | 'transfer') => {
     setMethod(m);
-    if (m === 'stripe' && !clientSecret) intentMutation.mutate();
+    setRedirectError('');
   };
 
   const handleCuponApplied = (updatedCita: Cita) => {
     setCitaOverride(updatedCita);
     qc.setQueryData(['cita', id], updatedCita);
-    // Reset intent so new price is used
-    setClientSecret('');
     setMethod(null);
   };
 
@@ -614,11 +548,20 @@ export function PagarCitaPage() {
                   <button
                     type="button"
                     className="pay-method-card"
-                    onClick={() => handleSelectMethod('stripe')}
+                    onClick={() => handleSelectMethod('flow')}
                   >
                     <span className="pay-method-icon">💳</span>
-                    <span className="pay-method-name">Tarjeta de crédito / débito</span>
-                    <span className="pay-method-sub">Visa, Mastercard, Amex</span>
+                    <span className="pay-method-name">Tarjeta chilena (Flow)</span>
+                    <span className="pay-method-sub">Webpay, débito y crédito Chile</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="pay-method-card"
+                    onClick={() => handleSelectMethod('paypal')}
+                  >
+                    <span className="pay-method-icon">🌐</span>
+                    <span className="pay-method-name">PayPal</span>
+                    <span className="pay-method-sub">Pagos internacionales</span>
                   </button>
                   <button
                     type="button"
@@ -642,23 +585,43 @@ export function PagarCitaPage() {
                   type="button"
                   className="btn-secondary"
                   style={{ marginBottom: '1rem', fontSize: '0.85rem' }}
-                  onClick={() => setMethod(null)}
+                  onClick={() => { setMethod(null); setRedirectError(''); }}
                 >
                   ← Cambiar método
                 </button>
 
-                {method === 'stripe' && clientSecret ? (
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
-                    <StripeForm
-                      clientSecret={clientSecret}
-                      cita={cita}
-                      onSuccess={() => setPaid(true)}
-                    />
-                  </Elements>
-                ) : method === 'stripe' && intentMutation.isPending ? (
-                  <p>Preparando formulario de pago…</p>
-                ) : method === 'stripe' && intentMutation.isError ? (
-                  <p className="form-error">No se pudo iniciar el pago. Intenta de nuevo.</p>
+                {method === 'flow' ? (
+                  <div className="pay-redirect-panel">
+                    <p className="pay-abono-note">
+                      Abono hoy (20%): <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
+                    </p>
+                    {redirectError ? <p className="form-error">{redirectError}</p> : null}
+                    <button
+                      type="button"
+                      className="btn-primary btn-shimmer pay-submit"
+                      disabled={flowMutation.isPending}
+                      onClick={() => flowMutation.mutate()}
+                    >
+                      {flowMutation.isPending ? 'Redirigiendo…' : `Pagar ${formatMoney(cita.precio_final_centavos, cita.moneda)} con Flow`}
+                    </button>
+                  </div>
+                ) : null}
+
+                {method === 'paypal' ? (
+                  <div className="pay-redirect-panel">
+                    <p className="pay-abono-note">
+                      Abono hoy (20%): <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
+                    </p>
+                    {redirectError ? <p className="form-error">{redirectError}</p> : null}
+                    <button
+                      type="button"
+                      className="btn-primary btn-shimmer pay-submit"
+                      disabled={paypalMutation.isPending}
+                      onClick={() => paypalMutation.mutate()}
+                    >
+                      {paypalMutation.isPending ? 'Redirigiendo…' : `Pagar con PayPal`}
+                    </button>
+                  </div>
                 ) : null}
 
                 {method === 'transfer' ? (

@@ -13,6 +13,8 @@ const BASE_ITEMS = [
   { to: '/app/admin/plantillas',     label: 'Plantillas',     end: false, superAdminOnly: true,  especialistaOnly: false },
   { to: '/app/admin/notificaciones', label: 'Notificaciones', end: false, superAdminOnly: true,  especialistaOnly: false },
   { to: '/app/admin/audit-log',      label: 'Audit log',      end: false, superAdminOnly: true,  especialistaOnly: false },
+  { to: '/app/admin/agente/metrics', label: 'IA · Métricas',  end: false, superAdminOnly: true,  especialistaOnly: false },
+  { to: '/app/admin/api-usage',      label: 'APIs · Consumo', end: false, superAdminOnly: true,  especialistaOnly: false },
   { to: '/app/admin/resenas',        label: 'Reseñas',        end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/servicios',      label: 'Servicios',      end: false, superAdminOnly: false, especialistaOnly: false },
   { to: '/app/admin/disponibilidad', label: 'Disponibilidad', end: false, superAdminOnly: false, especialistaOnly: false },

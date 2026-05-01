@@ -1,14 +1,9 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { loadStripe, type StripeCardElement } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { api } from '../../lib/api';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Cita = {
@@ -34,8 +29,6 @@ type DatosBancarios = {
   email?: string | null;
 };
 
-type PaymentIntentResponse = { client_secret: string };
-
 // ── API ───────────────────────────────────────────────────────────────────────
 const fetchCita = (id: string) =>
   api.get(`/citas/${id}`).then((r) => (r.data as { data: Cita }).data);
@@ -44,8 +37,11 @@ const fetchDatosTransferencia = (citaId: string) =>
   api.get(`/citas/${citaId}/pagar/transferencia/datos`)
     .then((r) => (r.data as { datos_bancarios: DatosBancarios }).datos_bancarios);
 
-const createSaldoIntent = (citaId: string) =>
-  api.post('/pagos/abono', { cita_uuid: citaId }).then((r) => r.data as PaymentIntentResponse);
+const createFlowSaldoPayment = (citaId: string) =>
+  api.post(`/citas/${citaId}/pagar/flow`).then((r) => r.data as { data: { redirect_url: string } });
+
+const createPaypalSaldoPayment = (citaId: string) =>
+  api.post(`/citas/${citaId}/pagar/paypal`).then((r) => r.data as { data: { approval_url: string } });
 
 const uploadComprobanteSaldo = (citaUuid: string, file: File) => {
   const form = new FormData();
@@ -66,72 +62,6 @@ function formatMoney(cents: number, currency: string) {
 
 function getSaldoCentavos(cita: Cita): number {
   return cita.saldo_centavos ?? (cita.precio_total_centavos - cita.precio_final_centavos);
-}
-
-// ── Stripe form ───────────────────────────────────────────────────────────────
-function SaldoStripeForm({
-  clientSecret,
-  cita,
-  onSuccess,
-}: {
-  clientSecret: string;
-  cita: Cita;
-  onSuccess: () => void;
-}) {
-  const stripe   = useStripe();
-  const elements = useElements();
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    setLoading(true);
-    setError('');
-    const card = elements.getElement(CardElement) as StripeCardElement;
-    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card },
-    });
-    if (stripeError) {
-      setError(stripeError.message ?? 'Error al procesar el pago.');
-      setLoading(false);
-    } else if (paymentIntent?.status === 'succeeded') {
-      onSuccess();
-    } else {
-      setError('El pago no pudo completarse. Intenta nuevamente.');
-      setLoading(false);
-    }
-  };
-
-  const saldo = getSaldoCentavos(cita);
-
-  return (
-    <form onSubmit={handleSubmit} className="stripe-form">
-      <p className="pay-section-label">Datos de tu tarjeta</p>
-      <div className="stripe-card-wrapper">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                color: '#f5e6d3',
-                fontFamily: 'Georgia, serif',
-                fontSize: '15px',
-                '::placeholder': { color: 'rgba(245,230,211,0.4)' },
-              },
-              invalid: { color: '#ffb3b3' },
-            },
-          }}
-        />
-      </div>
-      {error ? <p className="form-error">{error}</p> : null}
-      <p className="pay-abono-note">
-        Saldo a cobrar: <strong>{formatMoney(saldo, cita.moneda)}</strong>
-      </p>
-      <button className="btn-primary btn-shimmer pay-submit" type="submit" disabled={loading || !stripe}>
-        {loading ? 'Procesando…' : `Pagar ${formatMoney(saldo, cita.moneda)}`}
-      </button>
-    </form>
-  );
 }
 
 // ── Transfer saldo panel ──────────────────────────────────────────────────────
@@ -214,42 +144,11 @@ function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancari
   );
 }
 
-// ── Success screen ────────────────────────────────────────────────────────────
-function SaldoSuccess({ cita }: { cita: Cita }) {
-  return (
-    <motion.div
-      className="pay-success"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="pay-success-content">
-        <Suspense fallback={null}>
-          <ConstellationPortal />
-        </Suspense>
-        <motion.span
-          className="pay-success-icon"
-          animate={{ rotate: [0, 15, -15, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          ✦
-        </motion.span>
-        <h2>¡Saldo pagado!</h2>
-        <p>El pago completo de <strong>{cita.tipo_consulta?.nombre}</strong> está confirmado.</p>
-        <Link className="btn-primary btn-shimmer" to="/app/mis-consultas" style={{ marginTop: '1rem' }}>
-          Ver mis consultas
-        </Link>
-      </div>
-    </motion.div>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function PagarSaldoPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const [method, setMethod]         = useState<'stripe' | 'transfer' | null>(null);
-  const [paid, setPaid]             = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
+  const [method, setMethod]         = useState<'flow' | 'paypal' | 'transfer' | null>(null);
+  const [redirectError, setRedirectError] = useState('');
 
   const { data: cita, isLoading, isError } = useQuery({
     queryKey: ['cita', id],
@@ -263,14 +162,21 @@ export function PagarSaldoPage() {
     enabled:  Boolean(id) && method === 'transfer',
   });
 
-  const intentMutation = useMutation({
-    mutationFn: () => createSaldoIntent(id),
-    onSuccess:  (data) => setClientSecret(data.client_secret),
+  const flowMutation = useMutation({
+    mutationFn: () => createFlowSaldoPayment(id),
+    onSuccess:  (data) => { window.location.href = data.data.redirect_url; },
+    onError:    () => setRedirectError('No se pudo iniciar el pago con Flow. Intenta de nuevo.'),
   });
 
-  const handleSelectMethod = (m: 'stripe' | 'transfer') => {
+  const paypalMutation = useMutation({
+    mutationFn: () => createPaypalSaldoPayment(id),
+    onSuccess:  (data) => { window.location.href = data.data.approval_url; },
+    onError:    () => setRedirectError('No se pudo iniciar el pago con PayPal. Intenta de nuevo.'),
+  });
+
+  const handleSelectMethod = (m: 'flow' | 'paypal' | 'transfer') => {
     setMethod(m);
-    if (m === 'stripe' && !clientSecret) intentMutation.mutate();
+    setRedirectError('');
   };
 
   useEffect(() => { document.title = 'Pagar saldo | TarotEstrellas'; }, []);
@@ -305,17 +211,11 @@ export function PagarSaldoPage() {
         <p className="dash-subtitle">{cita.tipo_consulta?.nombre}</p>
       </motion.div>
 
-      <AnimatePresence mode="wait">
-        {paid ? (
-          <SaldoSuccess key="success" cita={cita} />
-        ) : (
-          <motion.div
-            key="payment"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="pay-wrapper"
-          >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="pay-wrapper"
+      >
             <div className="pay-summary-card">
               <div className="pay-summary-row">
                 <span>Servicio</span>
@@ -347,11 +247,20 @@ export function PagarSaldoPage() {
                   <button
                     type="button"
                     className="pay-method-card"
-                    onClick={() => handleSelectMethod('stripe')}
+                    onClick={() => handleSelectMethod('flow')}
                   >
                     <span className="pay-method-icon">💳</span>
-                    <span className="pay-method-name">Tarjeta de crédito / débito</span>
-                    <span className="pay-method-sub">Visa, Mastercard, Amex</span>
+                    <span className="pay-method-name">Tarjeta chilena (Flow)</span>
+                    <span className="pay-method-sub">Webpay, débito y crédito Chile</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="pay-method-card"
+                    onClick={() => handleSelectMethod('paypal')}
+                  >
+                    <span className="pay-method-icon">🌐</span>
+                    <span className="pay-method-name">PayPal</span>
+                    <span className="pay-method-sub">Pagos internacionales</span>
                   </button>
                   <button
                     type="button"
@@ -375,23 +284,43 @@ export function PagarSaldoPage() {
                   type="button"
                   className="btn-secondary"
                   style={{ marginBottom: '1rem', fontSize: '0.85rem' }}
-                  onClick={() => setMethod(null)}
+                  onClick={() => { setMethod(null); setRedirectError(''); }}
                 >
                   ← Cambiar método
                 </button>
 
-                {method === 'stripe' && clientSecret ? (
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
-                    <SaldoStripeForm
-                      clientSecret={clientSecret}
-                      cita={cita}
-                      onSuccess={() => setPaid(true)}
-                    />
-                  </Elements>
-                ) : method === 'stripe' && intentMutation.isPending ? (
-                  <p>Preparando formulario de pago…</p>
-                ) : method === 'stripe' && intentMutation.isError ? (
-                  <p className="form-error">No se pudo iniciar el pago. Intenta de nuevo.</p>
+                {method === 'flow' ? (
+                  <div className="pay-redirect-panel">
+                    <p className="pay-abono-note">
+                      Saldo a cobrar: <strong>{formatMoney(saldo, cita.moneda)}</strong>
+                    </p>
+                    {redirectError ? <p className="form-error">{redirectError}</p> : null}
+                    <button
+                      type="button"
+                      className="btn-primary btn-shimmer pay-submit"
+                      disabled={flowMutation.isPending}
+                      onClick={() => flowMutation.mutate()}
+                    >
+                      {flowMutation.isPending ? 'Redirigiendo…' : `Pagar ${formatMoney(saldo, cita.moneda)} con Flow`}
+                    </button>
+                  </div>
+                ) : null}
+
+                {method === 'paypal' ? (
+                  <div className="pay-redirect-panel">
+                    <p className="pay-abono-note">
+                      Saldo a cobrar: <strong>{formatMoney(saldo, cita.moneda)}</strong>
+                    </p>
+                    {redirectError ? <p className="form-error">{redirectError}</p> : null}
+                    <button
+                      type="button"
+                      className="btn-primary btn-shimmer pay-submit"
+                      disabled={paypalMutation.isPending}
+                      onClick={() => paypalMutation.mutate()}
+                    >
+                      {paypalMutation.isPending ? 'Redirigiendo…' : `Pagar con PayPal`}
+                    </button>
+                  </div>
                 ) : null}
 
                 {method === 'transfer' ? (
@@ -404,8 +333,6 @@ export function PagarSaldoPage() {
               <Link className="btn-secondary" to="/app/mis-consultas">← Volver a mis consultas</Link>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

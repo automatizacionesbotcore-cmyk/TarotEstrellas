@@ -34,6 +34,18 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'flow' => [
+        'api_key'    => env('FLOW_API_KEY'),
+        'secret_key' => env('FLOW_SECRET_KEY'),
+        'base_url'   => env('FLOW_BASE_URL', 'https://www.flow.cl/api'),
+    ],
+
+    'paypal' => [
+        'client_id'     => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'base_url'      => env('PAYPAL_BASE_URL', 'https://api-m.paypal.com'),
+    ],
+
     'daily' => [
         'api_key' => env('DAILY_API_KEY'),
         'domain' => env('DAILY_DOMAIN'),

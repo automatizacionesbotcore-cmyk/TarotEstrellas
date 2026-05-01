@@ -31,6 +31,7 @@ import { AgenteWidget } from './components/agente/AgenteWidget';
 // Lazy-load heavy pages (Stripe, Daily.co, R3F) para reducir el bundle inicial
 const PagarCitaPage  = lazy(() => import('./pages/app/PagarCitaPage').then((m) => ({ default: m.PagarCitaPage })));
 const PagarSaldoPage = lazy(() => import('./pages/app/PagarSaldoPage').then((m) => ({ default: m.PagarSaldoPage })));
+const PagoResultadoPage = lazy(() => import('./pages/app/PagoResultadoPage').then((m) => ({ default: m.PagoResultadoPage })));
 const SalaVideoPage  = lazy(() => import('./pages/app/SalaVideoPage').then((m) => ({ default: m.SalaVideoPage })));
 const DetalleCitaPage = lazy(() => import('./pages/app/DetalleCitaPage').then((m) => ({ default: m.DetalleCitaPage })));
 const LegalPage      = lazy(() => import('./pages/public/LegalPage').then((m) => ({ default: m.LegalPage })));
@@ -47,6 +48,8 @@ const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspe
 const AdminReportesPage         = lazy(() => import('./pages/app/admin/AdminReportesPage').then((m) => ({ default: m.AdminReportesPage })));
 const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/EspecialistaMisCitasPage').then((m) => ({ default: m.EspecialistaMisCitasPage })));
 const AdminAsistenteIAPage      = lazy(() => import('./pages/app/admin/AdminAsistenteIAPage').then((m) => ({ default: m.AdminAsistenteIAPage })));
+const AdminAgenteMetricsPage    = lazy(() => import('./pages/app/admin/AdminAgenteMetricsPage').then((m) => ({ default: m.AdminAgenteMetricsPage })));
+const AdminApiUsagePage         = lazy(() => import('./pages/app/admin/AdminApiUsagePage').then((m) => ({ default: m.AdminApiUsagePage })));
 const AdminClientesPage         = lazy(() => import('./pages/app/admin/AdminClientesPage').then((m) => ({ default: m.AdminClientesPage })));
 const AdminClienteDetallePage   = lazy(() => import('./pages/app/admin/AdminClienteDetallePage').then((m) => ({ default: m.AdminClienteDetallePage })));
 const AdminCuponesPage          = lazy(() => import('./pages/app/admin/AdminCuponesPage').then((m) => ({ default: m.AdminCuponesPage })));
@@ -130,6 +133,10 @@ export function App() {
           path="citas/:id/pagar-saldo"
           element={<Suspense fallback={<PageLoader />}><PagarSaldoPage /></Suspense>}
         />
+        <Route
+          path="pago-resultado"
+          element={<Suspense fallback={<PageLoader />}><PagoResultadoPage /></Suspense>}
+        />
         <Route path="membresia" element={<MembresiaPage />} />
         <Route path="asistente-ia" element={<AsistenteIAPage />} />
         <Route
@@ -161,6 +168,8 @@ export function App() {
           <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
           <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
+          <Route path="agente/metrics"       element={<Suspense fallback={<PageLoader />}><AdminAgenteMetricsPage    /></Suspense>} />
+          <Route path="api-usage"            element={<Suspense fallback={<PageLoader />}><AdminApiUsagePage         /></Suspense>} />
           <Route path="clientes"             element={<Suspense fallback={<PageLoader />}><AdminClientesPage         /></Suspense>} />
           <Route path="clientes/:uuid"       element={<Suspense fallback={<PageLoader />}><AdminClienteDetallePage   /></Suspense>} />
           <Route path="cupones"              element={<Suspense fallback={<PageLoader />}><AdminCuponesPage          /></Suspense>} />
