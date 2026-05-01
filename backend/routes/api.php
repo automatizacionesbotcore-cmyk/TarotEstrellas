@@ -29,7 +29,12 @@ use App\Http\Controllers\Api\VideollamadaController;
 use App\Http\Controllers\Api\AdminTranscripcionController;
 use App\Http\Controllers\Api\ResenaController;
 use App\Http\Controllers\Api\EspecialistaDashboardController;
+use App\Http\Controllers\Api\AdminAuditLogController;
+use App\Http\Controllers\Api\AdminNotificacionController;
+use App\Http\Controllers\Api\AdminPaqueteController;
+use App\Http\Controllers\Api\AdminPlantillaController;
 use App\Http\Controllers\Api\AdminReportesController;
+use App\Http\Controllers\Api\MonedaController;
 use App\Http\Controllers\Api\CuponController;
 use App\Http\Controllers\Api\MembresiaController;
 use App\Http\Controllers\Api\SeoController;
@@ -83,6 +88,10 @@ Route::prefix('public')->group(function () {
 });
 
 Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
+
+// Moneda (público): detección por país (CF-IPCountry) + conversión
+Route::get('moneda/detectar', [MonedaController::class, 'detectar']);
+Route::post('moneda/convertir', [MonedaController::class, 'convertir']);
 
 Route::middleware('auth:sanctum')->prefix('tipos-consulta')->group(function () {
     Route::get('/', [PublicTipoConsultaController::class, 'index']);
@@ -202,6 +211,34 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/reportes/consultas',  [AdminReportesController::class, 'consultas']);
         Route::get('admin/reportes/clientes',   [AdminReportesController::class, 'clientes']);
         Route::get('admin/reportes/fiscal',     [AdminReportesController::class, 'fiscal']);
+        Route::get('admin/reportes/export',     [AdminReportesController::class, 'exportCsv']);
+
+        // Admin: paquetes
+        Route::prefix('admin/paquetes')->group(function () {
+            Route::get('/', [AdminPaqueteController::class, 'index']);
+            Route::post('/', [AdminPaqueteController::class, 'store']);
+            Route::get('{id}', [AdminPaqueteController::class, 'show']);
+            Route::patch('{id}', [AdminPaqueteController::class, 'update']);
+            Route::delete('{id}', [AdminPaqueteController::class, 'destroy']);
+            Route::post('{id}/toggle', [AdminPaqueteController::class, 'toggle']);
+        });
+
+        // Admin: plantillas de notificación
+        Route::prefix('admin/plantillas')->group(function () {
+            Route::get('/', [AdminPlantillaController::class, 'index']);
+            Route::post('/', [AdminPlantillaController::class, 'store']);
+            Route::get('{id}', [AdminPlantillaController::class, 'show']);
+            Route::patch('{id}', [AdminPlantillaController::class, 'update']);
+            Route::delete('{id}', [AdminPlantillaController::class, 'destroy']);
+            Route::post('{id}/preview', [AdminPlantillaController::class, 'preview']);
+        });
+
+        // Admin: monitor notificaciones enviadas
+        Route::get('admin/notificaciones', [AdminNotificacionController::class, 'index']);
+        Route::get('admin/notificaciones/metrics', [AdminNotificacionController::class, 'metrics']);
+
+        // Admin: visor audit log
+        Route::get('admin/audit-log', [AdminAuditLogController::class, 'index']);
     });
 
     // Cupones

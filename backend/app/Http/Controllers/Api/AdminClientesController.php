@@ -27,6 +27,8 @@ class AdminClientesController extends Controller
             'signo' => ['sometimes', 'string', 'max:30'],
             'frecuencia' => ['sometimes', 'in:sin_consultas,baja,media,alta'],
             'activos' => ['sometimes', 'in:0,1'],
+            'membresia_activa' => ['sometimes', 'in:0,1'],
+            'inactivo_meses' => ['sometimes', 'integer', 'min:1', 'max:60'],
             'desde' => ['sometimes', 'date'],
             'hasta' => ['sometimes', 'date'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
@@ -76,6 +78,32 @@ class AdminClientesController extends Controller
                       ->orWhere('users.last_login_at', '<', now()->subDays(60));
                 });
             }
+        }
+
+        if ($request->has('membresia_activa')) {
+            if ($request->boolean('membresia_activa')) {
+                $query->whereExists(function ($q) {
+                    $q->select(DB::raw(1))->from('membresias')
+                      ->whereColumn('membresias.cliente_id', 'users.id')
+                      ->where('membresias.estado', 'activa');
+                });
+            } else {
+                $query->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))->from('membresias')
+                      ->whereColumn('membresias.cliente_id', 'users.id')
+                      ->where('membresias.estado', 'activa');
+                });
+            }
+        }
+
+        if ($meses = (int) $request->integer('inactivo_meses')) {
+            $cutoff = now()->subMonths($meses);
+            $query->whereNotExists(function ($q) use ($cutoff) {
+                $q->select(DB::raw(1))->from('citas')
+                  ->whereColumn('citas.cliente_id', 'users.id')
+                  ->where('citas.inicio_utc', '>=', $cutoff)
+                  ->whereIn('citas.estado', ['confirmada', 'finalizada', 'completada', 'en_curso']);
+            });
         }
 
         $rows = $query->orderByDesc('users.created_at')

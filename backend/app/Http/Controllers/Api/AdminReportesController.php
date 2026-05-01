@@ -198,5 +198,51 @@ class AdminReportesController extends Controller
                 'desglose_por_mes'           => $desglosePorMes,
             ],
         ]);
+        }
+
+    public function exportCsv(Request $request)
+    {
+        $tipo = $request->string('tipo')->toString() ?: 'ingresos';
+        $desde = $request->input('desde') ? now()->parse($request->input('desde'))->startOfDay() : now()->startOfMonth();
+        $hasta = $request->input('hasta') ? now()->parse($request->input('hasta'))->endOfDay() : now()->endOfDay();
+
+        $callback = function () use ($tipo, $desde, $hasta) {
+            $out = fopen('php://output', 'w');
+            if ($tipo === 'ingresos') {
+                fputcsv($out, ['fecha', 'tipo', 'canal', 'monto_centavos', 'moneda']);
+                Pago::query()->where('estado', 'completado')
+                    ->whereBetween('pagado_en', [$desde, $hasta])
+                    ->orderBy('pagado_en')
+                    ->chunk(500, function ($rows) use ($out) {
+                        foreach ($rows as $p) {
+                            fputcsv($out, [optional($p->pagado_en)->toDateTimeString(), $p->tipo, $p->canal, $p->monto_centavos, $p->moneda]);
+                        }
+                    });
+            } elseif ($tipo === 'consultas') {
+                fputcsv($out, ['inicio_utc', 'estado', 'cliente_id', 'tipo_id', 'precio_centavos']);
+                Cita::query()->whereBetween('inicio_utc', [$desde, $hasta])
+                    ->orderBy('inicio_utc')
+                    ->chunk(500, function ($rows) use ($out) {
+                        foreach ($rows as $c) {
+                            fputcsv($out, [optional($c->inicio_utc)->toDateTimeString(), $c->estado, $c->cliente_id, $c->tipo_consulta_id, $c->precio_final_centavos]);
+                        }
+                    });
+            } elseif ($tipo === 'clientes') {
+                fputcsv($out, ['id', 'nombre', 'email', 'creado_en']);
+                User::query()->whereBetween('created_at', [$desde, $hasta])
+                    ->orderBy('id')
+                    ->chunk(500, function ($rows) use ($out) {
+                        foreach ($rows as $u) {
+                            fputcsv($out, [$u->id, $u->name, $u->email, optional($u->created_at)->toDateTimeString()]);
+                        }
+                    });
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="reporte_'.$tipo.'_'.now()->format('Ymd_His').'.csv"',
+        ]);
     }
 }
