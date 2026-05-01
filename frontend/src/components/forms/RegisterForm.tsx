@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { sanitizeNombre, sanitizeDigits, validateTelefonoCL, validateTelefonoGenerico } from '../../lib/formValidators';
+import { LegalConsentBlock } from './LegalConsentBlock';
 
 function googleAuthUrl() {
   return `${api.defaults.baseURL}/auth/google`;
@@ -36,16 +37,7 @@ type RegisterPayload = {
   version_documento_terminos: string; version_documento_privacidad: string;
 };
 
-type LegalModalType = 'terminos' | 'privacidad';
-type LegalDocument  = { title: string; version: string; paragraphs: string[] };
-type PasswordRule   = { label: string; passed: boolean };
-
-const LEGAL_BASE_PATH = '/';
-
-const LEGAL_URLS: Record<LegalModalType, string> = {
-  terminos:   `${LEGAL_BASE_PATH}legal/terminos.json`,
-  privacidad: `${LEGAL_BASE_PATH}legal/privacidad.json`,
-};
+type PasswordRule = { label: string; passed: boolean };
 
 type Props = {
   onSuccess?: () => void;
@@ -55,48 +47,18 @@ type Props = {
 export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
   const navigate = useNavigate();
 
-  const [submitting,      setSubmitting]      = useState(false);
-  const [successMessage,  setSuccessMessage]  = useState<string | null>(null);
-  const [errorMessage,    setErrorMessage]    = useState<string | null>(null);
-  const [prefijoCelular,  setPrefijoCelular]  = useState('+56');
-  const [numeroCelular,   setNumeroCelular]   = useState('');
-  const [activeLegal,     setActiveLegal]     = useState<LegalModalType | null>(null);
-  const [scrolledBottom,  setScrolledBottom]  = useState(false);
-  const [scrollProgress,  setScrollProgress]  = useState(0);
-  const [legalDocs,       setLegalDocs]       = useState<Partial<Record<LegalModalType, LegalDocument>>>({});
-  const [legalLoading,    setLegalLoading]    = useState(false);
-  const [legalError,      setLegalError]      = useState<string | null>(null);
+  const [submitting,     setSubmitting]     = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage,   setErrorMessage]   = useState<string | null>(null);
+  const [prefijoCelular, setPrefijoCelular] = useState('+56');
+  const [numeroCelular,  setNumeroCelular]  = useState('');
 
   const [form, setForm] = useState<RegisterPayload>({
     nombre: '', apellido: '', email: '', password: '', password_confirmation: '',
     telefono: '', telefono_pais: 'CL', pais_residencia: 'CL',
     acepta_terminos: false, acepta_privacidad: false, acepta_mayor_18: false,
-    version_documento_terminos: 'v2.0', version_documento_privacidad: 'v2.0',
+    version_documento_terminos: 'v3.0 — 2026', version_documento_privacidad: 'v3.0 — 2026',
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    setLegalLoading(true);
-    setLegalError(null);
-
-    Promise.all(
-      (Object.keys(LEGAL_URLS) as LegalModalType[]).map(async (type) => {
-        const res = await fetch(LEGAL_URLS[type]);
-        if (!res.ok) throw new Error(`No se pudo cargar ${type}`);
-        return [type, await res.json() as LegalDocument] as const;
-      }),
-    )
-      .then((entries) => {
-        if (cancelled) return;
-        const next: Partial<Record<LegalModalType, LegalDocument>> = {};
-        entries.forEach(([t, d]) => { next[t] = d; });
-        setLegalDocs(next);
-      })
-      .catch(() => { if (!cancelled) setLegalError('No se pudieron cargar los documentos legales.'); })
-      .finally(() => { if (!cancelled) setLegalLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -112,8 +74,8 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
     const numericPhone = numeroCelular.replace(/\D/g, '');
     const payload: RegisterPayload = {
       ...form,
-      telefono:       numericPhone ? `${prefijoCelular}${numericPhone}` : '',
-      telefono_pais:  form.pais_residencia,
+      telefono:      numericPhone ? `${prefijoCelular}${numericPhone}` : '',
+      telefono_pais: form.pais_residencia,
     };
 
     try {
@@ -133,34 +95,20 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
     }
   };
 
-  const openLegal  = (type: LegalModalType) => { setActiveLegal(type); setScrolledBottom(false); setScrollProgress(0); };
-  const closeLegal = () => { setActiveLegal(null); setScrolledBottom(false); setScrollProgress(0); };
-
-  const acceptLegal = () => {
-    if (!activeLegal || !legalConfig) return;
-    if (activeLegal === 'terminos')
-      setForm((p) => ({ ...p, acepta_terminos: true, version_documento_terminos: legalConfig.version }));
-    if (activeLegal === 'privacidad')
-      setForm((p) => ({ ...p, acepta_privacidad: true, version_documento_privacidad: legalConfig.version }));
-    closeLegal();
-  };
-
-  const legalConfig = activeLegal ? legalDocs[activeLegal] ?? null : null;
-
   const passwordChecks: PasswordRule[] = [
-    { label: 'Mínimo 8 caracteres',               passed: form.password.length >= 8 },
-    { label: 'Al menos una mayúscula',             passed: /[A-Z]/.test(form.password) },
-    { label: 'Al menos una minúscula',             passed: /[a-z]/.test(form.password) },
-    { label: 'Al menos un número',                 passed: /\d/.test(form.password) },
-    { label: 'Al menos un símbolo (!@#$%^&*)',    passed: /[^A-Za-z0-9]/.test(form.password) },
+    { label: 'Mínimo 8 caracteres',            passed: form.password.length >= 8 },
+    { label: 'Al menos una mayúscula',          passed: /[A-Z]/.test(form.password) },
+    { label: 'Al menos una minúscula',          passed: /[a-z]/.test(form.password) },
+    { label: 'Al menos un número',              passed: /\d/.test(form.password) },
+    { label: 'Al menos un símbolo (!@#$%^&*)', passed: /[^A-Za-z0-9]/.test(form.password) },
   ];
 
-  const isPasswordStrong  = passwordChecks.every((r) => r.passed);
-  const hasPasswordValue  = form.password.length > 0;
-  const hasConfirmValue   = form.password_confirmation.length > 0;
-  const passwordsMatch    = hasPasswordValue && hasConfirmValue && form.password === form.password_confirmation;
+  const isPasswordStrong   = passwordChecks.every((r) => r.passed);
+  const hasPasswordValue   = form.password.length > 0;
+  const hasConfirmValue    = form.password_confirmation.length > 0;
+  const passwordsMatch     = hasPasswordValue && hasConfirmValue && form.password === form.password_confirmation;
   const allConsentAccepted = form.acepta_terminos && form.acepta_privacidad && form.acepta_mayor_18;
-  const canSubmit         = allConsentAccepted && isPasswordStrong && passwordsMatch && !submitting;
+  const canSubmit          = allConsentAccepted && isPasswordStrong && passwordsMatch && !submitting;
 
   return (
     <>
@@ -273,25 +221,14 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
           </div>
         </div>
 
-        <div className="checkbox-row checkbox-row-legal">
-          <input type="checkbox" checked={form.acepta_terminos} readOnly required />
-          <button className="legal-trigger" type="button" onClick={() => openLegal('terminos')}>
-            {form.acepta_terminos ? 'Términos aceptados' : 'Leer y aceptar términos y condiciones'}
-          </button>
-        </div>
-
-        <div className="checkbox-row checkbox-row-legal">
-          <input type="checkbox" checked={form.acepta_privacidad} readOnly required />
-          <button className="legal-trigger" type="button" onClick={() => openLegal('privacidad')}>
-            {form.acepta_privacidad ? 'Política aceptada' : 'Leer y aceptar política de privacidad'}
-          </button>
-        </div>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={form.acepta_mayor_18} required
-            onChange={(e) => setForm((p) => ({ ...p, acepta_mayor_18: e.target.checked }))} />
-          Confirmo que soy mayor de 18 años
-        </label>
+        <LegalConsentBlock
+          terminosAceptados={form.acepta_terminos}
+          privacidadAceptada={form.acepta_privacidad}
+          mayor18Aceptado={form.acepta_mayor_18}
+          onTerminosAccepted={(version) => setForm((p) => ({ ...p, acepta_terminos: true, version_documento_terminos: version }))}
+          onPrivacidadAccepted={(version) => setForm((p) => ({ ...p, acepta_privacidad: true, version_documento_privacidad: version }))}
+          onMayor18Change={(val) => setForm((p) => ({ ...p, acepta_mayor_18: val }))}
+        />
 
         {errorMessage   ? <p className="form-error">{errorMessage}</p>     : null}
         {successMessage ? <p className="form-success">{successMessage}</p> : null}
@@ -312,54 +249,7 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
           </Link>
         )}
       </p>
-
-      {/* Legal modals — rendered inside the same component so they work in modal context too */}
-      {legalConfig ? (
-        <div className="legal-modal-backdrop" role="presentation">
-          <section className="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
-            <header className="legal-modal-header">
-              <h2 id="legal-modal-title">{legalConfig.title}</h2>
-              <button type="button" className="legal-close" onClick={closeLegal} aria-label="Cerrar">Cerrar</button>
-            </header>
-            <p className="legal-version">Versión {legalConfig.version}</p>
-            <div className="legal-scroll"
-              onScroll={(e) => {
-                const t = e.currentTarget;
-                const max = t.scrollHeight - t.clientHeight;
-                if (max <= 0) { setScrollProgress(100); setScrolledBottom(true); return; }
-                const pct = Math.min(100, Math.round((t.scrollTop / max) * 100));
-                setScrollProgress(pct);
-                if (pct >= 99) setScrolledBottom(true);
-              }}>
-              {legalConfig.paragraphs.map((p) => <p key={p}>{p}</p>)}
-            </div>
-            <footer className="legal-modal-actions">
-              <span className="legal-hint">
-                {scrolledBottom
-                  ? `Lectura completa (${scrollProgress}%).`
-                  : `Progreso: ${scrollProgress}%. Desplázate hasta el final para aceptar.`}
-              </span>
-              <button type="button" className="btn-primary" disabled={!scrolledBottom} onClick={acceptLegal}>
-                Aceptar
-              </button>
-            </footer>
-          </section>
-        </div>
-      ) : null}
-
-      {activeLegal && !legalConfig ? (
-        <div className="legal-modal-backdrop" role="presentation">
-          <section className="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title-loading">
-            <header className="legal-modal-header">
-              <h2 id="legal-modal-title-loading">Documento legal</h2>
-              <button type="button" className="legal-close" onClick={closeLegal} aria-label="Cerrar">Cerrar</button>
-            </header>
-            <p className="legal-hint">
-              {legalLoading ? 'Cargando documento...' : legalError ?? 'Documento no disponible.'}
-            </p>
-          </section>
-        </div>
-      ) : null}
     </>
   );
 }
+

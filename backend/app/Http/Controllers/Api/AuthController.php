@@ -101,6 +101,20 @@ class AuthController extends Controller
 
         event(new Registered($user));
 
+        $clientIp = $request->ip() ?? '—';
+        dispatch(function () use ($user, $clientIp) {
+            $terminos   = \App\Support\LegalDocs::terminos();
+            $privacidad = \App\Support\LegalDocs::privacidad();
+            \Illuminate\Support\Facades\Mail::to($user->email)
+                ->send(new \App\Mail\ConsentimientoAceptadoMail(
+                    user: $user,
+                    ip: $clientIp,
+                    version: $terminos['version'] ?? 'v3.0',
+                    terminos: $terminos,
+                    privacidad: $privacidad,
+                ));
+        })->afterResponse();
+
         AuditLogger::log('register', [
             'user_id'    => $user->id,
             'user_email' => $user->email,

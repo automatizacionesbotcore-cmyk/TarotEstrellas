@@ -9,6 +9,7 @@ import {
   validateTelefonoCL,
   validateTelefonoGenerico,
 } from '../../lib/formValidators';
+import { LegalConsentBlock } from '../../components/forms/LegalConsentBlock';
 
 const PAISES_RESIDENCIA = [
   'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'Cuba',
@@ -58,6 +59,11 @@ export function CompletarPerfilPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [terminosAceptados,  setTerminosAceptados]  = useState(false);
+  const [privacidadAceptada, setPrivacidadAceptada] = useState(false);
+  const [mayor18Aceptado,    setMayor18Aceptado]    = useState(false);
+  const [versionDocumento,   setVersionDocumento]   = useState('v3.0 — 2026');
+
   useEffect(() => {
     if (user?.nombre && !nombre) setNombre(user.nombre);
   }, [user]);
@@ -75,6 +81,11 @@ export function CompletarPerfilPage() {
       return;
     }
 
+    if (!terminosAceptados || !privacidadAceptada || !mayor18Aceptado) {
+      setErrorMessage('Debes aceptar los términos, la política de privacidad y confirmar que eres mayor de 18 años.');
+      return;
+    }
+
     setSubmitting(true);
     setErrors({});
     setErrorMessage(null);
@@ -88,6 +99,10 @@ export function CompletarPerfilPage() {
         pais_residencia: paisResidencia,
         fecha_nacimiento_publica: fechaNacimiento,
         genero: genero || null,
+        consent_terminos: terminosAceptados,
+        consent_privacidad: privacidadAceptada,
+        version_documento: versionDocumento,
+        acepta_mayor_18: mayor18Aceptado,
       });
       await refreshUser();
       setSuccessMessage('¡Perfil completado! Las estrellas ya conocen tu camino ✨');
@@ -252,7 +267,16 @@ export function CompletarPerfilPage() {
               {errors.genero?.[0] && <em className="field-error">{errors.genero[0]}</em>}
             </label>
 
-            <button type="submit" disabled={submitting} className="btn-primary">
+            <LegalConsentBlock
+              terminosAceptados={terminosAceptados}
+              privacidadAceptada={privacidadAceptada}
+              mayor18Aceptado={mayor18Aceptado}
+              onTerminosAccepted={(version) => { setTerminosAceptados(true); setVersionDocumento(version); }}
+              onPrivacidadAccepted={(version) => { setPrivacidadAceptada(true); setVersionDocumento(version); }}
+              onMayor18Change={setMayor18Aceptado}
+            />
+
+            <button type="submit" disabled={submitting || !terminosAceptados || !privacidadAceptada || !mayor18Aceptado} className="btn-primary">
               {submitting ? 'Guardando…' : 'Completar perfil ✨'}
             </button>
           </form>

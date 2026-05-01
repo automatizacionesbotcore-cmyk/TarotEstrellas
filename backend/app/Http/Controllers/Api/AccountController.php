@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Consentimiento;
 use App\Models\PreferenciaNotificacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,9 @@ class AccountController extends Controller
             'fecha_nacimiento_publica' => ['required', 'date', 'before:today'],
             'zona_horaria'            => ['nullable', 'string', 'timezone'],
             'genero'                  => ['nullable', 'in:masculino,femenino,no_binario,prefiero_no_decir'],
+            'consent_terminos'        => ['nullable', 'boolean'],
+            'consent_privacidad'      => ['nullable', 'boolean'],
+            'version_documento'       => ['nullable', 'string', 'max:30'],
         ]);
 
         $user = $request->user();
@@ -29,6 +33,48 @@ class AccountController extends Controller
         $profile->fill($validated);
         $profile->perfil_completado_en = now();
         $profile->save();
+
+        if ($validated['consent_terminos'] ?? false) {
+            Consentimiento::query()->updateOrCreate(
+                ['user_id' => $user->id, 'tipo' => 'terminos'],
+                [
+                    'version_documento' => $validated['version_documento'] ?? 'v3.0',
+                    'otorgado'          => true,
+                    'otorgado_en'       => now(),
+                    'ip_otorgamiento'   => $request->ip(),
+                    'user_agent'        => substr($request->userAgent() ?? '', 0, 512),
+                ]
+            );
+        }
+
+        if ($validated['consent_privacidad'] ?? false) {
+            Consentimiento::query()->updateOrCreate(
+                ['user_id' => $user->id, 'tipo' => 'privacidad'],
+                [
+                    'version_documento' => $validated['version_documento'] ?? 'v3.0',
+                    'otorgado'          => true,
+                    'otorgado_en'       => now(),
+                    'ip_otorgamiento'   => $request->ip(),
+                    'user_agent'        => substr($request->userAgent() ?? '', 0, 512),
+                ]
+            );
+        }
+
+        if (($validated['consent_terminos'] ?? false) || ($validated['consent_privacidad'] ?? false)) {
+            $clientIp = $request->ip() ?? '—';
+            dispatch(function () use ($user, $clientIp) {
+                $terminos   = \App\Support\LegalDocs::terminos();
+                $privacidad = \App\Support\LegalDocs::privacidad();
+                \Illuminate\Support\Facades\Mail::to($user->email)
+                    ->send(new \App\Mail\ConsentimientoAceptadoMail(
+                        user: $user,
+                        ip: $clientIp,
+                        version: $terminos['version'] ?? 'v3.0',
+                        terminos: $terminos,
+                        privacidad: $privacidad,
+                    ));
+            })->afterResponse();
+        }
 
         return response()->json([
             'message' => 'Perfil completado correctamente.',
