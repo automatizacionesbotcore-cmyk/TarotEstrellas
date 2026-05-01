@@ -7,6 +7,9 @@ import { api } from '../../lib/api';
 import { sanitizeNombre, sanitizeDigits } from '../../lib/formValidators';
 import { useAuthStore } from '../../stores/authStore';
 import { toast } from '../../stores/toastStore';
+import { TwoFactorSection } from '../../components/cuenta/TwoFactorSection';
+import { ConsentimientosSection } from '../../components/cuenta/ConsentimientosSection';
+import { ExportarDatosSection } from '../../components/cuenta/ExportarDatosSection';
 
 type NotifPrefs = {
   email_recordatorios:    boolean;
@@ -394,10 +397,16 @@ export function MiCuentaPage() {
             </motion.section>
 
             <CambiarPasswordSection />
+
+            <TwoFactorSection />
           </div>
 
           <div className="cuenta-column">
             <NotificacionesSection />
+
+            <ConsentimientosSection />
+
+            <ExportarDatosSection />
 
             <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
               <h2 className="dash-section-title">Datos natales</h2>

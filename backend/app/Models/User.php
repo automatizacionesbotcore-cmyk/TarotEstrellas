@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'provider',
         'provider_id',
         'two_factor_secret',
+        'two_factor_recovery_codes',
         'two_factor_confirmed_at',
         'last_login_at',
         'last_login_ip',
@@ -55,7 +56,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_login_at'           => 'datetime',
             'deleted_at'              => 'datetime',
             'password'                => 'hashed',
-            'two_factor_secret'       => 'encrypted',
+            'two_factor_secret'         => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
         ];
     }
 

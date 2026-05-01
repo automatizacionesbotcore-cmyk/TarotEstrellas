@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\AgenteController;
 use App\Http\Controllers\Api\AdminClientesController;
 use App\Http\Controllers\Api\AdminCuponController;
 use App\Http\Controllers\Api\AdminResenaController;
+use App\Http\Controllers\Api\ConsentimientoController;
 use App\Http\Controllers\Api\CreditoClienteController;
+use App\Http\Controllers\Api\TwoFactorAuthController;
 use App\Http\Controllers\Api\PublicEspecialistasController;
 use App\Http\Controllers\Api\SuperAdminEspecialistasController;
 use App\Http\Controllers\Api\AdminMetricasController;
@@ -255,6 +257,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('admin/clientes/{uuid}/creditos', [CreditoClienteController::class, 'storeAdmin']);
         Route::post('admin/creditos/{id}/anular', [CreditoClienteController::class, 'anularAdmin']);
     });
+
+    // 2FA
+    Route::prefix('me/2fa')->group(function () {
+        Route::get('status', [TwoFactorAuthController::class, 'status']);
+        Route::post('setup', [TwoFactorAuthController::class, 'setup']);
+        Route::post('confirm', [TwoFactorAuthController::class, 'confirm']);
+        Route::post('verify', [TwoFactorAuthController::class, 'verify']);
+        Route::post('recovery-codes/regenerate', [TwoFactorAuthController::class, 'regenerateRecoveryCodes']);
+        Route::post('disable', [TwoFactorAuthController::class, 'disable']);
+    });
+
+    // Consentimientos GDPR
+    Route::get('me/consentimientos', [ConsentimientoController::class, 'index']);
+    Route::post('me/consentimientos', [ConsentimientoController::class, 'store']);
 
     Route::get('user', function (Request $request) {
         $user = $request->user()->load(['profile', 'roles']);
