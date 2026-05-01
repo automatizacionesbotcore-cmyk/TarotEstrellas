@@ -28,13 +28,23 @@ class AppServiceProvider extends ServiceProvider
             [\App\Listeners\RegistrarEmailEnviado::class, 'handleSent']
         );
 
-        // Audit observers (M2)
+        // Audit observers (M2) — all key models
         $observer = \App\Observers\AuditableObserver::class;
+        \App\Models\User::observe($observer);
         \App\Models\Cita::observe($observer);
         \App\Models\Pago::observe($observer);
         \App\Models\Reembolso::observe($observer);
+        \App\Models\ComprobanteTransferencia::observe($observer);
+        \App\Models\CuentaBancaria::observe($observer);
         \App\Models\Cupon::observe($observer);
+        \App\Models\Membresia::observe($observer);
         \App\Models\AppSetting::observe($observer);
         \App\Models\PlantillaNotificacion::observe($observer);
+        \App\Models\TipoConsulta::observe($observer);
+        \App\Models\TipoConsultaPrecio::observe($observer);
+        \App\Models\DisponibilidadBase::observe($observer);
+        \App\Models\BloqueoAgenda::observe($observer);
+        \App\Models\UserRole::observe($observer);
+        \App\Models\PerfilEspecialista::observe($observer);
     }
 }

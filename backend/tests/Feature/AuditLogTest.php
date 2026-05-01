@@ -61,7 +61,7 @@ class AuditLogTest extends TestCase
     {
         $admin = User::factory()->create(['email_verified_at' => now()]);
         $admin->roles()->syncWithoutDetaching([
-            Role::query()->where('nombre', 'admin_especialista')->value('id') => ['asignado_en' => now()],
+            Role::query()->where('nombre', 'super_admin')->value('id') => ['asignado_en' => now()],
         ]);
         Sanctum::actingAs($admin);
 
@@ -75,5 +75,48 @@ class AuditLogTest extends TestCase
         $this->getJson('/api/admin/audit-logs?action=created')
             ->assertOk()
             ->assertJsonStructure(['data', 'current_page', 'total']);
+    }
+
+    public function test_admin_audit_logs_forbidden_for_non_super_admin(): void
+    {
+        $admin = User::factory()->create(['email_verified_at' => now()]);
+        $admin->roles()->syncWithoutDetaching([
+            Role::query()->where('nombre', 'admin_especialista')->value('id') => ['asignado_en' => now()],
+        ]);
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/admin/audit-logs')->assertForbidden();
+    }
+
+    public function test_login_creates_audit_log(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'audit@test.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'email'    => 'audit@test.com',
+            'password' => 'password',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action'     => 'login',
+            'user_email' => 'audit@test.com',
+        ]);
+    }
+
+    public function test_failed_login_creates_audit_log(): void
+    {
+        $this->postJson('/api/auth/login', [
+            'email'    => 'nobody@test.com',
+            'password' => 'wrong',
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action'     => 'login_failed',
+            'user_email' => 'nobody@test.com',
+        ]);
     }
 }

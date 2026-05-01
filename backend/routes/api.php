@@ -182,7 +182,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('admin/metricas', [AdminMetricasController::class, 'index'])->middleware('admin');
 
-    Route::middleware('admin')->group(function () {
+    Route::middleware(['admin', 'audit'])->group(function () {
         // Horario base
         Route::get('admin/disponibilidad/horario', [AdminDisponibilidadController::class, 'indexHorario']);
         Route::put('admin/disponibilidad/horario', [AdminDisponibilidadController::class, 'upsertHorario']);
@@ -210,6 +210,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/api-usage',          [\App\Http\Controllers\Api\AdminApiUsageController::class, 'index']);
         Route::patch('admin/api-usage/limits', [\App\Http\Controllers\Api\AdminApiUsageController::class, 'updateLimits']);
         Route::post('admin/api-usage/check',   [\App\Http\Controllers\Api\AdminApiUsageController::class, 'check']);
+        // Audit log unificado — solo super_admin puede verlo
+        Route::get('admin/audit-logs', [AdminAuditLogController::class, 'unified']);
     });
 
     Route::middleware('admin')->prefix('admin/tipos-consulta')->group(function () {
@@ -263,9 +265,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/notificaciones', [AdminNotificacionController::class, 'index']);
         Route::get('admin/notificaciones/metrics', [AdminNotificacionController::class, 'metrics']);
 
-        // Admin: visor audit log
+        // Admin: visor audit log de configuraciones (legacy)
         Route::get('admin/audit-log', [AdminAuditLogController::class, 'index']);
-        Route::get('admin/audit-logs', [AdminAuditLogController::class, 'unified']);
     });
 
     // Cupones

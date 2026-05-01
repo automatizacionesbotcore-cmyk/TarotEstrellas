@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consentimiento;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -100,6 +101,13 @@ class AuthController extends Controller
 
         event(new Registered($user));
 
+        AuditLogger::log('register', [
+            'user_id'    => $user->id,
+            'user_email' => $user->email,
+            'user_role'  => 'cliente',
+            'changes'    => ['new' => ['email' => $user->email, 'name' => $user->name]],
+        ]);
+
         $token = $user->createToken('auth')->plainTextToken;
         $user->load(['profile', 'roles', 'preferenciaNotificacion']);
 
@@ -121,12 +129,22 @@ class AuthController extends Controller
         $user = User::query()->where('email', $validated['email'])->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            AuditLogger::log('login_failed', [
+                'user_id'    => $user?->id,
+                'user_email' => $validated['email'],
+                'changes'    => ['reason' => 'invalid_credentials'],
+            ]);
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
         if (! $user->hasVerifiedEmail()) {
+            AuditLogger::log('login_failed', [
+                'user_id'    => $user->id,
+                'user_email' => $user->email,
+                'changes'    => ['reason' => 'email_not_verified'],
+            ]);
             return response()->json([
                 'message' => 'Debes verificar tu correo electronico para iniciar sesion.',
             ], 403);
@@ -136,6 +154,12 @@ class AuthController extends Controller
             'last_login_at' => now(),
             'last_login_ip' => $request->ip(),
         ])->save();
+
+        AuditLogger::log('login', [
+            'user_id'    => $user->id,
+            'user_email' => $user->email,
+            'user_role'  => $user->rol ?? null,
+        ]);
 
         $token = $user->createToken('auth')->plainTextToken;
         $user->load(['profile', 'roles', 'preferenciaNotificacion']);
@@ -201,6 +225,12 @@ class AuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        AuditLogger::log('logout', [
+            'user_id'    => $user->id,
+            'user_email' => $user->email,
+            'user_role'  => $user->rol ?? null,
+        ]);
 
         $token = $user->currentAccessToken();
         if ($token) {
