@@ -51,6 +51,10 @@ const AdminClientesPage         = lazy(() => import('./pages/app/admin/AdminClie
 const AdminClienteDetallePage   = lazy(() => import('./pages/app/admin/AdminClienteDetallePage').then((m) => ({ default: m.AdminClienteDetallePage })));
 const AdminCuponesPage          = lazy(() => import('./pages/app/admin/AdminCuponesPage').then((m) => ({ default: m.AdminCuponesPage })));
 const AdminResenasPage          = lazy(() => import('./pages/app/admin/AdminResenasPage').then((m) => ({ default: m.AdminResenasPage })));
+const AdminPaquetesPage         = lazy(() => import('./pages/app/admin/AdminPaquetesPage').then((m) => ({ default: m.AdminPaquetesPage })));
+const AdminPlantillasPage       = lazy(() => import('./pages/app/admin/AdminPlantillasPage').then((m) => ({ default: m.AdminPlantillasPage })));
+const AdminNotificacionesPage   = lazy(() => import('./pages/app/admin/AdminNotificacionesPage').then((m) => ({ default: m.AdminNotificacionesPage })));
+const AdminAuditPage            = lazy(() => import('./pages/app/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
 
 function PageLoader() {
   return (
@@ -161,6 +165,10 @@ export function App() {
           <Route path="clientes/:uuid"       element={<Suspense fallback={<PageLoader />}><AdminClienteDetallePage   /></Suspense>} />
           <Route path="cupones"              element={<Suspense fallback={<PageLoader />}><AdminCuponesPage          /></Suspense>} />
           <Route path="resenas"              element={<Suspense fallback={<PageLoader />}><AdminResenasPage          /></Suspense>} />
+          <Route path="paquetes"             element={<Suspense fallback={<PageLoader />}><AdminPaquetesPage         /></Suspense>} />
+          <Route path="plantillas"           element={<Suspense fallback={<PageLoader />}><AdminPlantillasPage       /></Suspense>} />
+          <Route path="notificaciones"       element={<Suspense fallback={<PageLoader />}><AdminNotificacionesPage   /></Suspense>} />
+          <Route path="audit-log"            element={<Suspense fallback={<PageLoader />}><AdminAuditPage            /></Suspense>} />
         </Route>
         </Route>
       </Route>
