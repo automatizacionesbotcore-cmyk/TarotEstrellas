@@ -137,7 +137,7 @@ class CitaReservaExtensionTest extends TestCase
             'tipo_consulta_slug' => 'tarot',
             'inicio_local' => '2026-06-23 10:00:00',
             'zona_horaria_cliente' => 'America/Santiago',
-            'canal_pago' => 'flow',
+            'canal_pago' => 'paypal',
         ])->assertCreated();
 
         $uuid = (string) $create->json('data.uuid');

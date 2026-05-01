@@ -51,7 +51,7 @@ Route::get('robots.txt', [SeoController::class, 'robots']);
 
 Route::prefix('webhooks')->group(function () {
     Route::post('stripe', StripeWebhookController::class);
-    Route::post('flow', \App\Http\Controllers\Api\Webhooks\FlowWebhookController::class);
+    // FASE 2 — Flow.cl webhook: Route::post('flow', \App\Http\Controllers\Api\Webhooks\FlowWebhookController::class);
     Route::post('paypal', \App\Http\Controllers\Api\Webhooks\PaypalWebhookController::class);
     Route::post('daily', DailyWebhookController::class);
     Route::get('whatsapp', [WhatsappWebhookController::class, 'verify']);
@@ -95,6 +95,9 @@ Route::prefix('public')->group(function () {
 
 Route::get('disponibilidad', [DisponibilidadController::class, 'index']);
 
+// Cuentas bancarias públicas (para mostrar al cliente al pagar por transferencia)
+Route::get('cuentas-bancarias', [\App\Http\Controllers\Api\CuentaBancariaController::class, 'indexPublico']);
+
 // Moneda (público): detección por país (CF-IPCountry) + conversión
 Route::get('moneda/detectar', [MonedaController::class, 'detectar']);
 Route::post('moneda/convertir', [MonedaController::class, 'convertir']);
@@ -131,9 +134,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('citas/{uuid}/resena', [ResenaController::class, 'miResena']);
     Route::post('citas', [CitaController::class, 'store']);
     Route::post('citas/{uuid}/extender-reserva', [CitaController::class, 'extenderReserva']);
-    Route::post('citas/{uuid}/pagar/flow',            [CitaController::class, 'crearPagoFlow']);
     Route::post('citas/{uuid}/pagar/paypal',           [CitaController::class, 'crearPagoPaypal']);
     Route::post('citas/{uuid}/pagar/paypal/confirmar', [CitaController::class, 'confirmarPagoPaypal']);
+    // FASE 2 — Flow.cl: Route::post('citas/{uuid}/pagar/flow', [CitaController::class, 'crearPagoFlow']);
     Route::get('citas/{uuid}/pagar/transferencia/datos', [CitaController::class, 'datosTransferencia']);
     Route::post('citas/{uuid}/pagar/transferencia/comprobante', [CitaController::class, 'subirComprobanteTransferencia']);
     Route::get('grabaciones/{uuid}/url', [GrabacionController::class, 'obtenerUrlFirmada']);
@@ -220,6 +223,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('especialista/mis-citas', [EspecialistaDashboardController::class, 'misCitas']);
+
+    // Cuentas bancarias del especialista (gestión propia)
+    Route::middleware('admin')->prefix('admin/cuentas-bancarias')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\CuentaBancariaController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\CuentaBancariaController::class, 'store']);
+        Route::patch('{id}', [\App\Http\Controllers\Api\CuentaBancariaController::class, 'update']);
+        Route::delete('{id}', [\App\Http\Controllers\Api\CuentaBancariaController::class, 'destroy']);
+    });
 
     Route::middleware('admin')->group(function () {
         Route::get('admin/reportes/ingresos',   [AdminReportesController::class, 'ingresos']);

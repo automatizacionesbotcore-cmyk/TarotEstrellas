@@ -285,13 +285,18 @@ class CitaDetalleReagendaCancelacionTest extends TestCase
 
         Sanctum::actingAs($cliente);
 
-        $this->getJson('/api/citas/'.$cita->uuid.'/pagar/transferencia/datos')
+        $response = $this->getJson('/api/citas/'.$cita->uuid.'/pagar/transferencia/datos')
             ->assertOk()
             ->assertJsonPath('data.cita_uuid', $cita->uuid)
-            ->assertJsonPath('data.datos_bancarios.banco', 'BancoEstado')
-            ->assertJsonPath('data.datos_bancarios.cuenta', '1234567890')
-            ->assertJsonPath('data.datos_bancarios.rut', '11111111-1')
             ->assertJsonPath('data.monto_minimo_abono_centavos', 10000);
+
+        // Las cuentas bancarias vienen como array (puede ser desde cuentas_bancarias o fallback AppSettings)
+        $cuentas = $response->json('data.cuentas_bancarias');
+        $this->assertIsArray($cuentas);
+        $this->assertNotEmpty($cuentas);
+        $this->assertEquals('BancoEstado', $cuentas[0]['banco']);
+        $this->assertEquals('1234567890', $cuentas[0]['numero_cuenta']);
+        $this->assertEquals('11111111-1', $cuentas[0]['rut_titular']);
     }
 
     public function test_cliente_cannot_get_transferencia_datos_for_stripe_cita(): void

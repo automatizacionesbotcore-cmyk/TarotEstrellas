@@ -390,7 +390,7 @@ class CitaController extends Controller
             'tipo_consulta_slug'  => ['required', 'string', 'exists:tipos_consulta,slug'],
             'inicio_local'        => ['required', 'date_format:Y-m-d H:i:s'],
             'zona_horaria_cliente' => ['required', 'timezone'],
-            'canal_pago'          => ['required', 'in:flow,paypal,transferencia'],
+            'canal_pago'          => ['required', 'in:transferencia,paypal'],
             'moneda'              => ['nullable', 'string', 'size:3'],
             'tema_principal'      => ['nullable', 'string', 'max:50'],
             'notas_cliente'       => ['nullable', 'string', 'max:2000'],
@@ -601,13 +601,18 @@ class CitaController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // FASE 2 — Flow.cl (pasarela chilena de pago online)
+    // Pendiente de implementar. Por ahora Chile opera sólo con transferencia.
+    // =========================================================================
+    /*
     public function crearPagoFlow(Request $request, string $uuid): JsonResponse
     {
         $validated = $request->validate([
             'tipo' => ['nullable', 'in:abono_20,saldo_80'],
         ]);
 
-        /** @var User $user */
+        // @var User $user
         $user = $request->user();
 
         $cita = Cita::query()
@@ -698,6 +703,7 @@ class CitaController extends Controller
             ],
         ], 201);
     }
+    */ // fin FASE 2 crearPagoFlow
 
     public function crearPagoPaypal(Request $request, string $uuid): JsonResponse
     {
@@ -922,30 +928,47 @@ class CitaController extends Controller
             ], 422);
         }
 
-        $banco      = (string) AppSetting::getValue(self::TRANSFERENCIA_BANCO_KEY, 'BancoEstado');
-        $titular    = (string) AppSetting::getValue(self::TRANSFERENCIA_TITULAR_KEY, 'Tarot Estrellas');
-        $cuenta     = (string) AppSetting::getValue(self::TRANSFERENCIA_CUENTA_KEY, '1234567890');
-        $tipoCuenta = (string) AppSetting::getValue(self::TRANSFERENCIA_TIPO_CUENTA_KEY, 'Corriente');
-        $rut        = (string) AppSetting::getValue(self::TRANSFERENCIA_RUT_KEY, '11111111-1');
-        $email      = (string) AppSetting::getValue(self::TRANSFERENCIA_EMAIL_KEY, '');
+        // Leer cuentas bancarias configuradas (del especialista asignado, o las globales)
+        $cuentasQuery = \App\Models\CuentaBancaria::query()
+            ->where('activa', true)
+            ->orderBy('orden');
+
+        if ($cita->especialista_id) {
+            $cuentasQuery->where('user_id', $cita->especialista_id);
+        }
+
+        $cuentas = $cuentasQuery->get(['banco', 'tipo_cuenta', 'numero_cuenta', 'nombre_titular', 'rut_titular', 'orden']);
+
+        // Fallback a AppSettings si no hay cuentas configuradas
+        if ($cuentas->isEmpty()) {
+            $banco      = (string) AppSetting::getValue(self::TRANSFERENCIA_BANCO_KEY, '');
+            $titular    = (string) AppSetting::getValue(self::TRANSFERENCIA_TITULAR_KEY, '');
+            $cuenta     = (string) AppSetting::getValue(self::TRANSFERENCIA_CUENTA_KEY, '');
+            $tipoCuenta = (string) AppSetting::getValue(self::TRANSFERENCIA_TIPO_CUENTA_KEY, 'Corriente');
+            $rut        = (string) AppSetting::getValue(self::TRANSFERENCIA_RUT_KEY, '');
+
+            if ($banco || $cuenta) {
+                $cuentas = collect([[
+                    'banco'          => $banco,
+                    'tipo_cuenta'    => $tipoCuenta,
+                    'numero_cuenta'  => $cuenta,
+                    'nombre_titular' => $titular,
+                    'rut_titular'    => $rut,
+                    'orden'          => 0,
+                ]]);
+            }
+        }
 
         $montoMinimo = (int) round(((int) $cita->precio_final_centavos) * 0.20);
 
         return response()->json([
             'data' => [
-                'cita_uuid'                   => $cita->uuid,
-                'codigo_referencia'           => $cita->codigo_referencia,
-                'monto_minimo_abono_centavos' => $montoMinimo,
-                'moneda'                      => $cita->moneda,
+                'cita_uuid'                     => $cita->uuid,
+                'codigo_referencia'             => $cita->codigo_referencia,
+                'monto_minimo_abono_centavos'   => $montoMinimo,
+                'moneda'                        => $cita->moneda,
                 'minutos_ventana_transferencia' => $this->getPositiveIntSetting(self::MINUTOS_VENTANA_TRANSFERENCIA_KEY, 30),
-                'datos_bancarios' => [
-                    'banco'       => $banco,
-                    'titular'     => $titular,
-                    'cuenta'      => $cuenta,
-                    'tipo_cuenta' => $tipoCuenta,
-                    'rut'         => $rut,
-                    'email'       => $email ?: null,
-                ],
+                'cuentas_bancarias'             => $cuentas->values(),
             ],
         ]);
     }

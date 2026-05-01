@@ -43,7 +43,7 @@ class BookingAndPaymentFlowTest extends TestCase
             'tipo_consulta_slug' => 'tarot',
             'inicio_local' => '2026-04-25 10:00:00',
             'zona_horaria_cliente' => 'America/Santiago',
-            'canal_pago' => 'flow',
+            'canal_pago' => 'transferencia',
         ])->assertCreated();
 
         $response = $this->getJson('/api/public/disponibilidad?tipo_consulta_slug=tarot&date=2026-04-25&tz=America/Santiago');
@@ -89,7 +89,7 @@ class BookingAndPaymentFlowTest extends TestCase
             'tipo_consulta_slug' => 'tarot',
             'inicio_local' => '2026-04-29 12:00:00',
             'zona_horaria_cliente' => 'America/Santiago',
-            'canal_pago' => 'flow',
+            'canal_pago' => 'transferencia',
         ])->assertCreated();
 
         $uuid = $create->json('data.uuid');
@@ -334,3 +334,4 @@ class BookingAndPaymentFlowTest extends TestCase
         return $user;
     }
 }
+

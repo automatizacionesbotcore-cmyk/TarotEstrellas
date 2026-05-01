@@ -261,7 +261,7 @@ class ComprobanteTransferenciaController extends Controller
         }
 
         $comprobante = ComprobanteTransferencia::query()
-            ->with(['cita:id,cliente_id'])
+            ->with(['cita.cliente.profile', 'cita.tipoConsulta', 'pago'])
             ->findOrFail($id);
 
         $comprobante->forceFill([
@@ -271,7 +271,26 @@ class ComprobanteTransferenciaController extends Controller
             'razon_rechazo' => null,
         ])->save();
 
-        $clienteId = ($comprobante->cita ? $comprobante->cita->cliente_id : null)
+        // Actualizar pago a completado
+        if ($comprobante->pago && $comprobante->pago->estado === 'pendiente') {
+            $comprobante->pago->forceFill([
+                'estado'    => 'completado',
+                'pagado_en' => now(),
+            ])->save();
+        }
+
+        // Avanzar estado de la cita
+        $cita = $comprobante->cita;
+        if ($cita) {
+            $tipoPago = $comprobante->pago?->tipo ?? 'abono_20';
+            if ($tipoPago === 'abono_20' && $cita->estado === 'pendiente_abono') {
+                $cita->forceFill(['estado' => 'reservada'])->save();
+            } elseif ($tipoPago === 'saldo_80' && $cita->estado === 'reservada') {
+                $cita->forceFill(['estado' => 'confirmada', 'confirmada_en' => now()])->save();
+            }
+        }
+
+        $clienteId = ($cita ? $cita->cliente_id : null)
             ?? ValidacionAgente::query()
                 ->where('comprobante_id', $comprobante->id)
                 ->latest('created_at')
@@ -293,6 +312,14 @@ class ComprobanteTransferenciaController extends Controller
                     'accion' => 'aprobar',
                 ],
             ]);
+        }
+
+        // Enviar email al cliente
+        $clienteEmail = $cita?->cliente?->email;
+        if ($clienteEmail) {
+            $comprobante->loadMissing(['cita.cliente.profile', 'cita.tipoConsulta']);
+            \Illuminate\Support\Facades\Mail::to($clienteEmail)
+                ->send(new \App\Mail\TransferenciaAprobadaMail($comprobante));
         }
 
         return response()->json([
@@ -317,7 +344,7 @@ class ComprobanteTransferenciaController extends Controller
         ]);
 
         $comprobante = ComprobanteTransferencia::query()
-            ->with(['cita:id,cliente_id'])
+            ->with(['cita.cliente.profile', 'cita.tipoConsulta', 'pago'])
             ->findOrFail($id);
 
         $comprobante->forceFill([
@@ -327,7 +354,18 @@ class ComprobanteTransferenciaController extends Controller
             'razon_rechazo' => $validated['razon_rechazo'],
         ])->save();
 
-        $clienteId = ($comprobante->cita ? $comprobante->cita->cliente_id : null)
+        // Revertir pago a rechazado
+        if ($comprobante->pago && $comprobante->pago->estado === 'pendiente') {
+            $comprobante->pago->forceFill(['estado' => 'rechazado'])->save();
+        }
+
+        // Revertir cita a pendiente_abono para que el cliente reenvíe comprobante
+        $cita = $comprobante->cita;
+        if ($cita && in_array($cita->estado, ['reservada', 'pendiente_abono'], true)) {
+            $cita->forceFill(['estado' => 'pendiente_abono'])->save();
+        }
+
+        $clienteId = ($cita ? $cita->cliente_id : null)
             ?? ValidacionAgente::query()
                 ->where('comprobante_id', $comprobante->id)
                 ->latest('created_at')
@@ -349,6 +387,13 @@ class ComprobanteTransferenciaController extends Controller
                     'accion' => 'rechazar',
                 ],
             ]);
+        }
+
+        // Enviar email al cliente
+        $clienteEmail = $cita?->cliente?->email;
+        if ($clienteEmail) {
+            \Illuminate\Support\Facades\Mail::to($clienteEmail)
+                ->send(new \App\Mail\TransferenciaRechazadaMail($comprobante, $validated['razon_rechazo']));
         }
 
         return response()->json([
