@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AgenteController;
 use App\Http\Controllers\Api\AdminClientesController;
 use App\Http\Controllers\Api\AdminCuponController;
 use App\Http\Controllers\Api\AdminResenaController;
+use App\Http\Controllers\Api\CreditoClienteController;
 use App\Http\Controllers\Api\PublicEspecialistasController;
 use App\Http\Controllers\Api\SuperAdminEspecialistasController;
 use App\Http\Controllers\Api\AdminMetricasController;
@@ -245,6 +246,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{uuid}/responder', [AdminResenaController::class, 'responder']);
         Route::delete('{uuid}/responder', [AdminResenaController::class, 'eliminarRespuesta']);
         Route::post('{uuid}/visibilidad', [AdminResenaController::class, 'toggleVisibilidad']);
+    });
+
+    // Creditos de cliente (autoservicio + admin)
+    Route::get('me/creditos', [CreditoClienteController::class, 'misCreditos']);
+    Route::middleware('admin')->group(function () {
+        Route::get('admin/clientes/{uuid}/creditos', [CreditoClienteController::class, 'indexAdmin']);
+        Route::post('admin/clientes/{uuid}/creditos', [CreditoClienteController::class, 'storeAdmin']);
+        Route::post('admin/creditos/{id}/anular', [CreditoClienteController::class, 'anularAdmin']);
     });
 
     Route::get('user', function (Request $request) {
