@@ -5,92 +5,316 @@
     <title>Constancia de aceptación — TarotEstrellas</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: DejaVu Sans, Arial, sans-serif; background: #fff; color: #2d1a4e; font-size: 11px; line-height: 1.5; }
-        .page { padding: 36px 40px; }
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            background: #ffffff;
+            color: #1a0f2e;
+            font-size: 10.5px;
+            line-height: 1.55;
+        }
+        .page { padding: 0; }
 
-        /* Header */
-        .header { background: #2d1a4e; color: #f5d97e; padding: 22px 28px; border-radius: 6px; margin-bottom: 24px; }
-        .header h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.04em; }
-        .header p  { font-size: 11px; color: #d4b8ff; margin-top: 4px; }
+        /* ── COVER HEADER ─────────────────────────────────── */
+        .cover-header {
+            background-color: #1e0a3c;
+            padding: 0;
+            margin-bottom: 0;
+        }
+        .cover-header-inner {
+            padding: 28px 40px 20px 40px;
+        }
+        .cover-accent-bar {
+            height: 5px;
+            background-color: #c9a227;
+        }
 
-        /* Info box */
-        .info-box { background: #f8f4ff; border-left: 4px solid #7c3aed; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px; }
-        .info-box table { width: 100%; border-collapse: collapse; }
-        .info-box td  { padding: 3px 6px 3px 0; font-size: 11px; }
-        .info-box td.label { color: #7c3aed; font-weight: bold; width: 160px; white-space: nowrap; }
-        .info-box td.value { color: #2d1a4e; }
+        /* Logo row */
+        .logo-row { margin-bottom: 14px; }
+        .logo-svg  { display: inline-block; vertical-align: middle; }
+        .brand-name {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f0d060;
+            letter-spacing: 0.06em;
+        }
+        .brand-tagline {
+            font-size: 9.5px;
+            color: #b89fdf;
+            margin-top: 1px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
 
-        /* Section title */
-        .section-title { font-size: 13px; font-weight: bold; color: #7c3aed; border-bottom: 1.5px solid #d4b8ff; padding-bottom: 5px; margin: 22px 0 10px; }
+        .cover-doc-title {
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: bold;
+            margin-top: 12px;
+            letter-spacing: 0.02em;
+        }
+        .cover-doc-subtitle {
+            font-size: 10px;
+            color: #9f7fd4;
+            margin-top: 3px;
+        }
 
-        /* Document block */
-        .doc-title   { font-size: 12px; font-weight: bold; color: #2d1a4e; margin-bottom: 2px; }
-        .doc-version { font-size: 10px; color: #9172c4; margin-bottom: 8px; }
-        .doc-para    { font-size: 10px; color: #3d2a5e; margin-bottom: 5px; text-align: justify; }
+        /* ── CONTENT AREA ─────────────────────────────────── */
+        .content { padding: 28px 40px 20px 40px; }
 
-        /* Footer */
-        .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #d4b8ff; font-size: 9px; color: #9172c4; text-align: center; }
+        /* ── STATUS BANNER ────────────────────────────────── */
+        .status-banner {
+            background-color: #f0fdf4;
+            border: 1.5px solid #22c55e;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 22px;
+        }
+        .status-dot { color: #22c55e; font-size: 13px; vertical-align: middle; }
+        .status-text { font-size: 11px; font-weight: bold; color: #15803d; vertical-align: middle; margin-left: 6px; }
+        .status-sub  { font-size: 9.5px; color: #166534; margin-top: 2px; }
 
-        /* Badge */
-        .badge { display: inline-block; background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; margin-bottom: 14px; }
+        /* ── SECTION HEADER ───────────────────────────────── */
+        .section-header {
+            background-color: #f5f0ff;
+            border-left: 4px solid #7c3aed;
+            padding: 7px 14px;
+            margin-bottom: 14px;
+            margin-top: 22px;
+        }
+        .section-header h2 {
+            font-size: 11.5px;
+            font-weight: bold;
+            color: #4c1d95;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        /* ── INFO TABLE ───────────────────────────────────── */
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .info-table tr:nth-child(even) td { background-color: #faf7ff; }
+        .info-table td { padding: 6px 10px; font-size: 10.5px; border-bottom: 1px solid #ede9f7; }
+        .info-table td.lbl {
+            color: #6d28d9;
+            font-weight: bold;
+            width: 45%;
+            white-space: nowrap;
+        }
+        .info-table td.val { color: #1a0f2e; }
+
+        /* ── DOC CONTENT ──────────────────────────────────── */
+        .doc-header-row {
+            background-color: #2d1a4e;
+            padding: 9px 14px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .doc-header-row .doc-main-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #f0d060;
+        }
+        .doc-header-row .doc-main-version {
+            font-size: 9px;
+            color: #b89fdf;
+            margin-top: 1px;
+        }
+        .doc-para {
+            font-size: 9.5px;
+            color: #2d1a4e;
+            margin-bottom: 5px;
+            text-align: justify;
+            padding: 0 4px;
+        }
+        .doc-para-alt { background-color: #fdf8ff; }
+
+        /* ── SIGNATURE AREA ───────────────────────────────── */
+        .signature-area {
+            margin-top: 28px;
+            border: 1.5px dashed #7c3aed;
+            border-radius: 6px;
+            padding: 16px 20px;
+            background-color: #faf7ff;
+        }
+        .sig-title { font-size: 10px; font-weight: bold; color: #4c1d95; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.06em; }
+        .sig-table { width: 100%; border-collapse: collapse; }
+        .sig-table td { padding: 4px 8px; font-size: 9.5px; }
+        .sig-table td.sig-lbl { color: #7c3aed; font-weight: bold; width: 40%; }
+        .sig-table td.sig-val { color: #1a0f2e; font-family: "DejaVu Sans Mono", monospace; font-size: 9px; }
+
+        /* ── DOC ID / WATERMARK ───────────────────────────── */
+        .doc-id-box {
+            text-align: center;
+            margin-top: 20px;
+            padding: 8px;
+            background-color: #f5f0ff;
+            border-radius: 4px;
+        }
+        .doc-id-label { font-size: 8.5px; color: #9172c4; text-transform: uppercase; letter-spacing: 0.08em; }
+        .doc-id-value { font-size: 9px; font-family: "DejaVu Sans Mono", monospace; color: #4c1d95; margin-top: 2px; }
+
+        /* ── FOOTER ───────────────────────────────────────── */
+        .footer-wrap {
+            margin-top: 30px;
+            padding-top: 0;
+        }
+        .footer-accent {
+            height: 3px;
+            background-color: #c9a227;
+            margin-bottom: 0;
+        }
+        .footer-inner {
+            background-color: #1e0a3c;
+            padding: 12px 40px;
+        }
+        .footer-text { font-size: 8.5px; color: #9f7fd4; text-align: center; }
+        .footer-text a { color: #c9a227; text-decoration: none; }
+        .footer-legal { font-size: 8px; color: #6b4fa0; text-align: center; margin-top: 4px; }
+
+        /* ── DIVIDER ──────────────────────────────────────── */
+        .divider { border: none; border-top: 1px solid #e4d8ff; margin: 16px 0; }
+
+        /* ── PAGE NUMBER ──────────────────────────────────── */
+        @page { margin: 0; }
     </style>
 </head>
 <body>
 <div class="page">
 
-    <div class="header">
-        <h1>✦ TarotEstrellas — Constancia de aceptación</h1>
-        <p>Este documento certifica la aceptación voluntaria de los documentos legales vigentes.</p>
+    {{-- ══ COVER HEADER ════════════════════════════════════ --}}
+    <div class="cover-header">
+        <div class="cover-accent-bar"></div>
+        <div class="cover-header-inner">
+            <div class="logo-row">
+                {{-- Simplified logo SVG (no filters – DomPDF compatible) --}}
+                <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" width="36" height="34" viewBox="0 0 48 46">
+                    <path fill="#c9a227" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474C10.227.177 10.569 0 10.933 0h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
+                </svg>
+                <span class="brand-name">TarotEstrellas</span>
+            </div>
+            <div class="brand-tagline">Consultas de orientación espiritual</div>
+            <div class="cover-doc-title">Constancia de Aceptación de Documentos Legales</div>
+            <div class="cover-doc-subtitle">Documento generado automáticamente el {{ \Carbon\Carbon::parse($aceptadoEn)->format('d \d\e F \d\e Y, H:i') }} UTC</div>
+        </div>
     </div>
 
-    <span class="badge">✓ Documentos aceptados</span>
+    {{-- ══ CONTENT ══════════════════════════════════════════ --}}
+    <div class="content">
 
-    <div class="info-box">
-        <table>
+        {{-- Status banner --}}
+        <div class="status-banner">
+            <span class="status-dot">✓</span>
+            <span class="status-text">Documentos aceptados exitosamente</span>
+            <div class="status-sub">El usuario identificado a continuación aceptó los documentos legales vigentes de forma libre y voluntaria.</div>
+        </div>
+
+        {{-- ── Datos del firmante ────────────────────────── --}}
+        <div class="section-header"><h2>I. Datos del firmante</h2></div>
+        <table class="info-table">
             <tr>
-                <td class="label">Nombre</td>
-                <td class="value">{{ $user->profile?->nombre ?? $user->name }}{{ $user->profile?->apellido ? ' ' . $user->profile->apellido : '' }}</td>
+                <td class="lbl">Nombre completo</td>
+                <td class="val">{{ ($user->profile?->nombre ?? $user->name) . ($user->profile?->apellido ? ' ' . $user->profile->apellido : '') }}</td>
             </tr>
             <tr>
-                <td class="label">Correo electrónico</td>
-                <td class="value">{{ $user->email }}</td>
+                <td class="lbl">Correo electrónico</td>
+                <td class="val">{{ $user->email }}</td>
             </tr>
             <tr>
-                <td class="label">Fecha y hora de aceptación</td>
-                <td class="value">{{ \Carbon\Carbon::parse($aceptadoEn)->format('d/m/Y H:i:s') }} UTC</td>
+                <td class="lbl">Fecha y hora de aceptación</td>
+                <td class="val">{{ \Carbon\Carbon::parse($aceptadoEn)->format('d/m/Y H:i:s') }} UTC</td>
             </tr>
             <tr>
-                <td class="label">Dirección IP</td>
-                <td class="value">{{ $ip }}</td>
+                <td class="lbl">Dirección IP registrada</td>
+                <td class="val">{{ $ip }}</td>
             </tr>
             <tr>
-                <td class="label">Versión de documentos</td>
-                <td class="value">{{ $version }}</td>
+                <td class="lbl">Versión de documentos</td>
+                <td class="val">{{ $version }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Estado</td>
+                <td class="val" style="color:#15803d; font-weight:bold;">Aceptado ✓</td>
             </tr>
         </table>
-    </div>
 
-    <!-- Términos y condiciones -->
-    <div class="section-title">Términos y Condiciones</div>
-    <p class="doc-title">{{ $terminos['title'] ?? 'Términos y condiciones de uso' }}</p>
-    <p class="doc-version">Versión: {{ $terminos['version'] ?? $version }}</p>
-    @foreach ($terminos['paragraphs'] ?? [] as $para)
-        <p class="doc-para">{{ $para }}</p>
-    @endforeach
+        {{-- ── Documentos aceptados ─────────────────────── --}}
+        <div class="section-header"><h2>II. Documentos legales aceptados</h2></div>
 
-    <!-- Política de privacidad -->
-    <div class="section-title">Política de Privacidad</div>
-    <p class="doc-title">{{ $privacidad['title'] ?? 'Política de privacidad' }}</p>
-    <p class="doc-version">Versión: {{ $privacidad['version'] ?? $version }}</p>
-    @foreach ($privacidad['paragraphs'] ?? [] as $para)
-        <p class="doc-para">{{ $para }}</p>
-    @endforeach
+        {{-- Términos y condiciones --}}
+        <div class="doc-header-row">
+            <div class="doc-main-title">{{ $terminos['title'] ?? 'Términos y Condiciones de Uso' }}</div>
+            <div class="doc-main-version">Versión: {{ $terminos['version'] ?? $version }}</div>
+        </div>
+        @foreach ($terminos['paragraphs'] ?? [] as $i => $para)
+            <p class="doc-para {{ $i % 2 === 1 ? 'doc-para-alt' : '' }}">{{ $para }}</p>
+        @endforeach
 
-    <div class="footer">
-        Este documento fue generado automáticamente como constancia de aceptación. &bull;
-        &copy; {{ date('Y') }} TarotEstrellas &bull; contacto@tarotestrellas.com
+        <hr class="divider">
+
+        {{-- Política de privacidad --}}
+        <div class="doc-header-row">
+            <div class="doc-main-title">{{ $privacidad['title'] ?? 'Política de Privacidad' }}</div>
+            <div class="doc-main-version">Versión: {{ $privacidad['version'] ?? $version }}</div>
+        </div>
+        @foreach ($privacidad['paragraphs'] ?? [] as $i => $para)
+            <p class="doc-para {{ $i % 2 === 1 ? 'doc-para-alt' : '' }}">{{ $para }}</p>
+        @endforeach
+
+        {{-- ── Área de firma digital ────────────────────── --}}
+        <div class="section-header" style="margin-top:28px;"><h2>III. Constancia de aceptación</h2></div>
+        <div class="signature-area">
+            <div class="sig-title">✦ Registro de consentimiento digital ✦</div>
+            <table class="sig-table">
+                <tr>
+                    <td class="sig-lbl">Usuario</td>
+                    <td class="sig-val">{{ $user->email }}</td>
+                </tr>
+                <tr>
+                    <td class="sig-lbl">Acción registrada</td>
+                    <td class="sig-val">Aceptación voluntaria de Términos y Política de Privacidad</td>
+                </tr>
+                <tr>
+                    <td class="sig-lbl">Timestamp UTC</td>
+                    <td class="sig-val">{{ $aceptadoEn }}</td>
+                </tr>
+                <tr>
+                    <td class="sig-lbl">IP de origen</td>
+                    <td class="sig-val">{{ $ip }}</td>
+                </tr>
+                <tr>
+                    <td class="sig-lbl">Versión</td>
+                    <td class="sig-val">{{ $version }}</td>
+                </tr>
+            </table>
+        </div>
+
+        {{-- ── ID del documento ─────────────────────────── --}}
+        <div class="doc-id-box">
+            <div class="doc-id-label">Identificador único de documento</div>
+            <div class="doc-id-value">TE-CONSENT-{{ strtoupper(substr(sha1($user->email . $aceptadoEn . $ip), 0, 32)) }}</div>
+        </div>
+
+    </div>{{-- /content --}}
+
+    {{-- ══ FOOTER ═══════════════════════════════════════════ --}}
+    <div class="footer-wrap">
+        <div class="footer-accent"></div>
+        <div class="footer-inner">
+            <div class="footer-text">
+                Este documento fue generado automáticamente por la plataforma TarotEstrellas.
+                &bull; <span style="color:#c9a227;">tarotestrellas.com</span>
+                &bull; contacto@tarotestrellas.com
+            </div>
+            <div class="footer-legal">
+                Este documento tiene validez como constancia de aceptación de los documentos legales vigentes en la fecha indicada.
+                Conserva este archivo para tus registros. &copy; {{ date('Y') }} TarotEstrellas. Todos los derechos reservados.
+            </div>
+        </div>
     </div>
 
 </div>
 </body>
 </html>
+
