@@ -15,11 +15,15 @@ class Resena extends Model
         'puntuacion',
         'comentario',
         'visible',
+        'respuesta_admin',
+        'respondida_en',
+        'respondida_por',
     ];
 
     protected $casts = [
         'puntuacion' => 'integer',
         'visible' => 'boolean',
+        'respondida_en' => 'datetime',
     ];
 
     public function cita(): BelongsTo

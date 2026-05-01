@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminDisponibilidadController;
 use App\Http\Controllers\Api\AgenteController;
 use App\Http\Controllers\Api\AdminClientesController;
+use App\Http\Controllers\Api\AdminCuponController;
+use App\Http\Controllers\Api\AdminResenaController;
 use App\Http\Controllers\Api\PublicEspecialistasController;
 use App\Http\Controllers\Api\SuperAdminEspecialistasController;
 use App\Http\Controllers\Api\AdminMetricasController;
@@ -224,6 +226,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{uuid}/estadisticas', [AdminClientesController::class, 'estadisticas']);
         Route::patch('{uuid}/notas', [AdminClientesController::class, 'actualizarNotas']);
         Route::middleware('throttle:20,1')->get('{uuid}/briefing', [AdminClientesController::class, 'briefing']);
+    });
+
+    // Admin: gestion de cupones
+    Route::middleware('admin')->prefix('admin/cupones')->group(function () {
+        Route::get('/', [AdminCuponController::class, 'index']);
+        Route::post('/', [AdminCuponController::class, 'store']);
+        Route::get('{codigo}', [AdminCuponController::class, 'show']);
+        Route::patch('{codigo}', [AdminCuponController::class, 'update']);
+        Route::delete('{codigo}', [AdminCuponController::class, 'destroy']);
+        Route::post('{codigo}/toggle', [AdminCuponController::class, 'toggle']);
+    });
+
+    // Admin: gestion de resenas
+    Route::middleware('admin')->prefix('admin/resenas')->group(function () {
+        Route::get('/', [AdminResenaController::class, 'index']);
+        Route::get('{uuid}', [AdminResenaController::class, 'show']);
+        Route::post('{uuid}/responder', [AdminResenaController::class, 'responder']);
+        Route::delete('{uuid}/responder', [AdminResenaController::class, 'eliminarRespuesta']);
+        Route::post('{uuid}/visibilidad', [AdminResenaController::class, 'toggleVisibilidad']);
     });
 
     Route::get('user', function (Request $request) {

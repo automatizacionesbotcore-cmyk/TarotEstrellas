@@ -49,6 +49,8 @@ const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/Especiali
 const AdminAsistenteIAPage      = lazy(() => import('./pages/app/admin/AdminAsistenteIAPage').then((m) => ({ default: m.AdminAsistenteIAPage })));
 const AdminClientesPage         = lazy(() => import('./pages/app/admin/AdminClientesPage').then((m) => ({ default: m.AdminClientesPage })));
 const AdminClienteDetallePage   = lazy(() => import('./pages/app/admin/AdminClienteDetallePage').then((m) => ({ default: m.AdminClienteDetallePage })));
+const AdminCuponesPage          = lazy(() => import('./pages/app/admin/AdminCuponesPage').then((m) => ({ default: m.AdminCuponesPage })));
+const AdminResenasPage          = lazy(() => import('./pages/app/admin/AdminResenasPage').then((m) => ({ default: m.AdminResenasPage })));
 
 function PageLoader() {
   return (
@@ -157,6 +159,8 @@ export function App() {
           <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
           <Route path="clientes"             element={<Suspense fallback={<PageLoader />}><AdminClientesPage         /></Suspense>} />
           <Route path="clientes/:uuid"       element={<Suspense fallback={<PageLoader />}><AdminClienteDetallePage   /></Suspense>} />
+          <Route path="cupones"              element={<Suspense fallback={<PageLoader />}><AdminCuponesPage          /></Suspense>} />
+          <Route path="resenas"              element={<Suspense fallback={<PageLoader />}><AdminResenasPage          /></Suspense>} />
         </Route>
         </Route>
       </Route>

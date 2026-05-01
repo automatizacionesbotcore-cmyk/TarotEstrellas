@@ -9,6 +9,8 @@ class Cupon extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'cupones';
+
     protected $fillable = [
         'codigo', 'descripcion', 'tipo_descuento', 'valor_descuento',
         'moneda', 'uso_maximo_total', 'uso_maximo_por_cliente', 'usos_totales',
