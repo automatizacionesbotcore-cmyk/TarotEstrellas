@@ -38,6 +38,7 @@ export async function getApiUsage(): Promise<ApiUsageResponse> {
 
 export async function updateApiLimits(payload: {
   anthropic?: { limite?: number; warn_pct?: number };
+  openai?: { limite?: number; warn_pct?: number };
   daily?: { limite?: number; warn_pct?: number };
   alert_emails?: string;
 }): Promise<{ ok: true }> {

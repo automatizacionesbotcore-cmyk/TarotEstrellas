@@ -38,7 +38,9 @@ function normalizeUser(raw: Record<string, unknown>): User {
     nombre: (profile?.nombre as string) ?? (raw.name as string) ?? null,
     email_verified_at: (raw.email_verified_at as string) ?? null,
     roles: normalizeRoles(raw.roles),
-    perfil_completo: Boolean(raw.perfil_completo),
+    perfil_completo: raw.perfil_completo === undefined || raw.perfil_completo === null
+      ? undefined
+      : Boolean(raw.perfil_completo),
   };
 }
 

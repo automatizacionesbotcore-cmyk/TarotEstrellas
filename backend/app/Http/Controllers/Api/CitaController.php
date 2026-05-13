@@ -1411,6 +1411,9 @@ class CitaController extends Controller
             'desde' => ['nullable', 'date'],
             'hasta' => ['nullable', 'date'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'sort_by' => ['nullable', 'string', 'in:inicio_utc,estado,codigo_referencia'],
+            'sort_dir' => ['nullable', 'string', 'in:asc,desc'],
         ]);
     }
 
@@ -1424,8 +1427,20 @@ class CitaController extends Controller
                 'cliente:id,name,email',
                 'tipoConsulta:id,slug,nombre,duracion_minutos',
                 'grabaciones.transcripcion.resumen',
-            ])
-            ->orderByDesc('inicio_utc');
+            ]);
+
+        // Búsqueda general por UUID, código, email cliente
+        if (! empty($validated['q'])) {
+            $search = $validated['q'];
+            $query->where(function ($q) use ($search) {
+                $q->where('uuid', 'like', '%' . $search . '%')
+                  ->orWhere('codigo_referencia', 'like', '%' . $search . '%')
+                  ->orWhereHas('cliente', function ($sq) use ($search) {
+                      $sq->where('email', 'like', '%' . $search . '%')
+                         ->orWhere('name', 'like', '%' . $search . '%');
+                  });
+            });
+        }
 
         if (! empty($validated['estado'])) {
             $query->where('estado', $validated['estado']);
@@ -1445,6 +1460,11 @@ class CitaController extends Controller
         if (! empty($validated['hasta'])) {
             $query->whereDate('inicio_utc', '<=', $validated['hasta']);
         }
+
+        // Ordenamiento
+        $sortBy = $validated['sort_by'] ?? 'inicio_utc';
+        $sortDir = $validated['sort_dir'] ?? 'desc';
+        $query->orderBy($sortBy, $sortDir);
 
         return $query;
     }

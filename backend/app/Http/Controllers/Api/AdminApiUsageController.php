@@ -22,10 +22,14 @@ class AdminApiUsageController extends Controller
             ->limit(50)
             ->get();
 
+        $emailsExtra = AppSetting::query()->where('key', ApiUsageService::ALERT_EMAILS)->value('value');
+
         return response()->json([
             ...$snap,
             'alertas_recientes' => $alertas,
             'destinatarios'     => $this->svc->getAlertRecipients(),
+            'limites'           => $this->svc->getLimits(),
+            'emails_extra'      => is_string($emailsExtra) ? $emailsExtra : '',
         ]);
     }
 

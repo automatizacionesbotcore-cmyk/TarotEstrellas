@@ -29,10 +29,10 @@ class AccountController extends Controller
         ]);
 
         $user = $request->user();
-        $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
-        $profile->fill($validated);
-        $profile->perfil_completado_en = now();
-        $profile->save();
+        $profile = $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            array_merge($validated, ['perfil_completado_en' => now()])
+        );
 
         if ($validated['consent_terminos'] ?? false) {
             Consentimiento::query()->updateOrCreate(

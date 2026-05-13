@@ -30,17 +30,17 @@ function ActionBadge({ action }: { action: string }) {
 
 function ChangesDetail({ changes }: { changes: UnifiedAuditLog['changes'] }) {
   const [open, setOpen] = useState(false);
-  if (!changes || Object.keys(changes).length === 0) return <span className="text-gray-400">—</span>;
+  if (!changes || Object.keys(changes).length === 0) return <span style={{ color: 'var(--text-muted)' }}>—</span>;
   return (
     <div>
       <button
         onClick={() => setOpen((p) => !p)}
-        className="text-xs text-indigo-600 hover:underline"
+        style={{ fontSize: '0.75rem', color: 'var(--accent)', textDecoration: 'underline', background: 'none', border: 0, cursor: 'pointer' }}
       >
         {open ? 'Ocultar ▲' : 'Ver detalle ▼'}
       </button>
       {open && (
-        <pre className="mt-1 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto max-h-48 max-w-xs">
+        <pre style={{ marginTop: '0.25rem', fontSize: '0.75rem', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '0.25rem', overflow: 'auto', maxHeight: '12rem', maxWidth: '20rem' }}>
           {JSON.stringify(changes, null, 2)}
         </pre>
       )}
@@ -112,51 +112,52 @@ export function AdminAuditPage() {
 
   return (
     <main className="page-content">
-      <div className="flex items-center justify-between mb-4">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div>
-          <h1 className="text-2xl font-bold">Auditoría del sistema</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Auditoría del sistema</h1>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
             Registro de todas las acciones de usuarios — solo visible para super admins.
           </p>
         </div>
         {total > 0 && (
-          <span className="text-sm text-gray-500">{total.toLocaleString()} registros</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{total.toLocaleString()} registros</span>
         )}
       </div>
 
       {/* Filters */}
-      <form onSubmit={handleSearch} className="bg-white dark:bg-gray-900 border rounded-lg p-4 mb-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-3">
+      <form onSubmit={handleSearch} className="card" style={{ padding: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
           <input
-            className="input col-span-2 sm:col-span-1 lg:col-span-2"
+            className="form-input"
+            style={{ gridColumn: 'span 2' }}
             placeholder="Buscar email, URL, acción…"
             value={filters.q ?? ''}
             onChange={(e) => setF('q', e.target.value)}
           />
-          <select className="input" value={filters.action ?? ''} onChange={(e) => setF('action', e.target.value)}>
+          <select className="form-input" value={filters.action ?? ''} onChange={(e) => setF('action', e.target.value)}>
             <option value="">Todas las acciones</option>
             {AUDIT_ACTIONS.map((a) => (
               <option key={a} value={a}>{a}</option>
             ))}
           </select>
-          <select className="input" value={filters.auditable_type ?? ''} onChange={(e) => setF('auditable_type', e.target.value)}>
+          <select className="form-input" value={filters.auditable_type ?? ''} onChange={(e) => setF('auditable_type', e.target.value)}>
             <option value="">Todos los recursos</option>
             {Object.entries(AUDIT_TYPES).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
-          <input type="date" className="input" value={filters.desde ?? ''} onChange={(e) => setF('desde', e.target.value)} title="Desde" />
-          <input type="date" className="input" value={filters.hasta ?? ''} onChange={(e) => setF('hasta', e.target.value)} title="Hasta" />
+          <input type="date" className="form-input" value={filters.desde ?? ''} onChange={(e) => setF('desde', e.target.value)} title="Desde" />
+          <input type="date" className="form-input" value={filters.hasta ?? ''} onChange={(e) => setF('hasta', e.target.value)} title="Hasta" />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="btn btn-primary">Buscar</button>
-          <button type="button" className="btn btn-secondary" onClick={handleReset}>Limpiar</button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button type="submit" className="btn-primary">Buscar</button>
+          <button type="button" className="btn-secondary" onClick={handleReset}>Limpiar</button>
         </div>
       </form>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border bg-white dark:bg-gray-900">
-        <table className="data-table w-full text-sm">
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <table className="admin-table" style={{ width: '100%' }}>
           <thead>
             <tr>
               <th>Fecha</th>
@@ -171,39 +172,39 @@ export function AdminAuditPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-400">Cargando…</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Cargando…</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-400">Sin registros para los filtros seleccionados.</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Sin registros para los filtros seleccionados.</td></tr>
             ) : items.map((a) => (
-              <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <td className="whitespace-nowrap text-xs text-gray-500">
+              <tr key={a.id}>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {new Date(a.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}
                 </td>
-                <td className="max-w-[160px] truncate text-xs">
-                  <div className="font-medium truncate">{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
+                <td style={{ maxWidth: '160px', fontSize: '0.8rem' }}>
+                  <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
                   {a.user_email && a.user?.name && (
-                    <div className="text-gray-400 truncate">{a.user_email}</div>
+                    <div style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user_email}</div>
                   )}
                 </td>
-                <td className="text-xs text-gray-500">{a.user_role ?? '—'}</td>
+                <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{a.user_role ?? '—'}</td>
                 <td><ActionBadge action={a.action} /></td>
-                <td className="text-xs">
+                <td style={{ fontSize: '0.8rem' }}>
                   {a.auditable_type ? (
                     <span>
-                      <span className="font-medium">{shortType(a.auditable_type)}</span>
-                      {a.auditable_id && <span className="text-gray-400"> #{a.auditable_id}</span>}
+                      <span style={{ fontWeight: 500 }}>{shortType(a.auditable_type)}</span>
+                      {a.auditable_id && <span style={{ color: 'var(--text-muted)' }}> #{a.auditable_id}</span>}
                     </span>
                   ) : (
-                    <span className="text-gray-400 truncate max-w-[160px] block" title={a.url ?? ''}>
-                      {a.method && <span className="font-mono mr-1">{a.method}</span>}
+                    <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', display: 'block' }} title={a.url ?? ''}>
+                      {a.method && <span style={{ fontFamily: 'monospace', marginRight: '0.25rem' }}>{a.method}</span>}
                       {a.route ?? a.url ?? '—'}
                     </span>
                   )}
                 </td>
-                <td className="text-xs font-mono text-gray-500">{a.ip ?? '—'}</td>
-                <td className="text-xs">
+                <td style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{a.ip ?? '—'}</td>
+                <td style={{ fontSize: '0.8rem' }}>
                   {a.status_code ? (
-                    <span className={a.status_code >= 400 ? 'text-red-600 font-semibold' : 'text-green-600'}>
+                    <span style={{ color: a.status_code >= 400 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
                       {a.status_code}
                     </span>
                   ) : '—'}
@@ -216,10 +217,10 @@ export function AdminAuditPage() {
       </div>
 
       {/* Pagination */}
-      <nav className="flex items-center justify-center gap-2 mt-4">
-        <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Anterior</button>
-        <span className="text-sm text-gray-600">Página {page} de {lastPage}</span>
-        <button className="btn btn-secondary btn-sm" disabled={page >= lastPage} onClick={() => setPage(page + 1)}>Siguiente ›</button>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+        <button className="btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Anterior</button>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Página {page} de {lastPage}</span>
+        <button className="btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={page >= lastPage} onClick={() => setPage(page + 1)}>Siguiente ›</button>
       </nav>
     </main>
   );

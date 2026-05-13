@@ -94,6 +94,14 @@ function formatMoney(cents: number, currency: string) {
   }).format(cents / 100);
 }
 
+const PORCENTAJE_ABONO = 0.20;
+function calcAbono(cents: number) {
+  return Math.round(cents * PORCENTAJE_ABONO);
+}
+function calcSaldo(cents: number) {
+  return Math.max(0, cents - calcAbono(cents));
+}
+
 function getRemainingSeconds(iso: string) {
   return Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000));
 }
@@ -313,7 +321,10 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
             </div>
           ))}
           <p className="pay-abono-note">
-            Monto a transferir: <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
+            Monto a transferir (abono 20%): <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
+          </p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            El saldo restante de {formatMoney(calcSaldo(cita.precio_final_centavos), cita.moneda)} se paga el día de la consulta.
           </p>
         </div>
       ) : cuentasBancarias === null ? (
@@ -528,13 +539,35 @@ export function PagarCitaPage() {
                 <strong>{cita.tipo_consulta?.duracion_minutos} min</strong>
               </div>
               <div className="pay-summary-row">
-                <span>Total</span>
+                <span>Precio total</span>
                 <strong>{formatMoney(cita.precio_total_centavos, cita.moneda)}</strong>
               </div>
-              <div className="pay-summary-row pay-abono-row">
-                <span>Abono hoy (20%)</span>
+              {cita.precio_final_centavos !== cita.precio_total_centavos && (
+                <div className="pay-summary-row" style={{ color: 'var(--accent, #7c3aed)' }}>
+                  <span>Descuento aplicado</span>
+                  <strong>−{formatMoney(cita.precio_total_centavos - cita.precio_final_centavos, cita.moneda)}</strong>
+                </div>
+              )}
+              <div className="pay-summary-row">
+                <span>Subtotal a pagar</span>
                 <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
               </div>
+              <div className="pay-summary-row pay-abono-row">
+                <span>Abono hoy (20% mínimo) ✦</span>
+                <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
+              </div>
+              <div className="pay-summary-row" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <span>Saldo restante (80%)</span>
+                <span>{formatMoney(calcSaldo(cita.precio_final_centavos), cita.moneda)}</span>
+              </div>
+              <p style={{
+                marginTop: '0.6rem', fontSize: '0.8rem', color: 'var(--text-muted)',
+                lineHeight: 1.4, padding: '0.5rem 0.75rem', borderRadius: '8px',
+                background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
+              }}>
+                ℹ️ Para confirmar tu reserva debes pagar al menos el <strong>20%</strong> del valor total.
+                El saldo restante (80%) se cancela el día de la consulta.
+              </p>
             </div>
 
             {/* Membresía */}
@@ -557,7 +590,7 @@ export function PagarCitaPage() {
               >
                 <p className="pay-section-label">¿Cómo deseas pagar?</p>
                 <div className="pay-method-grid">
-                  {/* Flow.cl — FASE 2: desactivado temporalmente */}
+                  {/* Flow.cl — TODO FASE 2: reactivar cuando se integre Webpay/Flow Chile
                   <div className="pay-method-card pay-method-card--disabled" title="Próximamente disponible">
                     <span className="pay-method-icon">💳</span>
                     <span className="pay-method-name">Tarjeta chilena (Flow)</span>
@@ -567,6 +600,7 @@ export function PagarCitaPage() {
                       background: 'var(--accent, #7c3aed)', color: '#fff', marginTop: '0.3rem',
                     }}>Próximamente</span>
                   </div>
+                  */}
                   <button
                     type="button"
                     className="pay-method-card"
@@ -574,7 +608,7 @@ export function PagarCitaPage() {
                   >
                     <span className="pay-method-icon">🌐</span>
                     <span className="pay-method-name">PayPal</span>
-                    <span className="pay-method-sub">Pagos internacionales</span>
+                    <span className="pay-method-sub">Tarjeta o saldo PayPal</span>
                   </button>
                   <button
                     type="button"
@@ -606,7 +640,7 @@ export function PagarCitaPage() {
                 {method === 'flow' ? (
                   <div className="pay-redirect-panel">
                     <p className="pay-abono-note">
-                      Abono hoy (20%): <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
+                      Abono hoy (20%): <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
                     </p>
                     {redirectError ? <p className="form-error">{redirectError}</p> : null}
                     <button
@@ -615,7 +649,7 @@ export function PagarCitaPage() {
                       disabled={flowMutation.isPending}
                       onClick={() => flowMutation.mutate()}
                     >
-                      {flowMutation.isPending ? 'Redirigiendo…' : `Pagar ${formatMoney(cita.precio_final_centavos, cita.moneda)} con Flow`}
+                      {flowMutation.isPending ? 'Redirigiendo…' : `Pagar ${formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)} con Flow`}
                     </button>
                   </div>
                 ) : null}
@@ -623,7 +657,10 @@ export function PagarCitaPage() {
                 {method === 'paypal' ? (
                   <div className="pay-redirect-panel">
                     <p className="pay-abono-note">
-                      Abono hoy (20%): <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
+                      Abono hoy (20%): <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
+                    </p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem' }}>
+                      El saldo restante de {formatMoney(calcSaldo(cita.precio_final_centavos), cita.moneda)} se paga el día de la consulta.
                     </p>
                     {redirectError ? <p className="form-error">{redirectError}</p> : null}
                     <button
@@ -632,7 +669,7 @@ export function PagarCitaPage() {
                       disabled={paypalMutation.isPending}
                       onClick={() => paypalMutation.mutate()}
                     >
-                      {paypalMutation.isPending ? 'Redirigiendo…' : `Pagar con PayPal`}
+                      {paypalMutation.isPending ? 'Redirigiendo…' : `Pagar ${formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)} con PayPal`}
                     </button>
                   </div>
                 ) : null}

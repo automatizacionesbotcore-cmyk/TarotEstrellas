@@ -253,8 +253,9 @@ export function AdminServiciosPage() {
         <button
           className={`service-pill admin-toggle-pill ${r.activo ? 'estado-confirmada' : 'estado-cancelada'}`}
           onClick={(e) => { e.stopPropagation(); toggleMutation.mutate(r.id); }}
+          disabled={toggleMutation.isPending}
         >
-          {r.activo ? 'Activo' : 'Inactivo'}
+          {toggleMutation.isPending ? 'Actualizando…' : (r.activo ? 'Activo' : 'Inactivo')}
         </button>
       ),
     },

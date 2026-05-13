@@ -111,11 +111,11 @@ export function AdminCuentasBancariasPage() {
 
   return (
     <main className="page-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <header className="admin-page-header">
         <div>
           <p className="dash-eyebrow">✦ Pagos</p>
-          <h1 className="dash-title" style={{ margin: 0 }}>Cuentas bancarias</h1>
-          <p className="dash-subtitle" style={{ marginTop: '0.25rem' }}>
+          <h1>Cuentas bancarias</h1>
+          <p className="text-muted" style={{ fontSize: '0.9rem' }}>
             Configura hasta 3 cuentas para recibir transferencias de clientes chilenos.
           </p>
         </div>
@@ -124,75 +124,70 @@ export function AdminCuentasBancariasPage() {
             + Agregar cuenta
           </button>
         )}
-      </div>
+      </header>
 
       {/* Formulario crear/editar */}
       {(creating || editing) && (
         <form
           onSubmit={handleSubmit}
-          style={{
-            background: 'var(--card-bg, #1a1a2e)',
-            border: '1px solid var(--border, #2d2d4e)',
-            borderRadius: '0.75rem',
-            padding: '1.5rem',
-            marginBottom: '1.5rem',
-          }}
+          className="card"
+          style={{ padding: '1.5rem', marginBottom: '1.5rem' }}
         >
           <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>
             {editing ? 'Editar cuenta' : 'Nueva cuenta bancaria'}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label className="form-label">Banco *</label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Banco *</span>
               <input
-                className="form-input"
+                className="input-field"
                 value={form.banco}
                 onChange={(e) => setForm((f) => ({ ...f, banco: e.target.value }))}
                 placeholder="BancoEstado, Santander…"
                 maxLength={100}
               />
-            </div>
-            <div>
-              <label className="form-label">Tipo de cuenta *</label>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tipo de cuenta *</span>
               <select
-                className="form-input"
+                className="input-field"
                 value={form.tipo_cuenta}
                 onChange={(e) => setForm((f) => ({ ...f, tipo_cuenta: e.target.value }))}
               >
                 {TIPO_CUENTA_OPTIONS.map((t) => <option key={t}>{t}</option>)}
               </select>
-            </div>
-            <div>
-              <label className="form-label">N° de cuenta *</label>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>N° de cuenta *</span>
               <input
-                className="form-input"
+                className="input-field"
                 value={form.numero_cuenta}
                 onChange={(e) => setForm((f) => ({ ...f, numero_cuenta: e.target.value }))}
                 placeholder="0000000000"
                 maxLength={40}
               />
-            </div>
-            <div>
-              <label className="form-label">Nombre titular *</label>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Nombre titular *</span>
               <input
-                className="form-input"
+                className="input-field"
                 value={form.nombre_titular}
                 onChange={(e) => setForm((f) => ({ ...f, nombre_titular: e.target.value }))}
                 placeholder="Nombre completo"
                 maxLength={120}
               />
-            </div>
-            <div>
-              <label className="form-label">RUT titular *</label>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>RUT titular *</span>
               <input
-                className="form-input"
+                className="input-field"
                 value={form.rut_titular}
                 onChange={(e) => setForm((f) => ({ ...f, rut_titular: e.target.value }))}
                 placeholder="12.345.678-9"
                 maxLength={20}
               />
-            </div>
+            </label>
           </div>
 
           {formError && <p className="form-error" style={{ marginTop: '0.75rem' }}>{formError}</p>}
@@ -214,11 +209,11 @@ export function AdminCuentasBancariasPage() {
 
       {/* Lista de cuentas */}
       {isLoading ? (
-        <p>Cargando…</p>
+        <p className="text-muted">Cargando…</p>
       ) : cuentas.length === 0 ? (
-        <div className="dash-empty">
-          <span className="dash-empty-icon">🏦</span>
-          <p>No hay cuentas bancarias configuradas.</p>
+        <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <span style={{ fontSize: '2rem' }}>🏦</span>
+          <p className="text-muted">No hay cuentas bancarias configuradas.</p>
           {!creating && (
             <button type="button" className="btn-primary" onClick={handleCreate}>
               Agregar primera cuenta
@@ -230,11 +225,10 @@ export function AdminCuentasBancariasPage() {
           {cuentas.map((cuenta, index) => (
             <div
               key={cuenta.id}
+              className="card"
               style={{
-                background: 'var(--card-bg, #1a1a2e)',
-                border: `1px solid ${cuenta.activa ? 'var(--accent, #7c3aed)' : 'var(--border, #2d2d4e)'}`,
-                borderRadius: '0.75rem',
                 padding: '1.25rem',
+                border: cuenta.activa ? '1px solid var(--accent)' : '1px solid var(--border)',
                 opacity: cuenta.activa ? 1 : 0.6,
               }}
             >
@@ -249,7 +243,7 @@ export function AdminCuentasBancariasPage() {
                         fontSize: '0.7rem',
                         padding: '2px 8px',
                         borderRadius: '99px',
-                        background: cuenta.activa ? 'var(--accent, #7c3aed)' : 'var(--border, #2d2d4e)',
+                        background: cuenta.activa ? 'var(--accent)' : 'var(--border)',
                         color: cuenta.activa ? '#fff' : 'var(--text-muted)',
                       }}
                     >

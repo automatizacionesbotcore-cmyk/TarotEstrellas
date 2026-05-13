@@ -106,8 +106,8 @@ function Card({ label, value, accent }: { label: string; value: string; accent?:
       style={{
         padding: '1rem',
         borderRadius: 8,
-        border: '1px solid var(--border, #e5e7eb)',
-        background: accent ? 'var(--accent-bg, #fef3c7)' : 'var(--surface, #fff)',
+        border: '1px solid var(--border)',
+        background: accent ? 'var(--accent-bg)' : 'var(--surface)',
       }}
     >
       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{label}</div>

@@ -15,6 +15,7 @@ export function AdminPaquetesPage() {
   const [activo, setActivo] = useState<'all' | 'true' | 'false'>('all');
   const [editing, setEditing] = useState<Paquete | null>(null);
   const [creating, setCreating] = useState(false);
+  const [busyIds, setBusyIds] = useState<Set<number>>(new Set());
 
   const load = async () => {
     setLoading(true);
@@ -37,17 +38,21 @@ export function AdminPaquetesPage() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [page]);
 
   const onToggle = async (p: Paquete) => {
+    setBusyIds((prev) => new Set([...prev, p.id]));
     try {
       await togglePaquete(p.id);
       toast.success(`Paquete ${p.activo ? 'desactivado' : 'activado'}.`);
       load();
     } catch (e: any) { toast.error(e?.response?.data?.message || 'Error.'); }
+    finally { setBusyIds((prev) => { const next = new Set(prev); next.delete(p.id); return next; }); }
   };
 
   const onDelete = async (p: Paquete) => {
     if (!confirm(`¿Eliminar paquete ${p.nombre}?`)) return;
+    setBusyIds((prev) => new Set([...prev, p.id]));
     try { await eliminarPaquete(p.id); toast.success('Paquete eliminado.'); load(); }
     catch (e: any) { toast.error(e?.response?.data?.message || 'Error.'); }
+    finally { setBusyIds((prev) => { const next = new Set(prev); next.delete(p.id); return next; }); }
   };
 
   return (
@@ -96,9 +101,9 @@ export function AdminPaquetesPage() {
                   {p.destacado && <span className="badge badge-warning" style={{ marginLeft: 4 }}>★</span>}
                 </td>
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(p)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onToggle(p)}>{p.activo ? 'Desactivar' : 'Activar'}</button>{' '}
-                  <button type="button" onClick={() => onDelete(p)} style={{ color: 'var(--danger)' }}>Eliminar</button>
+                  <button type="button" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>{' '}
+                  <button type="button" onClick={() => onToggle(p)} disabled={busyIds.has(p.id)}>{busyIds.has(p.id) ? 'Procesando…' : (p.activo ? 'Desactivar' : 'Activar')}</button>{' '}
+                  <button type="button" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)} style={{ color: 'var(--danger)' }}>{busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}</button>
                 </td>
               </tr>
             ))}

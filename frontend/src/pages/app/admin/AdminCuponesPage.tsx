@@ -20,6 +20,7 @@ export function AdminCuponesPage() {
   const [activo, setActivo] = useState<'all' | 'true' | 'false'>('all');
   const [editing, setEditing] = useState<Cupon | null>(null);
   const [creating, setCreating] = useState(false);
+  const [busyCodigos, setBusyCodigos] = useState<Set<string>>(new Set());
 
   const load = async () => {
     setLoading(true);
@@ -50,23 +51,29 @@ export function AdminCuponesPage() {
   };
 
   const onToggle = async (c: Cupon) => {
+    setBusyCodigos((prev) => new Set([...prev, c.codigo]));
     try {
       await toggleCupon(c.codigo);
       toast.success(`Cupón ${c.codigo} ${c.activo ? 'desactivado' : 'activado'}.`);
       load();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Error.');
+    } finally {
+      setBusyCodigos((prev) => { const next = new Set(prev); next.delete(c.codigo); return next; });
     }
   };
 
   const onDelete = async (c: Cupon) => {
     if (!confirm(`¿Eliminar el cupón ${c.codigo}?`)) return;
+    setBusyCodigos((prev) => new Set([...prev, c.codigo]));
     try {
       await eliminarCupon(c.codigo);
       toast.success('Cupón eliminado.');
       load();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Error.');
+    } finally {
+      setBusyCodigos((prev) => { const next = new Set(prev); next.delete(c.codigo); return next; });
     }
   };
 
@@ -125,9 +132,9 @@ export function AdminCuponesPage() {
                   </span>
                 </td>
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(c)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onToggle(c)}>{c.activo ? 'Desactivar' : 'Activar'}</button>{' '}
-                  <button type="button" onClick={() => onDelete(c)} style={{ color: 'var(--danger)' }}>Eliminar</button>
+                  <button type="button" onClick={() => setEditing(c)} disabled={busyCodigos.has(c.codigo)}>Editar</button>{' '}
+                  <button type="button" onClick={() => onToggle(c)} disabled={busyCodigos.has(c.codigo)}>{busyCodigos.has(c.codigo) ? 'Procesando…' : (c.activo ? 'Desactivar' : 'Activar')}</button>{' '}
+                  <button type="button" onClick={() => onDelete(c)} disabled={busyCodigos.has(c.codigo)} style={{ color: 'var(--danger)' }}>{busyCodigos.has(c.codigo) ? 'Eliminando…' : 'Eliminar'}</button>
                 </td>
               </tr>
             ))}

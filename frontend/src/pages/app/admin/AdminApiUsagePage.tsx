@@ -18,25 +18,25 @@ function ProviderCard({ row }: { row: ApiUsageRow }) {
   const pct = Math.min(100, row.porcentaje);
   return (
     <div style={{
-      border: '1px solid #e5e7eb',
+      border: '1px solid var(--border-subtle)',
       borderLeft: `6px solid ${ESTADO_COLOR[row.estado]}`,
       borderRadius: 8,
       padding: 16,
-      background: '#fff',
+      background: 'var(--card)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <h4 style={{ margin: 0, textTransform: 'capitalize' }}>{row.provider}</h4>
+        <h4 style={{ margin: 0, textTransform: 'capitalize', color: 'var(--text)' }}>{row.provider}</h4>
         <span style={{ color: ESTADO_COLOR[row.estado], fontWeight: 600, fontSize: 12 }}>
           {ESTADO_LABEL[row.estado]}
         </span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 14, color: '#6b7280' }}>
+      <div style={{ marginTop: 8, fontSize: 14, color: 'var(--text-muted)' }}>
         {row.usado.toFixed(2)} / {row.limite} {row.unidad}
       </div>
-      <div style={{ marginTop: 8, height: 8, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ marginTop: 8, height: 8, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: ESTADO_COLOR[row.estado] }} />
       </div>
-      <div style={{ marginTop: 4, fontSize: 12, color: '#9ca3af' }}>
+      <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
         {row.porcentaje.toFixed(1)}% (umbral: {row.warn_pct}%)
       </div>
     </div>
@@ -58,10 +58,10 @@ export function AdminApiUsagePage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-api-usage'] }),
   });
 
-  if (isLoading) return <p>Cargando consumo de APIs…</p>;
+  if (isLoading) return <p style={{ color: 'var(--text)' }}>Cargando consumo de APIs…</p>;
   if (error || !data) return <p style={{ color: '#dc2626' }}>Error al cargar el dashboard.</p>;
 
-  const limites = data.limites;
+  const limites = data.limites ?? {};
   const getDraft = (p: string) =>
     draftLimits[p] ?? {
       limite: String(limites[p]?.limite ?? ''),
@@ -70,7 +70,7 @@ export function AdminApiUsagePage() {
 
   const onSave = () => {
     const payload: Parameters<typeof updateApiLimits>[0] = {};
-    for (const p of ['anthropic', 'daily']) {
+    for (const p of ['anthropic', 'openai', 'daily']) {
       const d = draftLimits[p];
       if (d) {
         (payload as any)[p] = {
@@ -86,11 +86,11 @@ export function AdminApiUsagePage() {
   return (
     <div style={{ padding: 24, maxWidth: 1100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ margin: 0 }}>APIs externas — consumo {data.periodo}</h2>
+        <h2 style={{ margin: 0, color: 'var(--text)' }}>APIs externas — consumo {data.periodo}</h2>
         <button
           onClick={() => checkMut.mutate()}
           disabled={checkMut.isPending}
-          style={{ padding: '8px 16px', background: '#111827', color: '#fff', border: 0, borderRadius: 6, cursor: 'pointer' }}
+          className="btn-primary"
         >
           {checkMut.isPending ? 'Verificando…' : 'Verificar ahora'}
         </button>
@@ -100,10 +100,10 @@ export function AdminApiUsagePage() {
         {data.rows.map((r) => <ProviderCard key={r.provider} row={r} />)}
       </div>
 
-      <h3 style={{ marginTop: 32 }}>Límites y umbrales</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e5e7eb' }}>
+      <h3 style={{ marginTop: 32, color: 'var(--text)' }}>Límites y umbrales</h3>
+      <table className="admin-table" style={{ width: '100%' }}>
         <thead>
-          <tr style={{ background: '#f9fafb' }}>
+          <tr>
             <th style={{ padding: 8, textAlign: 'left' }}>Proveedor</th>
             <th style={{ padding: 8, textAlign: 'left' }}>Límite mensual</th>
             <th style={{ padding: 8, textAlign: 'left' }}>Umbral aviso (%)</th>
@@ -113,14 +113,15 @@ export function AdminApiUsagePage() {
           {data.rows.map((r) => {
             const d = getDraft(r.provider);
             return (
-              <tr key={r.provider} style={{ borderTop: '1px solid #e5e7eb' }}>
+              <tr key={r.provider}>
                 <td style={{ padding: 8, textTransform: 'capitalize' }}>{r.provider} ({r.unidad})</td>
                 <td style={{ padding: 8 }}>
                   <input
                     type="number" step="0.01" min="0"
                     value={d.limite}
                     onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), limite: e.target.value } }))}
-                    style={{ width: 120, padding: 4 }}
+                    className="form-input"
+                    style={{ width: 120 }}
                   />
                 </td>
                 <td style={{ padding: 8 }}>
@@ -128,7 +129,8 @@ export function AdminApiUsagePage() {
                     type="number" step="1" min="1" max="100"
                     value={d.warn_pct}
                     onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), warn_pct: e.target.value } }))}
-                    style={{ width: 80, padding: 4 }}
+                    className="form-input"
+                    style={{ width: 80 }}
                   />
                 </td>
               </tr>
@@ -137,36 +139,37 @@ export function AdminApiUsagePage() {
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: 24 }}>Emails extra para alertas</h3>
-      <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 8px' }}>
+      <h3 style={{ marginTop: 24, color: 'var(--text)' }}>Emails extra para alertas</h3>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 8px' }}>
         Destinatarios actuales por rol: {data.destinatarios.join(', ') || '—'}
       </p>
       <input
         type="text"
-        defaultValue={data.emails_extra}
+        defaultValue={data.emails_extra ?? ''}
         onChange={(e) => setEmails(e.target.value)}
         placeholder="email1@dominio.com, email2@dominio.com"
-        style={{ width: '100%', maxWidth: 600, padding: 8 }}
+        className="form-input"
+        style={{ width: '100%', maxWidth: 600 }}
       />
 
       <div style={{ marginTop: 16 }}>
         <button
           onClick={onSave}
           disabled={saveMut.isPending}
-          style={{ padding: '8px 20px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 6, cursor: 'pointer' }}
+          className="btn-primary"
         >
           {saveMut.isPending ? 'Guardando…' : 'Guardar cambios'}
         </button>
-        {saveMut.isSuccess && <span style={{ marginLeft: 12, color: '#16a34a' }}>✓ Guardado</span>}
+        {saveMut.isSuccess && <span style={{ marginLeft: 12, color: 'var(--accent)' }}>✓ Guardado</span>}
       </div>
 
-      <h3 style={{ marginTop: 32 }}>Alertas recientes</h3>
+      <h3 style={{ marginTop: 32, color: 'var(--text)' }}>Alertas recientes</h3>
       {data.alertas_recientes.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>Sin alertas registradas.</p>
+        <p style={{ color: 'var(--text-muted)' }}>Sin alertas registradas.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e5e7eb' }}>
+        <table className="admin-table" style={{ width: '100%' }}>
           <thead>
-            <tr style={{ background: '#f9fafb' }}>
+            <tr>
               <th style={{ padding: 8, textAlign: 'left' }}>Fecha</th>
               <th style={{ padding: 8, textAlign: 'left' }}>Proveedor</th>
               <th style={{ padding: 8, textAlign: 'left' }}>Periodo</th>
@@ -177,7 +180,7 @@ export function AdminApiUsagePage() {
           </thead>
           <tbody>
             {data.alertas_recientes.map((a) => (
-              <tr key={a.id} style={{ borderTop: '1px solid #e5e7eb' }}>
+              <tr key={a.id}>
                 <td style={{ padding: 8 }}>{new Date(a.created_at).toLocaleString()}</td>
                 <td style={{ padding: 8, textTransform: 'capitalize' }}>{a.provider}</td>
                 <td style={{ padding: 8 }}>{a.period}</td>

@@ -13,6 +13,7 @@ export function AdminPlantillasPage() {
   const [lastPage, setLastPage] = useState(1);
   const [editing, setEditing] = useState<Plantilla | null>(null);
   const [creating, setCreating] = useState(false);
+  const [busyIds, setBusyIds] = useState<Set<number>>(new Set());
 
   const load = async () => {
     setLoading(true);
@@ -27,8 +28,10 @@ export function AdminPlantillasPage() {
 
   const onDelete = async (p: Plantilla) => {
     if (!confirm(`¿Eliminar plantilla ${p.clave}?`)) return;
+    setBusyIds((prev) => new Set([...prev, p.id]));
     try { await eliminarPlantilla(p.id); toast.success('Eliminada.'); load(); }
     catch (e: any) { toast.error(e?.response?.data?.message || 'Error.'); }
+    finally { setBusyIds((prev) => { const next = new Set(prev); next.delete(p.id); return next; }); }
   };
 
   return (
@@ -61,8 +64,8 @@ export function AdminPlantillasPage() {
                 <td>v{p.version}</td>
                 <td><span className={`badge ${p.activo ? 'badge-success' : 'badge-muted'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span></td>
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(p)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onDelete(p)} style={{ color: 'var(--danger)' }}>Eliminar</button>
+                  <button type="button" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>{' '}
+                  <button type="button" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)} style={{ color: 'var(--danger)' }}>{busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}</button>
                 </td>
               </tr>
             ))}
@@ -152,7 +155,7 @@ function PlantillaModal({ initial, onClose, onSaved }: { initial: Plantilla | nu
             </div>
           </div>
           {preview && (
-            <div style={{ background: '#f5f5f5', padding: '1rem', borderRadius: 4 }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 4 }}>
               <h3 style={{ marginTop: 0 }}>Preview</h3>
               {preview.asunto && <div><strong>Asunto:</strong> {preview.asunto}</div>}
               <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{preview.cuerpo}</pre>

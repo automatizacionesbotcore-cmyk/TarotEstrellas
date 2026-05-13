@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   actualizarNotasCliente,
+  eliminarCliente,
   getClienteBriefing,
   getClienteDetalle,
   type BriefingResponse,
@@ -9,6 +10,21 @@ import {
 } from '../../../lib/clientesAdminApi';
 import { AgenteChat } from '../../../components/agente/AgenteChat';
 import { toast } from '../../../stores/toastStore';
+import { useAuthStore } from '../../../stores/authStore';
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderMarkdown(text: string): string {
+  let html = escapeHtml(text);
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/\n/g, '<br/>');
+  return html;
+}
 
 type TabKey = 'resumen' | 'cronologia' | 'natal' | 'chat' | 'pagos' | 'notas' | 'briefing';
 
@@ -24,10 +40,42 @@ const TABS: Array<{ key: TabKey; label: string }> = [
 
 export function AdminClienteDetallePage() {
   const { uuid } = useParams<{ uuid: string }>();
+  const navigate = useNavigate();
+  const authUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = Array.isArray(authUser?.roles) && authUser.roles.includes('super_admin');
   const [data, setData] = useState<ClienteDetalle | null>(null);
   const [tab, setTab] = useState<TabKey>('resumen');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleEliminar(force = false) {
+    if (!uuid || !data) return;
+    const nombre = data.profile?.nombre || data.name;
+    const msg = force
+      ? `⚠️ ELIMINACIÓN EN CASCADA\n\nEsto borrará TODAS las citas, pagos, resúmenes y datos de "${nombre}". ¿Continuar?`
+      : `¿Eliminar definitivamente al cliente "${nombre}" (${data.email})? Esta acción no se puede deshacer.`;
+    if (!window.confirm(msg)) return;
+    setDeleting(true);
+    try {
+      const res = await eliminarCliente(uuid, force);
+      toast.success(res.message || 'Cliente eliminado.');
+      navigate('/app/admin/clientes');
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const payload = e?.response?.data;
+      if (status === 409 && payload?.requires_force) {
+        if (window.confirm(`${payload.message}\n\n¿Forzar eliminación?`)) {
+          setDeleting(false);
+          return handleEliminar(true);
+        }
+      } else {
+        toast.error(payload?.message || 'No se pudo eliminar el cliente.');
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (!uuid) return;
@@ -47,28 +95,43 @@ export function AdminClienteDetallePage() {
     <main className="page-content">
       <header style={{ marginBottom: '1rem' }}>
         <Link to="/app/admin/clientes" style={{ fontSize: '0.9em' }}>← Volver a clientes</Link>
-        <h1 style={{ marginTop: '0.5rem' }}>
-          {data.profile?.nombre || data.name}{data.profile?.apellido ? ` ${data.profile.apellido}` : ''}
-        </h1>
-        <p style={{ color: 'var(--text-muted)' }}>
-          {data.email} · Cliente desde {data.created_at ? new Date(data.created_at).toLocaleDateString() : '—'}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <div>
+            <h1 style={{ margin: 0 }}>
+              {data.profile?.nombre || data.name}{data.profile?.apellido ? ` ${data.profile.apellido}` : ''}
+            </h1>
+            <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+              {data.email} · Cliente desde {data.created_at ? new Date(data.created_at).toLocaleDateString() : '—'}
+            </p>
+          </div>
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => handleEliminar(false)}
+              disabled={deleting}
+              className="btn-danger"
+              style={{ padding: '0.5rem 0.9rem', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              {deleting ? 'Eliminando…' : '🗑 Eliminar cliente'}
+            </button>
+          )}
+        </div>
       </header>
 
-      <nav className="tabs" style={{ display: 'flex', gap: '0.25rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem', overflowX: 'auto' }}>
+      <nav style={{ display: 'flex', gap: '0.25rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem', overflowX: 'auto' }}>
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={tab === t.key ? 'tab-active' : 'tab'}
             style={{
               padding: '0.5rem 1rem',
               border: 'none',
               background: 'transparent',
-              borderBottom: tab === t.key ? '2px solid var(--primary, #6c5ce7)' : '2px solid transparent',
+              borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
               cursor: 'pointer',
               fontWeight: tab === t.key ? 600 : 400,
+              color: tab === t.key ? 'var(--accent)' : 'var(--text)',
               whiteSpace: 'nowrap',
             }}
           >
@@ -112,7 +175,7 @@ function TabResumen({ data }: { data: ClienteDetalle }) {
 }
 
 function TabCronologia({ data }: { data: ClienteDetalle }) {
-  if (!data.citas.length) return <p style={{ color: 'var(--text-muted)' }}>Sin citas registradas.</p>;
+  if (!data.citas.length) return <p className="text-muted">Sin citas registradas.</p>;
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.75rem' }}>
       {data.citas.map((c) => (
@@ -145,7 +208,7 @@ function TabCronologia({ data }: { data: ClienteDetalle }) {
                 <header style={{ fontSize: '0.85em', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
                   {new Date(r.inicio_utc).toLocaleDateString()} · {r.tema_principal || 'sin tema'}
                 </header>
-                <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{r.contenido}</pre>
+                <div style={{ margin: 0 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(r.contenido) }} />
               </article>
             ))}
           </div>
@@ -156,7 +219,7 @@ function TabCronologia({ data }: { data: ClienteDetalle }) {
 }
 
 function TabNatal({ data }: { data: ClienteDetalle }) {
-  if (!data.dato_natal) return <p style={{ color: 'var(--text-muted)' }}>El cliente no ha registrado sus datos natales.</p>;
+  if (!data.dato_natal) return <p className="text-muted">El cliente no ha registrado sus datos natales.</p>;
   const n = data.dato_natal;
   return (
     <dl style={{ display: 'grid', gap: '0.5rem 1rem', gridTemplateColumns: 'auto 1fr' }}>
@@ -170,10 +233,10 @@ function TabNatal({ data }: { data: ClienteDetalle }) {
 function TabPagos({ data }: { data: ClienteDetalle }) {
   return (
     <div>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+      <p className="text-muted" style={{ marginBottom: '1rem' }}>
         Resumen de ingresos: {Object.entries(data.stats.ingresos_centavos || {}).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
       </p>
-      <table className="data-table" style={{ width: '100%' }}>
+      <table className="admin-table" style={{ width: '100%' }}>
         <thead>
           <tr><th>Cita</th><th>Fecha</th><th>Estado</th><th style={{ textAlign: 'right' }}>Monto</th></tr>
         </thead>
@@ -211,12 +274,13 @@ function TabNotas({ uuid, initial, onSaved }: { uuid: string; initial: string | 
 
   return (
     <div>
-      <p style={{ color: 'var(--text-muted)' }}>Notas privadas, solo visibles para administradores.</p>
+      <p className="text-muted">Notas privadas, solo visibles para administradores.</p>
       <textarea
+        className="input-field"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         rows={12}
-        style={{ width: '100%', fontFamily: 'inherit', padding: '0.75rem' }}
+        style={{ width: '100%', resize: 'vertical' }}
         placeholder="Observaciones, preferencias, contexto del cliente…"
       />
       <button type="button" className="btn-primary" onClick={save} disabled={saving} style={{ marginTop: '0.5rem' }}>
@@ -249,14 +313,15 @@ function TabBriefing({ uuid, citas }: { uuid: string; citas: ClienteDetalle['cit
 
   return (
     <div>
-      <p style={{ color: 'var(--text-muted)' }}>
+      <p className="text-muted">
         Genera un briefing IA para preparar la próxima sesión: temas recurrentes, última sesión, recomendaciones y datos natales.
       </p>
       {proximas.length > 0 && (
         <select
+          className="input-field"
           value={citaUuid || ''}
           onChange={(e) => setCitaUuid(e.target.value || undefined)}
-          style={{ marginBottom: '0.5rem', padding: '0.5rem' }}
+          style={{ marginBottom: '0.5rem' }}
         >
           <option value="">Sin cita específica (briefing general)</option>
           {proximas.map((c) => (
@@ -271,13 +336,13 @@ function TabBriefing({ uuid, citas }: { uuid: string; citas: ClienteDetalle['cit
           {loading ? 'Generando…' : briefing ? 'Regenerar briefing' : 'Generar briefing'}
         </button>
       </div>
-      {error && <p style={{ color: 'var(--danger)', marginTop: '0.75rem' }}>{error}</p>}
+      {error && <p className="form-error" style={{ marginTop: '0.75rem' }}>{error}</p>}
       {briefing && (
         <article className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
-          <header style={{ fontSize: '0.85em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+          <header className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
             Modelo {briefing.modelo} · {briefing.sesiones_consideradas} sesiones consideradas · generado {new Date(briefing.generado_en).toLocaleString()}
           </header>
-          <div style={{ whiteSpace: 'pre-wrap' }}>{briefing.contenido}</div>
+          <div dangerouslySetInnerHTML={{ __html: renderMarkdown(briefing.contenido) }} />
         </article>
       )}
     </div>

@@ -15,6 +15,19 @@ interface Props {
   clienteUuid?: string;
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderMarkdown(text: string): string {
+  let html = escapeHtml(text);
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  html = html.replace(/\n/g, '<br/>');
+  return html;
+}
+
 interface Msg {
   id: string;
   role: 'user' | 'assistant';
@@ -242,8 +255,11 @@ export function AgenteChat({ mode, clienteUuid }: Props) {
                 <span className="agente-chat__bubble-label">
                   {m.role === 'user' ? 'Tú' : 'Astrea ✨'}
                 </span>
-                <p>{m.text}</p>
-                {m.meta?.modelo && (
+                <p
+                  className="agente-chat__text"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.text) }}
+                />
+                {mode === 'admin' && m.meta?.modelo && (
                   <small className="agente-chat__meta">
                     {m.meta.modelo} · {m.meta.tokens_in ?? '?'}/{m.meta.tokens_out ?? '?'} tok · {m.meta.latencia_ms ?? '?'}ms
                   </small>

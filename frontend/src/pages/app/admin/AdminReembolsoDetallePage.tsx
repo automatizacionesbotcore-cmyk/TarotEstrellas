@@ -68,15 +68,15 @@ export function AdminReembolsoDetallePage() {
 
       <section>
         <h2>Acciones</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {reembolso.estado === 'pendiente' && (
-            <button className="btn-primary" onClick={() => setAction('procesar')}>Procesar</button>
+            <button className="btn-primary" onClick={() => setAction('procesar')} disabled={procesar.isPending}>Procesar</button>
           )}
           {reembolso.estado === 'fallido' && (
-            <button className="btn-secondary" onClick={() => setAction('reintentar')}>Reintentar</button>
+            <button className="btn-secondary" onClick={() => setAction('reintentar')} disabled={procesar.isPending}>Reintentar</button>
           )}
           {reembolso.estado !== 'completado' && (
-            <button className="btn-secondary" onClick={() => setAction('marcar_completado')}>Marcar completado</button>
+            <button className="btn-secondary" onClick={() => setAction('marcar_completado')} disabled={procesar.isPending}>Marcar completado</button>
           )}
         </div>
       </section>
@@ -88,11 +88,17 @@ export function AdminReembolsoDetallePage() {
 
       {action === 'marcar_completado' && (
         <div className="confirm-dialog-backdrop">
-          <div className="confirm-dialog">
+          <div className="confirm-dialog" style={{ maxWidth: 500 }}>
             <h3>Marcar como completado</h3>
-            <form className="auth-form" onSubmit={(e) => { e.preventDefault(); procesar.mutate(); }}>
-              <label>Referencia manual<input required value={referencia} onChange={(e) => setReferencia(e.target.value)} /></label>
-              <label>Nota admin<textarea value={nota} onChange={(e) => setNota(e.target.value)} /></label>
+            <form onSubmit={(e) => { e.preventDefault(); procesar.mutate(); }} style={{ display: 'grid', gap: '1rem' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Referencia manual</span>
+                <input className="input-field" required value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Nota admin</span>
+                <textarea className="input-field" value={nota} onChange={(e) => setNota(e.target.value)} rows={3} />
+              </label>
               <div className="confirm-dialog-actions">
                 <button type="button" className="btn-secondary" onClick={() => setAction(null)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={procesar.isPending}>

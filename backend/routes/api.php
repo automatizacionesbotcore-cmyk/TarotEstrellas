@@ -190,6 +190,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Bloqueos
         Route::get('admin/disponibilidad/bloqueos', [AdminDisponibilidadController::class, 'indexBloqueos']);
         Route::post('admin/disponibilidad/bloqueos', [AdminDisponibilidadController::class, 'storeBloqueo']);
+        Route::post('admin/disponibilidad/bloqueos/seed-feriados-chile', [AdminDisponibilidadController::class, 'seedFeriadosChile']);
         Route::patch('admin/disponibilidad/bloqueos/{id}', [AdminDisponibilidadController::class, 'updateBloqueo']);
         Route::delete('admin/disponibilidad/bloqueos/{id}', [AdminDisponibilidadController::class, 'destroyBloqueo']);
 
@@ -295,6 +296,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{uuid}/estadisticas', [AdminClientesController::class, 'estadisticas']);
         Route::patch('{uuid}/notas', [AdminClientesController::class, 'actualizarNotas']);
         Route::middleware('throttle:20,1')->get('{uuid}/briefing', [AdminClientesController::class, 'briefing']);
+        Route::delete('{uuid}', [AdminClientesController::class, 'destroy']);
     });
 
     // Admin: gestion de cupones

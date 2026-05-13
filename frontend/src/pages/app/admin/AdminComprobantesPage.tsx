@@ -32,15 +32,12 @@ const ESTADO_LABELS: Record<string, string> = {
 
 function estadoBadge(estado: string) {
   const label = ESTADO_LABELS[estado] ?? estado;
-  const color =
-    estado.startsWith('aprobado') ? '#166534' :
-    estado.startsWith('rechazado') ? '#7f1d1d' :
-    '#44403c';
+  const colorClass =
+    estado.startsWith('aprobado') ? 'estado-confirmada' :
+    estado.startsWith('rechazado') ? 'estado-cancelada' :
+    'estado-pendiente';
   return (
-    <span style={{
-      background: color, color: '#fff',
-      borderRadius: '99px', padding: '2px 10px', fontSize: '0.75rem',
-    }}>
+    <span className={`service-pill ${colorClass}`} style={{ fontSize: '0.75rem', padding: '2px 10px' }}>
       {label}
     </span>
   );
@@ -115,16 +112,18 @@ export function AdminComprobantesPage() {
 
   return (
     <main className="page-content">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <p className="dash-eyebrow">✦ Pagos Chile</p>
-        <h1 className="dash-title" style={{ margin: 0 }}>Comprobantes de transferencia</h1>
-        <p className="dash-subtitle" style={{ marginTop: '0.25rem' }}>
-          Revisa el comprobante en tu banco y confirma o rechaza cada transferencia.
-        </p>
-      </div>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">✦ Pagos Chile</p>
+          <h1>Comprobantes de transferencia</h1>
+          <p className="text-muted" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
+            Revisa el comprobante en tu banco y confirma o rechaza cada transferencia.
+          </p>
+        </div>
+      </header>
 
       {/* Filtro estado */}
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="admin-filters">
         {['', 'revision_requerida', 'pendiente', 'aprobado_manual', 'rechazado_manual'].map((e) => (
           <button
             key={e}
@@ -147,11 +146,11 @@ export function AdminComprobantesPage() {
 
       {/* Modal: confirmar aprobación */}
       {pendingAprobar !== null && (
-        <div className="modal-overlay" onClick={() => setPendingAprobar(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-dialog-backdrop" onClick={() => setPendingAprobar(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
             <h3>Confirmar transferencia</h3>
             <p>¿Ya verificaste el depósito en tu cuenta bancaria?<br />Se notificará al cliente por correo.</p>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+            <div className="confirm-dialog-actions">
               <button className="btn-secondary" onClick={() => setPendingAprobar(null)}>Cancelar</button>
               <button
                 className="btn-primary"
@@ -167,25 +166,27 @@ export function AdminComprobantesPage() {
 
       {/* Modal: rechazar con razón */}
       {pendingRechazar !== null && (
-        <div className="modal-overlay" onClick={() => setPendingRechazar(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-dialog-backdrop" onClick={() => setPendingRechazar(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
             <h3>Rechazar comprobante</h3>
-            <p>El cliente recibirá un correo con la razón del rechazo y deberá adjuntar un nuevo comprobante.</p>
+            <p className="text-muted">El cliente recibirá un correo con la razón del rechazo y deberá adjuntar un nuevo comprobante.</p>
             <div style={{ marginTop: '1rem' }}>
-              <label className="form-label">Motivo del rechazo *</label>
-              <textarea
-                className="form-input"
-                style={{ width: '100%', minHeight: '80px', marginTop: '0.4rem' }}
-                placeholder="Ej: El monto no corresponde, la imagen es ilegible, la transferencia es de otra persona…"
-                value={pendingRechazar.razon}
-                onChange={(e) => setPendingRechazar((p) => p ? { ...p, razon: e.target.value } : null)}
-                maxLength={500}
-              />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Motivo del rechazo *</span>
+                <textarea
+                  className="input-field"
+                  style={{ width: '100%', minHeight: '80px', resize: 'vertical' }}
+                  placeholder="Ej: El monto no corresponde, la imagen es ilegible, la transferencia es de otra persona…"
+                  value={pendingRechazar.razon}
+                  onChange={(e) => setPendingRechazar((p) => p ? { ...p, razon: e.target.value } : null)}
+                  maxLength={500}
+                />
+              </label>
               {rechazarMutation.isError && (
                 <p className="form-error">No se pudo rechazar. Intenta de nuevo.</p>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+            <div className="confirm-dialog-actions">
               <button className="btn-secondary" onClick={() => setPendingRechazar(null)}>Cancelar</button>
               <button
                 className="btn-primary"

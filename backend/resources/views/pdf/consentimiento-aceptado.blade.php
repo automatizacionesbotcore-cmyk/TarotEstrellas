@@ -28,8 +28,14 @@
             background-color: #c9a227;
         }
 
+        /* Stars row */
+        .stars-row { text-align: right; margin-bottom: 6px; }
+        .star { color: #c9a227; font-size: 13px; margin: 0 3px; }
+        .star-sm { color: #9b7ec8; font-size: 9px; margin: 0 2px; vertical-align: middle; }
+        .stars-bottom { margin-top: 12px; }
+
         /* Logo row */
-        .logo-row { margin-bottom: 14px; }
+        .logo-row { margin-bottom: 6px; }
         .logo-svg  { display: inline-block; vertical-align: middle; }
         .brand-name {
             display: inline-block;
@@ -187,16 +193,44 @@
     <div class="cover-header">
         <div class="cover-accent-bar"></div>
         <div class="cover-header-inner">
-            <div class="logo-row">
-                {{-- Simplified logo SVG (no filters – DomPDF compatible) --}}
-                <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" width="36" height="34" viewBox="0 0 48 46">
-                    <path fill="#c9a227" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474C10.227.177 10.569 0 10.933 0h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
-                </svg>
-                <span class="brand-name">TarotEstrellas</span>
-            </div>
+            {{-- Stars top-right --}}
+            <table width="100%" style="border-collapse:collapse; margin-bottom:10px;">
+                <tr>
+                    <td style="vertical-align:middle;">
+                        {{-- Logo + brand --}}
+                        <div class="logo-row">
+                            <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" width="36" height="34" viewBox="0 0 48 46">
+                                <path fill="#c9a227" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474C10.227.177 10.569 0 10.933 0h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
+                            </svg>
+                            <span class="brand-name">TarotEstrellas</span>
+                        </div>
+                    </td>
+                    <td style="text-align:right; vertical-align:top; padding-top:4px;">
+                        <span class="star-sm">&#9733;</span>
+                        <span class="star">&#9733;</span>
+                        <span class="star-sm">&#9733;</span>
+                        <span class="star">&#9733;</span>
+                        <span class="star-sm">&#9733;</span>
+                        <span class="star">&#9733;</span>
+                        <span class="star-sm">&#9733;</span>
+                    </td>
+                </tr>
+            </table>
             <div class="brand-tagline">Consultas de orientación espiritual</div>
             <div class="cover-doc-title">Constancia de Aceptación de Documentos Legales</div>
             <div class="cover-doc-subtitle">Documento generado automáticamente el {{ \Carbon\Carbon::parse($aceptadoEn)->format('d \d\e F \d\e Y, H:i') }} UTC</div>
+            {{-- Stars bottom separator --}}
+            <div class="stars-bottom" style="text-align:center; margin-top:14px;">
+                <span class="star-sm">&#9733;</span>
+                <span class="star-sm">&#9733;</span>
+                <span class="star">&#10022;</span>
+                <span class="star-sm">&#9733;</span>
+                <span class="star">&#10022;</span>
+                <span class="star-sm">&#9733;</span>
+                <span class="star">&#10022;</span>
+                <span class="star-sm">&#9733;</span>
+                <span class="star-sm">&#9733;</span>
+            </div>
         </div>
     </div>
 

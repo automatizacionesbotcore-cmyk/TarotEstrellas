@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -68,6 +70,14 @@ class User extends Authenticatable implements MustVerifyEmail
                 $user->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    /**
+     * Override default reset link notification with branded Spanish version.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function profile(): HasOne

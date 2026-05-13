@@ -13,7 +13,15 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'TarotEstrellas'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    | Used in email links (reset password, verify email, etc).
+    */
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL')),
 
     /*
     |--------------------------------------------------------------------------

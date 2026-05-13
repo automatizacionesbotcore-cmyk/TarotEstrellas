@@ -195,6 +195,7 @@ function EliminarCuentaSection() {
   const navigate      = useNavigate();
   const clearSession  = useAuthStore((s) => s.clearSession);
   const [fase, setFase] = useState<'idle' | 'confirmar' | 'pending'>('idle');
+  const isPending = fase === 'pending';
 
   const handleEliminar = async () => {
     setFase('pending');
@@ -239,10 +240,11 @@ function EliminarCuentaSection() {
               className="btn-primary"
               style={{ background: 'var(--red, #e05555)', borderColor: 'var(--red, #e05555)' }}
               onClick={handleEliminar}
+              disabled={isPending}
             >
-              Sí, eliminar
+              {isPending ? 'Eliminando...' : 'Sí, eliminar'}
             </button>
-            <button type="button" className="btn-secondary" onClick={() => setFase('idle')}>
+            <button type="button" className="btn-secondary" onClick={() => setFase('idle')} disabled={isPending}>
               Cancelar
             </button>
           </div>

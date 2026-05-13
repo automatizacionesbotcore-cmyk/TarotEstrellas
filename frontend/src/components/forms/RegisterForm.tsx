@@ -72,10 +72,14 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
     setSuccessMessage(null);
 
     const numericPhone = numeroCelular.replace(/\D/g, '');
-    const payload: RegisterPayload = {
+    const payload: any = {
       ...form,
       telefono:      numericPhone ? `${prefijoCelular}${numericPhone}` : '',
       telefono_pais: form.pais_residencia,
+      consent_terminos: form.acepta_terminos,
+      consent_privacidad: form.acepta_privacidad,
+      consent_mayor_18: form.acepta_mayor_18,
+      version_documento: form.version_documento_terminos,
     };
 
     try {

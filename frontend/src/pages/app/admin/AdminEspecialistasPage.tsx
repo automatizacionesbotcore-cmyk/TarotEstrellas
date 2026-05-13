@@ -139,7 +139,7 @@ export function AdminEspecialistasPage() {
                       <button className="btn-primary" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: e.id, data: editForm })}>
                         {updateMutation.isPending ? 'Guardando…' : 'Guardar'}
                       </button>
-                      <button className="btn-secondary" onClick={() => setEditId(null)}>Cancelar</button>
+                      <button className="btn-secondary" onClick={() => setEditId(null)} disabled={updateMutation.isPending}>Cancelar</button>
                     </div>
                   </div>
                 ) : (
@@ -167,7 +167,7 @@ export function AdminEspecialistasPage() {
                         disabled={toggleMutation.isPending}
                         onClick={() => toggleMutation.mutate(e.id)}
                       >
-                        {e.activo ? 'Desactivar' : 'Activar'}
+                        {toggleMutation.isPending ? 'Procesando…' : (e.activo ? 'Desactivar' : 'Activar')}
                       </button>
                     </div>
                   </div>

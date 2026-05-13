@@ -111,6 +111,13 @@ export async function actualizarNotasCliente(uuid: string, notas: string | null)
   return data;
 }
 
+export async function eliminarCliente(uuid: string, force = false): Promise<{ message: string }> {
+  const { data } = await api.delete<{ message: string }>(`/admin/clientes/${uuid}`, {
+    params: force ? { force: 1 } : {},
+  });
+  return data;
+}
+
 export async function getClienteBriefing(uuid: string, citaUuid?: string): Promise<{ data: BriefingResponse }> {
   const { data } = await api.get<{ data: BriefingResponse }>(`/admin/clientes/${uuid}/briefing`, {
     params: citaUuid ? { cita_uuid: citaUuid } : {},

@@ -125,10 +125,13 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
         $user->load(['profile', 'roles', 'preferenciaNotificacion']);
 
+        $userArr = $user->toArray();
+        $userArr['perfil_completo'] = $user->profile ? $user->profile->estaCompleto() : false;
+
         return response()->json([
             'message' => 'Registro exitoso.',
             'token' => $token,
-            'user' => $user,
+            'user' => $userArr,
         ], 201);
     }
 
@@ -178,10 +181,13 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
         $user->load(['profile', 'roles', 'preferenciaNotificacion']);
 
+        $userArr = $user->toArray();
+        $userArr['perfil_completo'] = $user->profile ? $user->profile->estaCompleto() : false;
+
         return response()->json([
             'message' => 'Inicio de sesion exitoso.',
             'token' => $token,
-            'user' => $user,
+            'user' => $userArr,
         ]);
     }
 

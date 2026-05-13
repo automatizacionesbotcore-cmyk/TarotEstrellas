@@ -56,18 +56,21 @@ export function AdminClientesPage() {
       <section className="card" style={{ padding: '1rem', marginBottom: '1rem', display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
         <input
           type="search"
+          className="input-field"
           placeholder="Buscar por nombre, email o teléfono"
           value={filters.q || ''}
           onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value, page: 1 }))}
         />
         <input
           type="text"
+          className="input-field"
           placeholder="País (CL, AR…)"
           maxLength={2}
           value={filters.pais || ''}
           onChange={(e) => setFilters((f) => ({ ...f, pais: e.target.value.toUpperCase() || undefined, page: 1 }))}
         />
         <select
+          className="input-field"
           value={filters.frecuencia ?? ''}
           onChange={(e) => setFilters((f) => ({ ...f, frecuencia: (e.target.value || undefined) as ClienteListaParams['frecuencia'], page: 1 }))}
         >
@@ -76,6 +79,7 @@ export function AdminClientesPage() {
           ))}
         </select>
         <select
+          className="input-field"
           value={filters.activos === undefined ? '' : String(filters.activos)}
           onChange={(e) => setFilters((f) => ({ ...f, activos: e.target.value === '' ? undefined : (Number(e.target.value) as 0 | 1), page: 1 }))}
         >
@@ -85,10 +89,10 @@ export function AdminClientesPage() {
         </select>
       </section>
 
-      {error && <p style={{ color: 'var(--danger, #c0392b)' }}>{error}</p>}
+      {error && <p style={{ color: '#c0392b' }}>{error}</p>}
 
       <section style={{ overflowX: 'auto' }}>
-        <table className="data-table" style={{ width: '100%' }}>
+        <table className="admin-table" style={{ width: '100%' }}>
           <thead>
             <tr>
               <th>Cliente</th>
@@ -120,7 +124,7 @@ export function AdminClientesPage() {
                   <td>{c.profile?.pais_residencia || '—'}</td>
                   <td>
                     <strong>{c.stats.total_completadas}</strong>
-                    {c.stats.total_no_show > 0 && <span style={{ color: 'var(--warning, #d68910)' }}> · {c.stats.total_no_show} no-show</span>}
+                    {c.stats.total_no_show > 0 && <span style={{ color: '#d68910' }}> · {c.stats.total_no_show} no-show</span>}
                   </td>
                   <td>{ingresos}</td>
                   <td>{c.stats.ultima_consulta ? new Date(c.stats.ultima_consulta).toLocaleDateString() : '—'}</td>

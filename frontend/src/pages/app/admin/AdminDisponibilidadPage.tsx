@@ -108,6 +108,18 @@ export function AdminDisponibilidadPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'disponibilidad', 'bloqueos'] }),
   });
 
+  const [anioFeriados, setAnioFeriados] = useState<number>(new Date().getFullYear());
+  const seedFeriados = useMutation({
+    mutationFn: async () => {
+      const res = await api.post<{ message: string; creados: number; omitidos_existentes: number; total_feriados: number }>(
+        '/admin/disponibilidad/bloqueos/seed-feriados-chile',
+        { anio: anioFeriados, ...especialistaParam }
+      );
+      return res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'disponibilidad', 'bloqueos'] }),
+  });
+
   const hasDraft = Object.keys(draftHorarios).length > 0;
 
   return (
@@ -132,11 +144,19 @@ export function AdminDisponibilidadPage() {
         </div>
       )}
 
-      <div className="booking-tabs" style={{ marginBottom: '1.5rem' }}>
-        <button className={`booking-tab${tab === 'horario' ? ' active' : ''}`} onClick={() => setTab('horario')}>
+      <div className="booking-tabs admin-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+        <button
+          className={tab === 'horario' ? 'btn-primary' : 'btn-secondary'}
+          onClick={() => setTab('horario')}
+          type="button"
+        >
           Horario base
         </button>
-        <button className={`booking-tab${tab === 'bloqueos' ? ' active' : ''}`} onClick={() => setTab('bloqueos')}>
+        <button
+          className={tab === 'bloqueos' ? 'btn-primary' : 'btn-secondary'}
+          onClick={() => setTab('bloqueos')}
+          type="button"
+        >
           Bloqueos y excepciones
         </button>
       </div>
@@ -197,7 +217,41 @@ export function AdminDisponibilidadPage() {
       {/* ── Bloqueos ── */}
       {tab === 'bloqueos' && (
         <section>
+          {/* Feriados chilenos por defecto */}
+          <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <strong style={{ display: 'block', marginBottom: '0.25rem' }}>🇨🇱 Feriados chilenos</strong>
+              <small className="text-muted">Carga los feriados oficiales del año (no se duplican si ya existen).</small>
+            </div>
+            <select
+              className="input-field"
+              value={anioFeriados}
+              onChange={(e) => setAnioFeriados(Number(e.target.value))}
+              style={{ maxWidth: 110 }}
+              disabled={seedFeriados.isPending}
+            >
+              {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <button
+              className="btn-primary"
+              onClick={() => seedFeriados.mutate()}
+              disabled={seedFeriados.isPending}
+            >
+              {seedFeriados.isPending ? 'Cargando…' : `Cargar feriados ${anioFeriados}`}
+            </button>
+          </div>
+          {seedFeriados.isSuccess && seedFeriados.data && (
+            <p style={{ color: 'var(--accent)', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+              ✓ {seedFeriados.data.creados} feriados nuevos · {seedFeriados.data.omitidos_existentes} ya existían
+            </p>
+          )}
+
           <h2 style={{ marginBottom: '1rem' }}>Agregar bloqueo o apertura</h2>
+          <p className="text-muted" style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
+            Bloquea un día completo (vacaciones, feriado), un rango horario específico (ej: 14:00 – 16:00) o varias horas en un día laboral.
+          </p>
           <div className="bloqueo-form">
             <div className="form-row">
               <label className="booking-field-label">
@@ -257,7 +311,7 @@ export function AdminDisponibilidadPage() {
                     disabled={deleteBloqueo.isPending}
                     style={{ marginTop: '0.5rem', background: 'transparent', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '0.2rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem' }}
                   >
-                    Eliminar
+                    {deleteBloqueo.isPending ? 'Eliminando…' : 'Eliminar'}
                   </button>
                 </div>
               ))}

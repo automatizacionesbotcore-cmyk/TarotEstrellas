@@ -134,6 +134,76 @@ class AdminDisponibilidadController extends Controller
         return response()->json(['data' => $bloqueo->fresh()]);
     }
 
+    public function seedFeriadosChile(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'anio' => ['required', 'integer', 'min:2024', 'max:2050'],
+        ]);
+
+        $especialista = $this->especialista();
+        $anio = (int) $validated['anio'];
+
+        // Pascua → calcular Viernes Santo y Sábado Santo
+        $easterTs = easter_date($anio);
+        $viernesSanto = date('Y-m-d', strtotime('-2 days', $easterTs));
+        $sabadoSanto  = date('Y-m-d', strtotime('-1 day', $easterTs));
+
+        $feriados = [
+            ['fecha' => "$anio-01-01", 'descripcion' => 'Año Nuevo'],
+            ['fecha' => $viernesSanto, 'descripcion' => 'Viernes Santo'],
+            ['fecha' => $sabadoSanto,  'descripcion' => 'Sábado Santo'],
+            ['fecha' => "$anio-05-01", 'descripcion' => 'Día del Trabajador'],
+            ['fecha' => "$anio-05-21", 'descripcion' => 'Día de las Glorias Navales'],
+            ['fecha' => "$anio-06-20", 'descripcion' => 'Día Nacional de los Pueblos Indígenas'],
+            ['fecha' => "$anio-06-29", 'descripcion' => 'San Pedro y San Pablo'],
+            ['fecha' => "$anio-07-16", 'descripcion' => 'Virgen del Carmen'],
+            ['fecha' => "$anio-08-15", 'descripcion' => 'Asunción de la Virgen'],
+            ['fecha' => "$anio-09-18", 'descripcion' => 'Independencia de Chile'],
+            ['fecha' => "$anio-09-19", 'descripcion' => 'Día de las Glorias del Ejército'],
+            ['fecha' => "$anio-10-12", 'descripcion' => 'Encuentro de Dos Mundos'],
+            ['fecha' => "$anio-10-31", 'descripcion' => 'Día de las Iglesias Evangélicas'],
+            ['fecha' => "$anio-11-01", 'descripcion' => 'Día de Todos los Santos'],
+            ['fecha' => "$anio-12-08", 'descripcion' => 'Inmaculada Concepción'],
+            ['fecha' => "$anio-12-25", 'descripcion' => 'Navidad'],
+        ];
+
+        $creados = 0;
+        $omitidos = 0;
+        foreach ($feriados as $f) {
+            $inicio = $f['fecha'].' 00:00:00';
+            $fin    = $f['fecha'].' 23:59:00';
+
+            $existe = BloqueoAgenda::query()
+                ->where('especialista_id', $especialista->id)
+                ->where('motivo', 'feriado')
+                ->where('fecha_inicio_utc', $inicio)
+                ->exists();
+
+            if ($existe) {
+                $omitidos++;
+                continue;
+            }
+
+            BloqueoAgenda::query()->create([
+                'especialista_id' => $especialista->id,
+                'tipo' => 'bloqueo',
+                'motivo' => 'feriado',
+                'descripcion' => $f['descripcion'],
+                'fecha_inicio_utc' => $inicio,
+                'fecha_fin_utc' => $fin,
+                'all_day' => true,
+            ]);
+            $creados++;
+        }
+
+        return response()->json([
+            'message' => "Feriados $anio cargados",
+            'creados' => $creados,
+            'omitidos_existentes' => $omitidos,
+            'total_feriados' => count($feriados),
+        ]);
+    }
+
     public function destroyBloqueo(int $id): JsonResponse
     {
         $especialista = $this->especialista();

@@ -73,7 +73,7 @@ export function AdminReembolsosPage() {
 
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <header className="admin-page-header">
         <h1>Reembolsos</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="btn-secondary" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
@@ -138,22 +138,43 @@ function CreateReembolsoModal({ onClose, onCreated }: { onClose: () => void; onC
 
   return (
     <div className="confirm-dialog-backdrop" role="dialog" aria-modal="true">
-      <div className="confirm-dialog" style={{ maxWidth: 520 }}>
+      <div className="confirm-dialog" style={{ maxWidth: 600 }}>
         <h3>Crear reembolso manual</h3>
-        <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="auth-form">
-          <label>Cita UUID<input required value={form.cita_uuid} onChange={(e) => setForm({ ...form, cita_uuid: e.target.value })} /></label>
-          <label>Pago UUID (opcional)<input value={form.pago_uuid} onChange={(e) => setForm({ ...form, pago_uuid: e.target.value })} /></label>
-          <label>Monto (centavos)<input type="number" required min={1} value={form.monto_centavos} onChange={(e) => setForm({ ...form, monto_centavos: e.target.value })} /></label>
-          <label>Moneda<input required maxLength={3} value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value.toUpperCase() })} /></label>
-          <label>Razón<input required value={form.razon} onChange={(e) => setForm({ ...form, razon: e.target.value })} /></label>
-          <label>Método
-            <select value={form.metodo} onChange={(e) => setForm({ ...form, metodo: e.target.value })}>
-              <option value="mismo_medio_pago">Mismo medio de pago</option>
-              <option value="transferencia_manual">Transferencia manual</option>
-              <option value="credito_cliente">Crédito cliente</option>
-            </select>
+        <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} style={{ display: 'grid', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cita UUID</span>
+              <input className="input-field" required value={form.cita_uuid} onChange={(e) => setForm({ ...form, cita_uuid: e.target.value })} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pago UUID (opcional)</span>
+              <input className="input-field" value={form.pago_uuid} onChange={(e) => setForm({ ...form, pago_uuid: e.target.value })} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Monto (centavos)</span>
+              <input className="input-field" type="number" required min={1} value={form.monto_centavos} onChange={(e) => setForm({ ...form, monto_centavos: e.target.value })} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Moneda</span>
+              <input className="input-field" required maxLength={3} value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value.toUpperCase() })} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Razón</span>
+              <input className="input-field" required value={form.razon} onChange={(e) => setForm({ ...form, razon: e.target.value })} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Método</span>
+              <select className="input-field" value={form.metodo} onChange={(e) => setForm({ ...form, metodo: e.target.value })}>
+                <option value="mismo_medio_pago">Mismo medio de pago</option>
+                <option value="transferencia_manual">Transferencia manual</option>
+                <option value="credito_cliente">Crédito cliente</option>
+              </select>
+            </label>
+          </div>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Nota admin</span>
+            <textarea className="input-field" value={form.nota_admin} onChange={(e) => setForm({ ...form, nota_admin: e.target.value })} rows={3} />
           </label>
-          <label>Nota admin<textarea value={form.nota_admin} onChange={(e) => setForm({ ...form, nota_admin: e.target.value })} /></label>
           {error && <p className="form-error">{error}</p>}
           <div className="confirm-dialog-actions">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>

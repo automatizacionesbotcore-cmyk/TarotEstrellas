@@ -14,6 +14,24 @@ import { toast } from '../../stores/toastStore';
 
 type Mode = 'publico' | 'self' | 'admin';
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderMarkdown(text: string): string {
+  let html = escapeHtml(text);
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  html = html.replace(/\n/g, '<br/>');
+  return html;
+}
+
 interface Msg {
   id: string;
   role: 'user' | 'assistant';
@@ -297,12 +315,11 @@ export function AgenteWidget() {
                   <span className="astrea-msg__icon" aria-hidden="true"><StarIcon size={14} /></span>
                 )}
                 <div className="astrea-msg__bubble">
-                  <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{m.text}</p>
-                  {m.meta && m.role === 'assistant' && (
-                    <small className="astrea-msg__meta">
-                      {m.meta.modelo} · {m.meta.tokens_in ?? '?'}/{m.meta.tokens_out ?? '?'} tk · {m.meta.latencia_ms ?? '?'} ms
-                    </small>
-                  )}
+                  <div
+                    className="astrea-msg__text"
+                    style={{ margin: 0 }}
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(m.text) }}
+                  />
                 </div>
               </div>
             ))}

@@ -42,6 +42,26 @@
 	color-scheme: light;
 }
 
+/* ── ALIAS DE VARIABLES PARA PÁGINAS ADMIN ────────────────────────────── */
+:root {
+	--surface: var(--card);
+	--card-bg: var(--card);
+	--accent-bg: color-mix(in srgb, var(--accent) 22%, transparent);
+	--border: var(--border-subtle);
+	--input-bg: rgba(13, 11, 30, 0.55);
+	--table-header-bg: rgba(23, 18, 41, 0.92);
+	--table-row-hover: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+:root[data-theme='light'] {
+	--surface: rgba(255, 255, 255, 0.95);
+	--card-bg: rgba(255, 255, 255, 0.95);
+	--accent-bg: color-mix(in srgb, var(--accent) 18%, white);
+	--border: rgba(120, 100, 150, 0.18);
+	--input-bg: rgba(255, 255, 255, 0.9);
+	--table-header-bg: rgba(245, 240, 250, 0.95);
+	--table-row-hover: color-mix(in srgb, var(--accent) 10%, white);
+}
+
 /* ── KEYFRAMES ──────────────────────────────────────────────────────────── */
 @keyframes shimmer-sweep {
 	0%   { background-position: 0% center; }
@@ -4187,4 +4207,479 @@ border-radius: 14px;
 @media (max-width:680px){
   .agente-chat__suggestions-chips{grid-template-columns:1fr}
   .agente-chat__chip{-webkit-line-clamp:3;line-clamp:3}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * UTILITY CLASSES MISSING (admin pages, auth flows, generic UI)
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Generic card ─────────────────────────────────────────────────────── */
+.card {
+background: var(--card);
+border: 1px solid var(--border-subtle);
+border-radius: 14px;
+padding: 1.25rem 1.4rem;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover { border-color: var(--border-active); }
+
+/* ── Text helpers ─────────────────────────────────────────────────────── */
+.text-muted { color: var(--text-muted); }
+
+/* ── Generic table ────────────────────────────────────────────────────── */
+table.data-table,
+table.table {
+width: 100%;
+border-collapse: collapse;
+background: var(--card);
+color: var(--text);
+border-radius: 12px;
+overflow: hidden;
+}
+.data-table th, .data-table td,
+.table th, .table td {
+padding: 0.7rem 0.9rem;
+text-align: left;
+border-bottom: 1px solid var(--border-subtle);
+}
+.data-table th, .table th {
+font-weight: 600;
+font-size: 0.78rem;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+color: var(--text-muted);
+background: var(--table-header-bg);
+}
+.data-table tbody tr:hover,
+.table tbody tr:hover { background: var(--table-row-hover); }
+
+.admin-table-wrap {
+background: var(--card);
+border: 1px solid var(--border-subtle);
+border-radius: 12px;
+overflow: auto;
+}
+
+/* ── Form helpers ─────────────────────────────────────────────────────── */
+.form-group {
+display: flex;
+flex-direction: column;
+gap: 0.35rem;
+margin-bottom: 1rem;
+}
+.form-label {
+font-size: 0.82rem;
+color: var(--text-muted);
+font-weight: 500;
+}
+.form-input,
+.input-field {
+padding: 0.55rem 0.75rem;
+background: var(--input-bg);
+color: var(--text);
+border: 1px solid var(--border-subtle);
+border-radius: 8px;
+font-family: inherit;
+font-size: 0.92rem;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
+width: 100%;
+}
+.form-input:focus,
+.input-field:focus {
+outline: none;
+border-color: var(--border-active);
+box-shadow: 0 0 0 2px var(--glow);
+}
+.form-input:disabled,
+.input-field:disabled { opacity: 0.55; cursor: not-allowed; }
+
+select.input-field, select.form-input {
+appearance: none;
+background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                  linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+background-size: 5px 5px;
+background-repeat: no-repeat;
+padding-right: 2rem;
+}
+
+/* ── Tabs (booking-tabs / admin-tabs) ─────────────────────────────────── */
+.booking-tabs,
+.admin-tabs {
+display: flex;
+gap: 0.5rem;
+flex-wrap: wrap;
+border-bottom: 1px solid var(--border-subtle);
+padding-bottom: 0.5rem;
+margin-bottom: 1.25rem;
+}
+.booking-tab {
+background: transparent;
+border: 1px solid var(--border-subtle);
+color: var(--text-muted);
+padding: 0.5rem 1rem;
+border-radius: 999px;
+cursor: pointer;
+font-size: 0.88rem;
+font-weight: 500;
+transition: all 0.18s ease;
+}
+.booking-tab:hover { border-color: var(--border-active); color: var(--text); }
+.booking-tab.active {
+background: var(--accent);
+color: #13101f;
+border-color: var(--accent);
+}
+:root[data-theme='light'] .booking-tab.active { color: #ffffff; }
+
+/* ── Buttons danger ───────────────────────────────────────────────────── */
+.btn-danger {
+background: #c0392b;
+color: #fff;
+border: none;
+padding: 0.55rem 1.1rem;
+border-radius: 999px;
+cursor: pointer;
+font-weight: 600;
+font-size: 0.88rem;
+transition: all 0.18s ease;
+}
+.btn-danger:hover { background: #a93226; box-shadow: 0 0 12px rgba(192, 57, 43, 0.35); }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Badges ───────────────────────────────────────────────────────────── */
+.badge {
+display: inline-block;
+padding: 0.18rem 0.6rem;
+border-radius: 999px;
+font-size: 0.74rem;
+font-weight: 600;
+letter-spacing: 0.02em;
+background: var(--accent-bg);
+color: var(--accent);
+border: 1px solid var(--border-subtle);
+}
+.badge-warning {
+background: color-mix(in srgb, #f4a23a 22%, transparent);
+color: #f4a23a;
+border-color: color-mix(in srgb, #f4a23a 35%, transparent);
+}
+.badge-success {
+background: color-mix(in srgb, #4ade80 22%, transparent);
+color: #4ade80;
+border-color: color-mix(in srgb, #4ade80 35%, transparent);
+}
+.badge-danger {
+background: color-mix(in srgb, #ef4444 22%, transparent);
+color: #ef4444;
+border-color: color-mix(in srgb, #ef4444 35%, transparent);
+}
+
+/* ── Admin layout helpers ─────────────────────────────────────────────── */
+.admin-dashboard-row {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 1rem;
+margin-bottom: 1.25rem;
+}
+.admin-color-field {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+.admin-color-field input[type="color"] {
+width: 42px;
+height: 32px;
+border: 1px solid var(--border-subtle);
+border-radius: 6px;
+background: transparent;
+cursor: pointer;
+}
+
+/* === Modales admin: estilos automáticos para inputs sin clase === */
+.confirm-dialog { max-width: 720px; }
+.confirm-dialog form { display: flex; flex-direction: column; gap: 0.75rem; }
+.confirm-dialog form > label,
+.confirm-dialog form > div > label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; color: var(--text); font-weight: 500; }
+.confirm-dialog input:not([type="checkbox"]):not([type="radio"]),
+.confirm-dialog select,
+.confirm-dialog textarea {
+  width: 100%;
+  background: var(--input-bg, var(--card));
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.confirm-dialog input:not([type="checkbox"]):not([type="radio"]):focus,
+.confirm-dialog select:focus,
+.confirm-dialog textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow, rgba(132, 96, 255, 0.2));
+}
+.confirm-dialog textarea { min-height: 100px; resize: vertical; }
+.confirm-dialog input[type="checkbox"], .confirm-dialog input[type="radio"] { accent-color: var(--accent); }
+.confirm-dialog label > input[type="checkbox"],
+.confirm-dialog label > input[type="radio"] { flex-direction: row; align-self: flex-start; margin-right: 0.4rem; }
+.confirm-dialog label:has(> input[type="checkbox"]),
+.confirm-dialog label:has(> input[type="radio"]) { flex-direction: row; align-items: center; }
+
+/* Filtros de listados: aplica a inputs sin clase dentro de admin-filters */
+.admin-filters input:not([type="checkbox"]):not([type="radio"]),
+.admin-filters select {
+  background: var(--input-bg, var(--card));
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.9rem;
+}
+.admin-filters input:focus, .admin-filters select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow, rgba(132, 96, 255, 0.2));
+}
+
+/* Fila de 2 columnas en modales: usar style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem'}} en JSX */
+
+/* === Estilos por defecto para inputs/selects/textareas en panel admin === */
+/* Aplica solo a elementos sin clase específica para no romper componentes que ya tienen estilos */
+.admin-content input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.admin-content select:not([class]),
+.admin-content textarea:not([class]) {
+  background: var(--input-bg, var(--card));
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.admin-content input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.admin-content select:not([class]):focus,
+.admin-content textarea:not([class]):focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow, rgba(132, 96, 255, 0.2));
+}
+.admin-content textarea:not([class]) { min-height: 100px; resize: vertical; }
+.admin-content input[type="checkbox"]:not([class]),
+.admin-content input[type="radio"]:not([class]) { accent-color: var(--accent); }
+
+/* Labels-with-input en modales y formularios admin: layout columna y tipografía */
+.admin-content label:not([class]) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  font-weight: 500;
+}
+/* Si el label envuelve un checkbox/radio, layout horizontal */
+.admin-content label:not([class]):has(> input[type="checkbox"]),
+.admin-content label:not([class]):has(> input[type="radio"]) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 400;
+}
+
+/* Botones sin clase dentro de admin: estilo base sutil */
+.admin-content button:not([class]):not([type="submit"]) {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.admin-content button:not([class]):hover { border-color: var(--accent); }
+
+/* Mejoras de tabla genérica dentro del panel */
+.admin-content table:not([class]) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.admin-content table:not([class]) th,
+.admin-content table:not([class]) td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.admin-content table:not([class]) th {
+  background: var(--table-header-bg, var(--card));
+  color: var(--text);
+  font-weight: 600;
+}
+.admin-content table:not([class]) tbody tr:hover {
+  background: var(--table-row-hover, rgba(255,255,255,0.03));
+}
+
+/* === Admin sidebar info tooltip === */
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+.admin-nav-item .admin-nav-link {
+  flex: 1;
+  min-width: 0;
+}
+.admin-nav-info {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.2));
+  background: transparent;
+  color: var(--text-muted, rgba(255,255,255,0.6));
+  font-size: 0.7rem;
+  font-style: italic;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+.admin-nav-info:hover {
+  background: var(--accent-soft, rgba(212,175,55,0.15));
+  color: var(--accent, #d4af37);
+  border-color: var(--accent, #d4af37);
+}
+
+/* Markdown rendered content (briefing/resumen IA) */
+.agente-chat__text strong, .admin-content strong { font-weight: 700; }
+.agente-chat__text em, .admin-content em { font-style: italic; }
+.agente-chat__text code, .admin-content code {
+  background: rgba(255,255,255,0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.9em;
+}
+
+/* ========== Admin shell · responsive drawer ========== */
+.admin-mobile-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+}
+.admin-mobile-toggle:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+.admin-sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.admin-sidebar-header .admin-sidebar-title { margin-bottom: 0; }
+.admin-drawer-close {
+  display: none;
+  background: transparent; border: none;
+  color: var(--text); font-size: 1.6rem; line-height: 1;
+  cursor: pointer; padding: 0 0.25rem;
+}
+.admin-drawer-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 998;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 860px) {
+  .admin-shell { padding: 1rem; gap: 1rem; }
+  .admin-mobile-toggle { display: inline-flex; }
+  .admin-drawer-close { display: inline-flex; align-items: center; justify-content: center; }
+  .admin-drawer-backdrop { display: block; }
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: 80vw; max-width: 320px;
+    height: 100vh;
+    border-radius: 0;
+    overflow-y: auto;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  }
+  .admin-sidebar.is-open { transform: translateX(0); }
+}
+
+/* ========== Admin tables · mobile responsive ========== */
+@media (max-width: 720px) {
+  .admin-table { font-size: 0.85rem; }
+  .admin-table th, .admin-table td { padding: 0.5rem 0.5rem; }
+  .admin-filters { flex-direction: column; align-items: stretch; }
+  .admin-filters > * { width: 100%; }
+  .admin-content section[style*="overflowX"] { -webkit-overflow-scrolling: touch; }
+}
+
+/* Tarjetas de estadísticas y cards generales */
+@media (max-width: 720px) {
+  .cards-grid, .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+  .page-content { padding: 1rem !important; }
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+}
+
+/* Header del sitio · evitar overflow móvil */
+@media (max-width: 720px) {
+  .site-header, .app-header {
+    flex-wrap: wrap !important;
+    padding: 0.75rem 1rem !important;
+  }
+  .site-header nav, .app-header nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .nav-link { padding: 0.4rem 0.6rem !important; font-size: 0.9rem; }
+}
+
+/* Botones acción primaria/peligro */
+.btn-danger {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-danger:hover:not(:disabled) { background: #a93226; }
+.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Inputs/selects ocupan ancho completo en móvil para mejor tap */
+@media (max-width: 480px) {
+  input, select, textarea, button { font-size: 16px !important; }
+  .modal-content, .dialog { width: 95vw !important; max-width: 95vw !important; }
 }

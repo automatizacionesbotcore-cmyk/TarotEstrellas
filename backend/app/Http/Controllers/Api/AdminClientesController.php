@@ -163,7 +163,7 @@ class AdminClientesController extends Controller
                 'profile',
                 'datoNatal',
                 'preferenciaNotificacion',
-                'consentimientos:id,user_id,tipo,version,otorgado_en,revocado_en',
+                'consentimientos:id,user_id,tipo,version_documento,otorgado,otorgado_en',
                 'roles:id,nombre',
             ])
             ->firstOrFail();
@@ -215,6 +215,72 @@ class AdminClientesController extends Controller
                 'resumenes' => $resumenes,
             ],
         ]);
+    }
+
+    /**
+     * DELETE /api/admin/clientes/{uuid}
+     * Elimina definitivamente un cliente (force delete). Solo super_admin.
+     * Bloquea si tiene citas pagadas/realizadas: requiere ?force=1 para borrarlas en cascada.
+     */
+    public function destroy(Request $request, string $uuid): JsonResponse
+    {
+        $user = $request->user();
+        $isSuper = $user && $user->roles()->where('nombre', 'super_admin')->exists();
+        if (! $isSuper) {
+            return response()->json(['message' => 'Solo super_admin puede eliminar clientes.'], 403);
+        }
+
+        $cliente = User::query()->where('uuid', $uuid)->firstOrFail();
+
+        if ($cliente->id === $user->id) {
+            return response()->json(['message' => 'No puedes eliminar tu propia cuenta.'], 422);
+        }
+
+        $force = $request->boolean('force');
+        $citasRelevantes = Cita::query()
+            ->where('cliente_id', $cliente->id)
+            ->whereIn('estado', ['pagada', 'confirmada', 'realizada'])
+            ->count();
+
+        if ($citasRelevantes > 0 && ! $force) {
+            return response()->json([
+                'message' => "El cliente tiene {$citasRelevantes} cita(s) pagada(s)/realizada(s). Confirma con force=1 para eliminar todo en cascada.",
+                'requires_force' => true,
+                'citas_relevantes' => $citasRelevantes,
+            ], 409);
+        }
+
+        DB::transaction(function () use ($cliente) {
+            $citaIds = Cita::query()->where('cliente_id', $cliente->id)->pluck('id');
+            if ($citaIds->isNotEmpty()) {
+                DB::table('pagos')->whereIn('cita_id', $citaIds)->delete();
+                DB::table('resumenes')->whereIn('cita_id', $citaIds)->delete();
+                if (DB::getSchemaBuilder()->hasTable('grabaciones')) {
+                    DB::table('grabaciones')->whereIn('cita_id', $citaIds)->delete();
+                }
+                Cita::query()->whereIn('id', $citaIds)->forceDelete();
+            }
+            DB::table('user_roles')->where('user_id', $cliente->id)->delete();
+            DB::table('user_profiles')->where('user_id', $cliente->id)->delete();
+            DB::table('datos_natales')->where('user_id', $cliente->id)->delete();
+            if (DB::getSchemaBuilder()->hasTable('preferencias_notificacion')) {
+                DB::table('preferencias_notificacion')->where('user_id', $cliente->id)->delete();
+            }
+            DB::table('consentimientos')->where('user_id', $cliente->id)->delete();
+            if (DB::getSchemaBuilder()->hasTable('agente_conversaciones')) {
+                DB::table('agente_conversaciones')->where('user_id', $cliente->id)->delete();
+            }
+            if (DB::getSchemaBuilder()->hasTable('creditos_cliente')) {
+                DB::table('creditos_cliente')->where('user_id', $cliente->id)->delete();
+            }
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', User::class)
+                ->where('tokenable_id', $cliente->id)
+                ->delete();
+            $cliente->forceDelete();
+        });
+
+        return response()->json(['message' => 'Cliente eliminado definitivamente.']);
     }
 
     /**

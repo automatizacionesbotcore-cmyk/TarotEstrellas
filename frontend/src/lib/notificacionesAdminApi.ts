@@ -2,24 +2,23 @@ import { api } from './api';
 
 export type Notificacion = {
   id: number;
-  canal: 'email' | 'whatsapp' | 'sms';
+  canal: 'email' | 'whatsapp' | 'sms' | 'push';
   destinatario: string;
-  plantilla_clave: string | null;
+  plantilla_clave?: string | null;
+  tipo?: string | null;
   asunto: string | null;
-  estado: 'pendiente' | 'enviado' | 'fallido' | 'bounced';
-  error: string | null;
+  estado: 'enviado' | 'error' | 'rebotado' | 'leido' | 'pendiente';
+  error?: string | null;
   user_id: number | null;
-  cita_id: number | null;
+  cita_id?: number | null;
   enviado_en: string | null;
   created_at: string;
 };
 
 export type NotificacionMetricas = {
-  total: number;
-  por_estado: Record<string, number>;
-  por_canal: Record<string, number>;
-  ultimas_24h: number;
-  fallidas_pct: number;
+  hoy: number;
+  errores: number;
+  porCanal: Record<string, number>;
 };
 
 export type Paginated<T> = {
