@@ -1,9 +1,54 @@
 # 📋 Handoff TarotEstrellas — Estado Actual
 
 **Stack**: Laravel 11 (PHP 8.3) + React 18 + Vite + TanStack Query + MySQL 8 · Hostinger
-**Repo**: `automatizacionesbotcore-cmyk/TarotEstrellas` · Rama actual: `feat/mejoras-observabilidad` (default `main`)
+**Repo**: `automatizacionesbotcore-cmyk/TarotEstrellas`
 **PROD**: https://tarotestrellas.com (Hostinger SSH `88.223.85.175:65002` user `u402745362`)
 **Spec**: `tarotestrellas/docs/ESPECIFICACION_TECNICATarotEstrellasV2.md` (305 KB)
+
+---
+
+## 🌿 Estrategia de ramas (Git Flow simplificado)
+
+> **Corte base (2026-05-13)**: las 3 ramas principales se crearon al mismo commit `c352a3c`. A partir de aquí divergen según el propósito de cada una.
+
+| Rama | Propósito | Reglas |
+|---|---|---|
+| **`main`** | Espejo de PROD — lo que está vivo en tarotestrellas.com | Solo se actualiza con merges validados desde `dev`. Nunca se hace commit directo aquí. Siempre debe estar desplegable |
+| **`dev`** | Integración / staging — donde trabaja Codex/Claude | Recibe merges de feature branches. Se testea aquí antes de subir a `main`. Puede estar "un sprint adelante" de PROD |
+| **`feat/*`** | Feature branches individuales | Se crean desde `dev`, se mergean de vuelta a `dev` cuando la feature está completa y probada |
+
+### Flujo recomendado
+
+```
+feat/mi-feature  ──┐
+                   ├──► dev ──► (QA + smoke test) ──► main ──► deploy PROD
+feat/otra-cosa   ──┘
+```
+
+### Comandos útiles
+
+```bash
+# Iniciar nueva feature
+git checkout dev
+git pull origin dev
+git checkout -b feat/nombre-feature
+
+# Mergear feature a dev (sin fast-forward para conservar historial)
+git checkout dev
+git merge --no-ff feat/nombre-feature
+
+# Llevar dev a main (solo cuando validado en PROD staging)
+git checkout main
+git merge --no-ff dev
+git push origin main
+
+# Crear rama feature desde dev en remoto (para Codex/Claude)
+git push origin feat/nombre-feature
+```
+
+> ⚠️ Nunca hacer `git push --force` sobre `main` salvo emergencia y con consenso del equipo.
+
+---
 
 ---
 
