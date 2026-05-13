@@ -4,6 +4,19 @@ Fecha: 2026-04-19
 Proyecto: TarotEstrellas
 Estado: implementado y validado
 
+## ⚠️ Nota de actualización (2026-05-13)
+
+Este brief se mantiene como referencia histórica. Cambios desde abril:
+
+| Tema | Brief original | Estado actual |
+|---|---|---|
+| **Pasarela de pago** | Stripe (procesamiento asíncrono Stripe) | **PayPal** es la pasarela activa. La lógica de reembolsos Stripe sigue en código pero no se usa para nuevos pagos. Pendiente: implementar reembolsos PayPal análogos al flujo Stripe descrito |
+| **Job `ProcesarReembolsoJob`** | Procesa contra Stripe API | Sigue funcional para reembolsos legacy Stripe; para nuevos PayPal se requiere job equivalente |
+| **Scheduler cada 5 min** | Activo | Definido pero requiere cron PROD (cfg-06 pendiente) |
+| **Tests** | Suite verde | Sigue en verde para Stripe; añadir cobertura PayPal cuando se implemente |
+
+---
+
 ## 1) Resumen
 
 Se cerro el backend de reembolsos de punta a punta, incluyendo:

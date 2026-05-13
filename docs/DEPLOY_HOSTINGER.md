@@ -5,6 +5,39 @@
 
 ---
 
+## ⚠️ Notas de actualización (2026-05-13)
+
+Esta guía es la versión original. La instalación real en PROD difiere en algunos puntos. Se conserva el documento por valor de referencia, pero ten en cuenta:
+
+| Tema | Documento original | Realidad PROD actual |
+|---|---|---|
+| **Dominio** | `tarotestrellas.cl` + subdominio `api.tarotestrellas.cl` | `tarotestrellas.com` (TLD `.com`, sin subdominio API separado) |
+| **Backend path** | `/home/u123456789/backend/public/` (subdominio independiente) | `/home/u402745362/domains/tarotestrellas.com/public_html/backend/` (mismo dominio, ruta `/backend`) |
+| **Frontend path** | `public_html/` | `domains/tarotestrellas.com/public_html/` |
+| **PHP** | 8.2 | **8.3** (PATH local tiene 7.4 — usar `C:\wamp64\bin\php\php8.3.14\php.exe`) |
+| **Pasarela de pago** | Stripe (`STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`, `VITE_STRIPE_PUBLIC_KEY`) | **PayPal** (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_BASE_URL`) + Transferencia bancaria. Flow.cl comentado para Fase 2 |
+| **Reload OPcache** | `php artisan config:cache` | **NO** usar `touch index.php` en `public_html/` raíz (rompió el sitio: creaba un `index.php` vacío que precedía a `index.html`). Usar `touch backend/bootstrap/app.php` o reiniciar PHP-FPM desde panel Hostinger |
+| **Reset password** | Notification por defecto Laravel (inglés) | `App\Notifications\ResetPasswordNotification` custom en español, con link a `{FRONTEND_URL}/auth/reset-password?token=...` |
+| **APP_LOCALE** | (no mencionado) | `es` (mensajes Laravel en español) |
+| **APP_NAME** | (variable) | `TarotEstrellas` |
+| **Usuario SSH** | `u123456789` (placeholder) | `u402745362` |
+| **Puerto SSH** | 22 (default) | **65002** |
+| **SSH desde Windows** | `ssh` | `plink.exe` y `pscp.exe` de PuTTY (`-pw '...' -batch`) |
+| **Webhook Stripe** | `/api/webhooks/stripe` | Sigue existiendo legacy, pero no se usa para nuevos pagos |
+
+> ⚠️ **Variables Stripe abajo** → ya no se usan en código nuevo (mantener solo por compatibilidad con webhook legacy si hay pagos antiguos). Reemplazar mentalmente por bloque PayPal:
+> ```env
+> PAYPAL_CLIENT_ID=...
+> PAYPAL_CLIENT_SECRET=...
+> PAYPAL_BASE_URL=https://api-m.paypal.com   # LIVE; sandbox: https://api-m.sandbox.paypal.com
+> ```
+
+> ⚠️ **`VITE_STRIPE_PUBLIC_KEY`** ya no es necesario en `.env.production` del frontend.
+
+> ✅ Lo que sigue válido: arquitectura general (frontend SPA + Laravel backend), pasos de DB, migrate, storage:link, cron scheduler (`* * * * * php artisan schedule:run`), webhooks Daily/Resend/WhatsApp, OAuth Google.
+
+---
+
 ## Arquitectura en producción
 
 ```

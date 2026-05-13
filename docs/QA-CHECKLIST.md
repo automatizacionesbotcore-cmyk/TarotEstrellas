@@ -3,6 +3,17 @@
 Documento exhaustivo para validar **todas las funcionalidades** del sistema en cada release.
 Ejecutar en orden. Marcar `[x]` lo OK y anotar issue al lado de lo que falle.
 
+> ⚠️ **Nota de actualización (2026-05-13)**: Este checklist menciona **Stripe** en varias secciones (pago, suscripciones, reembolsos, settings, smoke E2E). En la implementación actual **Stripe fue reemplazado por PayPal** + Transferencia bancaria. Flow.cl está comentado para Fase 2. Al ejecutar el QA, sustituir mentalmente "Stripe" por "PayPal" hasta refactorizar el documento.
+>
+> | Mención original | Sustituir por |
+> |---|---|
+> | "Selector método: Stripe / Transferencia" | "Selector método: PayPal / Transferencia" |
+> | "Stripe → checkout funciona, callback OK" | "PayPal → checkout funciona, callback OK; ver UI muestra abono 20% real" |
+> | "Suscripción Stripe funciona" | (n/a por ahora — suscripciones no implementadas en Fase 1) |
+> | "Aprobar (parcial/total) → Stripe refund + email" | "Aprobar → reembolso PayPal pendiente de implementar; reembolso manual + email funcional" |
+> | "Integraciones (Stripe keys, Daily, Anthropic)" | "Integraciones (PayPal keys, Daily, Anthropic, Resend, Google OAuth)" |
+> | "Paga con Stripe (sandbox)" | "Paga con PayPal (sandbox local; LIVE en PROD pendiente cfg-paypal-prod)" |
+
 **Entornos:**
 - 🟢 Local: `http://localhost:5173` (frontend Vite) + `http://tarotestrellas.test` (backend WAMP)
 - 🔵 PROD: `https://tarotestrellas.com`

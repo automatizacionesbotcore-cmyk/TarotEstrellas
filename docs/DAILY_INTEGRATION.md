@@ -1,5 +1,15 @@
 # Daily.co Integration
 
+## ⚠️ Nota de actualización (2026-05-13)
+
+| Aspecto | Documento original | Estado real |
+|---|---|---|
+| **Modo** | Mock (sin cuenta Daily.co) | **Mock todavía activo en PROD** — pendiente activar producción real |
+| **Webhooks PROD** | URL `https://tarotestrellas.com/api/webhooks/daily` | Sigue válido cuando se active |
+| **Job limpieza** | `LimpiarGrabacionesExpiradasJob` cada día 03:00 | Definido pero requiere cron PROD activo (cfg-06 pendiente) |
+
+---
+
 ## Estado actual
 Toda la integración está implementada en **modo mock**: el código funciona end-to-end sin necesidad de cuenta Daily.co. Para activar producción solo hay que llenar variables de entorno.
 

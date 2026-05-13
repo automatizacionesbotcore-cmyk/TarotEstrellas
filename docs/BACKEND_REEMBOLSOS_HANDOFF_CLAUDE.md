@@ -4,6 +4,19 @@ Fecha: 2026-04-19
 Proyecto: TarotEstrellas
 Stack backend: Laravel + Sanctum + Queue Jobs + Scheduler + Stripe API
 
+## ⚠️ Nota de actualización (2026-05-13)
+
+Documento conservado como referencia técnica del módulo Stripe original. Cambios mayores desde abril:
+
+- **Stripe → PayPal**: el motor de cobro se cambió a PayPal. Los reembolsos automáticos contra Stripe siguen en el código pero ya no aplican a transacciones nuevas. Pendiente: implementar `ProcesarReembolsoPaypalJob` análogo, llamando a la API `/v2/payments/captures/{id}/refund` de PayPal.
+- **Frontend admin reembolsos** (`AdminReembolsosPage`, `AdminReembolsoDetallePage`): UI mantenida y mejorada en sprints siguientes (responsive, filtros).
+- **Scheduler cada 5 min**: requiere cron en PROD (tarea `cfg-06` pendiente).
+- **Tests**: la suite Stripe sigue verde. Añadir cobertura PayPal cuando se implemente.
+
+Toda la arquitectura de jobs, metadata, timeline y endpoints admin descrita abajo sigue siendo el modelo a seguir para PayPal.
+
+---
+
 ## 1) Objetivo del modulo
 
 Este modulo implementa el ciclo completo de reembolsos:
