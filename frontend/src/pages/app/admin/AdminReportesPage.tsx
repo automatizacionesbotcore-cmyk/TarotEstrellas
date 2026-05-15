@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { api } from '../../../lib/api';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type PagoRow = {
@@ -79,6 +80,13 @@ function TabIngresos() {
     staleTime: 60_000,
   });
   const report = data?.data;
+  const pagosColumns: Column<PagoRow>[] = [
+    { key: 'pagado_en', label: 'Fecha', render: (p) => fmtDate(p.pagado_en) },
+    { key: 'tipo', label: 'Tipo', render: (p) => TIPO_LABELS[p.tipo] ?? p.tipo },
+    { key: 'canal', label: 'Canal', render: (p) => <span style={{ textTransform: 'capitalize' }}>{p.canal}</span> },
+    { key: 'servicio', label: 'Servicio', render: (p) => p.servicio ?? '—' },
+    { key: 'monto_centavos', label: 'Monto', render: (p) => <strong style={{ color: 'var(--accent)' }}>{fmtMoney(p.monto_centavos, p.moneda)}</strong> },
+  ];
 
   return (
     <>
@@ -105,22 +113,16 @@ function TabIngresos() {
             {report.pagos.length === 0 ? (
               <p className="text-muted">No hay pagos en este período.</p>
             ) : (
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Fecha</th><th>Tipo</th><th>Canal</th><th>Servicio</th><th>Monto</th></tr></thead>
-                  <tbody>
-                    {report.pagos.map((p) => (
-                      <tr key={p.uuid}>
-                        <td>{fmtDate(p.pagado_en)}</td>
-                        <td>{TIPO_LABELS[p.tipo] ?? p.tipo}</td>
-                        <td style={{ textTransform: 'capitalize' }}>{p.canal}</td>
-                        <td>{p.servicio ?? '—'}</td>
-                        <td><strong style={{ color: 'var(--accent)' }}>{fmtMoney(p.monto_centavos, p.moneda)}</strong></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={pagosColumns}
+                rows={report.pagos}
+                rowKey={(p) => p.uuid}
+                searchable
+                searchPlaceholder="Buscar pago"
+                getSearchText={(p) => `${p.tipo} ${p.canal} ${p.servicio ?? ''} ${p.moneda}`}
+                pageSize={10}
+                pageSizeOptions={[10, 25, 50]}
+              />
             )}
           </section>
         </>
@@ -142,6 +144,10 @@ function TabConsultas() {
     staleTime: 60_000,
   });
   const r = data?.data;
+  const breakdownColumns: Column<[string, number]>[] = [
+    { key: 'label', label: 'Categoría', render: ([label]) => label },
+    { key: 'cantidad', label: 'Cantidad', render: ([, count]) => count },
+  ];
 
   return (
     <>
@@ -170,29 +176,25 @@ function TabConsultas() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por estado</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Estado</th><th>Cantidad</th></tr></thead>
-                  <tbody>
-                    {Object.entries(r.por_estado).map(([est, cnt]) => (
-                      <tr key={est}><td>{est}</td><td>{cnt}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={breakdownColumns}
+                rows={Object.entries(r.por_estado)}
+                rowKey={([label]) => label}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por tipo de consulta</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
-                  <tbody>
-                    {Object.entries(r.por_tipo).map(([tipo, cnt]) => (
-                      <tr key={tipo}><td>{tipo}</td><td>{cnt}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={breakdownColumns}
+                rows={Object.entries(r.por_tipo)}
+                rowKey={([label]) => label}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
           </div>
         </>
@@ -214,6 +216,30 @@ function TabClientes() {
     staleTime: 60_000,
   });
   const r = data?.data;
+  const topIngresosColumns: Column<TopCliente>[] = [
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (c) => (
+        <span>
+          {c.name}<br /><small style={{ opacity: 0.6 }}>{c.email}</small>
+        </span>
+      ),
+    },
+    { key: 'total', label: 'Total', render: (c) => c.total_centavos != null ? fmtMoney(c.total_centavos, c.moneda ?? 'CLP') : '—' },
+  ];
+  const topConsultasColumns: Column<TopCliente>[] = [
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (c) => (
+        <span>
+          {c.name}<br /><small style={{ opacity: 0.6 }}>{c.email}</small>
+        </span>
+      ),
+    },
+    { key: 'total_consultas', label: 'Consultas' },
+  ];
 
   return (
     <>
@@ -232,35 +258,25 @@ function TabClientes() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Top 10 por ingresos</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Cliente</th><th>Total</th></tr></thead>
-                  <tbody>
-                    {r.top_ingresos.map((c) => (
-                      <tr key={c.id}>
-                        <td>{c.name}<br /><small style={{ opacity: 0.6 }}>{c.email}</small></td>
-                        <td>{c.total_centavos != null ? fmtMoney(c.total_centavos, c.moneda ?? 'CLP') : '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={topIngresosColumns}
+                rows={r.top_ingresos}
+                rowKey={(c) => c.id}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Top 10 por consultas</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Cliente</th><th>Consultas</th></tr></thead>
-                  <tbody>
-                    {r.top_consultas.map((c) => (
-                      <tr key={c.id}>
-                        <td>{c.name}<br /><small style={{ opacity: 0.6 }}>{c.email}</small></td>
-                        <td>{c.total_consultas}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={topConsultasColumns}
+                rows={r.top_consultas}
+                rowKey={(c) => c.id}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
           </div>
         </>
@@ -282,6 +298,16 @@ function TabFiscal() {
     staleTime: 60_000,
   });
   const r = data?.data;
+  const tipoColumns: Column<FiscalData['desglose_por_tipo'][number]>[] = [
+    { key: 'tipo', label: 'Servicio' },
+    { key: 'cantidad_pagos', label: 'Pagos' },
+    { key: 'total_centavos', label: 'Total', render: (d) => fmtMoney(d.total_centavos, d.moneda) },
+  ];
+  const mesColumns: Column<FiscalData['desglose_por_mes'][number]>[] = [
+    { key: 'mes', label: 'Mes' },
+    { key: 'cantidad_pagos', label: 'Pagos' },
+    { key: 'total_centavos', label: 'Total', render: (d) => fmtMoney(d.total_centavos, 'CLP') },
+  ];
 
   return (
     <>
@@ -308,37 +334,25 @@ function TabFiscal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por tipo de servicio</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Servicio</th><th>Pagos</th><th>Total</th></tr></thead>
-                  <tbody>
-                    {r.desglose_por_tipo.map((d) => (
-                      <tr key={d.tipo}>
-                        <td>{d.tipo}</td>
-                        <td>{d.cantidad_pagos}</td>
-                        <td>{fmtMoney(d.total_centavos, d.moneda)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={tipoColumns}
+                rows={r.desglose_por_tipo}
+                rowKey={(d) => d.tipo}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
             <section>
               <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por mes</h3>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Mes</th><th>Pagos</th><th>Total</th></tr></thead>
-                  <tbody>
-                    {r.desglose_por_mes.map((d) => (
-                      <tr key={d.mes}>
-                        <td>{d.mes}</td>
-                        <td>{d.cantidad_pagos}</td>
-                        <td>{fmtMoney(d.total_centavos, 'CLP')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={mesColumns}
+                rows={r.desglose_por_mes}
+                rowKey={(d) => d.mes}
+                searchable={false}
+                pageSizeOptions={[]}
+                showFooter={false}
+              />
             </section>
           </div>
         </>

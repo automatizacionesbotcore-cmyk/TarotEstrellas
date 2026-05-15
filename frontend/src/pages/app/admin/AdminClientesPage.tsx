@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listClientes, type ClienteListaItem, type ClienteListaParams } from '../../../lib/clientesAdminApi';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 const FRECUENCIAS: Array<{ value: ClienteListaParams['frecuencia']; label: string }> = [
   { value: undefined, label: 'Todas las frecuencias' },
@@ -43,6 +44,48 @@ export function AdminClientesPage() {
     });
     return acc;
   }, [items]);
+
+  const columns: Column<ClienteListaItem>[] = [
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (c) => (
+        <>
+          <strong>{c.profile?.nombre || c.name}{c.profile?.apellido ? ` ${c.profile.apellido}` : ''}</strong>
+          <div style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{c.email}</div>
+        </>
+      ),
+    },
+    { key: 'pais', label: 'País', render: (c) => c.profile?.pais_residencia || '—' },
+    {
+      key: 'consultas',
+      label: 'Consultas',
+      render: (c) => (
+        <>
+          <strong>{c.stats.total_completadas}</strong>
+          {c.stats.total_no_show > 0 && <span style={{ color: '#d68910' }}> · {c.stats.total_no_show} no-show</span>}
+        </>
+      ),
+    },
+    {
+      key: 'ingresos',
+      label: 'Ingresos',
+      render: (c) => Object.entries(c.stats.ingresos_centavos || {})
+        .map(([m, ctvs]) => `${m === 'CLP' ? '$' : ''}${formatMoney(ctvs, m)} ${m}`)
+        .join(' • ') || '—',
+    },
+    {
+      key: 'ultima',
+      label: 'Última consulta',
+      render: (c) => c.stats.ultima_consulta ? new Date(c.stats.ultima_consulta).toLocaleDateString() : '—',
+    },
+    { key: 'favorito', label: 'Tipo favorito', render: (c) => c.stats.tipo_favorito || '—' },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (c) => <Link className="btn-secondary" to={`/app/admin/clientes/${c.uuid}`}>Ver ficha</Link>,
+    },
+  ];
 
   return (
     <main className="page-content">
@@ -91,73 +134,25 @@ export function AdminClientesPage() {
 
       {error && <p style={{ color: '#c0392b' }}>{error}</p>}
 
-      <section style={{ overflowX: 'auto' }}>
-        <table className="admin-table" style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>País</th>
-              <th>Consultas</th>
-              <th>Ingresos</th>
-              <th>Última consulta</th>
-              <th>Tipo favorito</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</td></tr>
-            )}
-            {!loading && items.length === 0 && (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No hay clientes con esos filtros.</td></tr>
-            )}
-            {items.map((c) => {
-              const ingresos = Object.entries(c.stats.ingresos_centavos || {})
-                .map(([m, ctvs]) => `${m === 'CLP' ? '$' : ''}${formatMoney(ctvs, m)} ${m}`)
-                .join(' • ') || '—';
-              return (
-                <tr key={c.uuid}>
-                  <td>
-                    <strong>{c.profile?.nombre || c.name}{c.profile?.apellido ? ` ${c.profile.apellido}` : ''}</strong>
-                    <div style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{c.email}</div>
-                  </td>
-                  <td>{c.profile?.pais_residencia || '—'}</td>
-                  <td>
-                    <strong>{c.stats.total_completadas}</strong>
-                    {c.stats.total_no_show > 0 && <span style={{ color: '#d68910' }}> · {c.stats.total_no_show} no-show</span>}
-                  </td>
-                  <td>{ingresos}</td>
-                  <td>{c.stats.ultima_consulta ? new Date(c.stats.ultima_consulta).toLocaleDateString() : '—'}</td>
-                  <td>{c.stats.tipo_favorito || '—'}</td>
-                  <td><Link className="btn-secondary" to={`/app/admin/clientes/${c.uuid}`}>Ver ficha</Link></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="No hay clientes con esos filtros."
+        rowKey={(c) => c.uuid}
+        searchable={false}
+        pagination={meta ? {
+          currentPage: meta.current_page,
+          lastPage: meta.last_page,
+          total: meta.total,
+          onPageChange: (next) => setFilters((f) => ({ ...f, page: next })),
+        } : undefined}
+      />
 
       {meta && (
-        <footer style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: 'var(--text-muted)' }}>
-            {meta.total} clientes · ingresos visibles: {Object.entries(totalIngresos).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
-          </span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={meta.current_page <= 1}
-              onClick={() => setFilters((f) => ({ ...f, page: Math.max(1, (f.page || 1) - 1) }))}
-            >Anterior</button>
-            <span>Página {meta.current_page} / {meta.last_page}</span>
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={meta.current_page >= meta.last_page}
-              onClick={() => setFilters((f) => ({ ...f, page: (f.page || 1) + 1 }))}
-            >Siguiente</button>
-          </div>
-        </footer>
+        <p style={{ color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+          Ingresos visibles: {Object.entries(totalIngresos).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
+        </p>
       )}
     </main>
   );

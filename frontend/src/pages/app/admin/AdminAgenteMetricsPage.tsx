@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAgenteMetrics } from '../../../lib/agenteMetricsApi';
+import {
+  getAgenteMetrics,
+  type AgenteMetricsPorModelo,
+  type AgenteMetricsSerie,
+  type AgenteMetricsTopUsuario,
+} from '../../../lib/agenteMetricsApi';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminAgenteMetricsPage() {
   const { data, isLoading, isError, error } = useQuery({
@@ -17,6 +23,31 @@ export function AdminAgenteMetricsPage() {
 
   const fmtUsd = (v: number) => `$${v.toFixed(4)}`;
   const fmtN   = (v: number) => v.toLocaleString();
+
+  const modelColumns: Column<AgenteMetricsPorModelo>[] = [
+    { key: 'modelo', label: 'Modelo', render: (m) => <code>{m.modelo ?? '—'}</code> },
+    { key: 'conv', label: 'Conv.', render: (m) => fmtN(m.conv) },
+    { key: 'tokens_in', label: 'Tokens in', render: (m) => fmtN(m.tokens_in) },
+    { key: 'tokens_out', label: 'Tokens out', render: (m) => fmtN(m.tokens_out) },
+    { key: 'precio_in', label: '$/1M in', render: (m) => `$${m.precio.in.toFixed(2)}` },
+    { key: 'precio_out', label: '$/1M out', render: (m) => `$${m.precio.out.toFixed(2)}` },
+    { key: 'costo_usd', label: 'Costo USD', render: (m) => <strong>{fmtUsd(m.costo_usd)}</strong> },
+    { key: 'errores', label: 'Errores' },
+  ];
+
+  const userColumns: Column<AgenteMetricsTopUsuario>[] = [
+    { key: 'cliente_id', label: 'Cliente ID' },
+    { key: 'conversaciones', label: 'Conv.', render: (u) => fmtN(u.conversaciones) },
+    { key: 'tokens_in', label: 'Tokens in', render: (u) => fmtN(u.tokens_in) },
+    { key: 'tokens_out', label: 'Tokens out', render: (u) => fmtN(u.tokens_out) },
+    { key: 'costo_usd', label: 'Costo USD', render: (u) => <strong>{fmtUsd(u.costo_usd)}</strong> },
+  ];
+
+  const dailyColumns: Column<AgenteMetricsSerie>[] = [
+    { key: 'dia', label: 'Día' },
+    { key: 'conversaciones', label: 'Conv.', render: (s) => fmtN(s.conversaciones) },
+    { key: 'costo_usd', label: 'Costo USD', render: (s) => fmtUsd(s.costo_usd) },
+  ];
 
   return (
     <main className="page-content">
@@ -38,63 +69,44 @@ export function AdminAgenteMetricsPage() {
 
       <section style={{ marginBottom: '2rem' }}>
         <h2>Costo por modelo</h2>
-        <table className="table">
-          <thead>
-            <tr><th>Modelo</th><th>Conv.</th><th>Tokens in</th><th>Tokens out</th><th>$/1M in</th><th>$/1M out</th><th>Costo USD</th><th>Errores</th></tr>
-          </thead>
-          <tbody>
-            {data.por_modelo.map((m, i) => (
-              <tr key={i}>
-                <td><code>{m.modelo ?? '—'}</code></td>
-                <td>{fmtN(m.conv)}</td>
-                <td>{fmtN(m.tokens_in)}</td>
-                <td>{fmtN(m.tokens_out)}</td>
-                <td>${m.precio.in.toFixed(2)}</td>
-                <td>${m.precio.out.toFixed(2)}</td>
-                <td><strong>{fmtUsd(m.costo_usd)}</strong></td>
-                <td>{m.errores}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AdminTable
+          columns={modelColumns}
+          rows={data.por_modelo}
+          rowKey={(m) => m.modelo ?? 'sin-modelo'}
+          searchable
+          searchPlaceholder="Buscar modelo"
+          getSearchText={(m) => `${m.modelo ?? ''} ${m.errores}`}
+          pageSize={5}
+          pageSizeOptions={[5, 10, 25]}
+        />
       </section>
 
       <section style={{ marginBottom: '2rem' }}>
         <h2>Top 10 usuarios por costo</h2>
-        <table className="table">
-          <thead>
-            <tr><th>Cliente ID</th><th>Conv.</th><th>Tokens in</th><th>Tokens out</th><th>Costo USD</th></tr>
-          </thead>
-          <tbody>
-            {data.top_usuarios.map((u) => (
-              <tr key={u.cliente_id}>
-                <td>{u.cliente_id}</td>
-                <td>{fmtN(u.conversaciones)}</td>
-                <td>{fmtN(u.tokens_in)}</td>
-                <td>{fmtN(u.tokens_out)}</td>
-                <td><strong>{fmtUsd(u.costo_usd)}</strong></td>
-              </tr>
-            ))}
-            {data.top_usuarios.length === 0 && <tr><td colSpan={5}>Sin datos en el periodo.</td></tr>}
-          </tbody>
-        </table>
+        <AdminTable
+          columns={userColumns}
+          rows={data.top_usuarios}
+          rowKey={(u) => u.cliente_id}
+          searchable
+          searchPlaceholder="Buscar cliente"
+          getSearchText={(u) => `${u.cliente_id}`}
+          emptyLabel="Sin datos en el periodo."
+          pageSize={5}
+          pageSizeOptions={[5, 10, 25]}
+        />
       </section>
 
       <section>
         <h2>Serie diaria</h2>
-        <table className="table">
-          <thead><tr><th>Día</th><th>Conv.</th><th>Costo USD</th></tr></thead>
-          <tbody>
-            {data.serie_diaria.map((s) => (
-              <tr key={s.dia}>
-                <td>{s.dia}</td>
-                <td>{fmtN(s.conversaciones)}</td>
-                <td>{fmtUsd(s.costo_usd)}</td>
-              </tr>
-            ))}
-            {data.serie_diaria.length === 0 && <tr><td colSpan={3}>Sin datos.</td></tr>}
-          </tbody>
-        </table>
+        <AdminTable
+          columns={dailyColumns}
+          rows={data.serie_diaria}
+          rowKey={(s) => s.dia}
+          searchable={false}
+          emptyLabel="Sin datos."
+          pageSize={10}
+          pageSizeOptions={[10, 25, 50]}
+        />
       </section>
     </main>
   );

@@ -7,6 +7,7 @@ import {
   type UnifiedAuditLog,
 } from '../../../lib/auditAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 const ACTION_BADGE: Record<string, string> = {
   login: 'badge-green',
@@ -110,6 +111,54 @@ export function AdminAuditPage() {
     return AUDIT_TYPES[type] ?? type.split('\\').pop() ?? type;
   };
 
+  const columns: Column<UnifiedAuditLog>[] = [
+    {
+      key: 'created_at',
+      label: 'Fecha',
+      render: (a) => new Date(a.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }),
+    },
+    {
+      key: 'usuario',
+      label: 'Usuario',
+      render: (a) => (
+        <div style={{ maxWidth: '18rem' }}>
+          <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
+          {a.user_email && a.user?.name && (
+            <div style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user_email}</div>
+          )}
+        </div>
+      ),
+    },
+    { key: 'user_role', label: 'Rol', render: (a) => a.user_role ?? '—' },
+    { key: 'action', label: 'Acción', render: (a) => <ActionBadge action={a.action} /> },
+    {
+      key: 'recurso',
+      label: 'Recurso',
+      render: (a) => a.auditable_type ? (
+        <span>
+          <span style={{ fontWeight: 500 }}>{shortType(a.auditable_type)}</span>
+          {a.auditable_id && <span style={{ color: 'var(--text-muted)' }}> #{a.auditable_id}</span>}
+        </span>
+      ) : (
+        <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '18rem', display: 'block' }} title={a.url ?? ''}>
+          {a.method && <span style={{ fontFamily: 'monospace', marginRight: '0.25rem' }}>{a.method}</span>}
+          {a.route ?? a.url ?? '—'}
+        </span>
+      ),
+    },
+    { key: 'ip', label: 'IP', render: (a) => <span style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{a.ip ?? '—'}</span> },
+    {
+      key: 'status_code',
+      label: 'Estado HTTP',
+      render: (a) => a.status_code ? (
+        <span style={{ color: a.status_code >= 400 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
+          {a.status_code}
+        </span>
+      ) : '—',
+    },
+    { key: 'changes', label: 'Cambios', render: (a) => <ChangesDetail changes={a.changes} /> },
+  ];
+
   return (
     <main className="page-content">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -155,73 +204,21 @@ export function AdminAuditPage() {
         </div>
       </form>
 
-      {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="admin-table" style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Acción</th>
-              <th>Recurso</th>
-              <th>IP</th>
-              <th>Estado HTTP</th>
-              <th>Cambios</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Cargando…</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Sin registros para los filtros seleccionados.</td></tr>
-            ) : items.map((a) => (
-              <tr key={a.id}>
-                <td style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  {new Date(a.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}
-                </td>
-                <td style={{ maxWidth: '160px', fontSize: '0.8rem' }}>
-                  <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
-                  {a.user_email && a.user?.name && (
-                    <div style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user_email}</div>
-                  )}
-                </td>
-                <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{a.user_role ?? '—'}</td>
-                <td><ActionBadge action={a.action} /></td>
-                <td style={{ fontSize: '0.8rem' }}>
-                  {a.auditable_type ? (
-                    <span>
-                      <span style={{ fontWeight: 500 }}>{shortType(a.auditable_type)}</span>
-                      {a.auditable_id && <span style={{ color: 'var(--text-muted)' }}> #{a.auditable_id}</span>}
-                    </span>
-                  ) : (
-                    <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', display: 'block' }} title={a.url ?? ''}>
-                      {a.method && <span style={{ fontFamily: 'monospace', marginRight: '0.25rem' }}>{a.method}</span>}
-                      {a.route ?? a.url ?? '—'}
-                    </span>
-                  )}
-                </td>
-                <td style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{a.ip ?? '—'}</td>
-                <td style={{ fontSize: '0.8rem' }}>
-                  {a.status_code ? (
-                    <span style={{ color: a.status_code >= 400 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
-                      {a.status_code}
-                    </span>
-                  ) : '—'}
-                </td>
-                <td><ChangesDetail changes={a.changes} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-        <button className="btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Anterior</button>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Página {page} de {lastPage}</span>
-        <button className="btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={page >= lastPage} onClick={() => setPage(page + 1)}>Siguiente ›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin registros para los filtros seleccionados."
+        rowKey={(a) => a.id}
+        searchable={false}
+        pageSizeOptions={[]}
+        pagination={{
+          currentPage: page,
+          lastPage,
+          total,
+          onPageChange: setPage,
+        }}
+      />
     </main>
   );
 }

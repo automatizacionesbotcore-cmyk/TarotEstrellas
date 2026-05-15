@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { getApiUsage, triggerApiCheck, updateApiLimits, type ApiUsageRow } from '../../../lib/apiUsageApi';
+import { useEffect, useState } from 'react';
+import { getApiUsage, triggerApiCheck, updateApiLimits, type ApiUsageAlert, type ApiUsageRow } from '../../../lib/apiUsageApi';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 const ESTADO_COLOR: Record<ApiUsageRow['estado'], string> = {
   ok: '#16a34a',
@@ -49,6 +50,12 @@ export function AdminApiUsagePage() {
   const [draftLimits, setDraftLimits] = useState<Record<string, { limite: string; warn_pct: string }>>({});
   const [emails, setEmails] = useState<string>('');
 
+  useEffect(() => {
+    if (data) {
+      setEmails(data.emails_extra ?? '');
+    }
+  }, [data]);
+
   const saveMut = useMutation({
     mutationFn: updateApiLimits,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-api-usage'] }),
@@ -79,14 +86,78 @@ export function AdminApiUsagePage() {
         };
       }
     }
-    if (emails) payload.alert_emails = emails;
+    payload.alert_emails = emails;
     saveMut.mutate(payload);
   };
 
+  const limitColumns: Column<ApiUsageRow>[] = [
+    {
+      key: 'provider',
+      label: 'Proveedor',
+      render: (r) => <span style={{ textTransform: 'capitalize' }}>{r.provider} ({r.unidad})</span>,
+    },
+    {
+      key: 'limite',
+      label: 'Límite mensual',
+      render: (r) => {
+        const d = getDraft(r.provider);
+        return (
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={d.limite}
+            onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), limite: e.target.value } }))}
+            className="form-input admin-inline-input"
+          />
+        );
+      },
+    },
+    {
+      key: 'warn_pct',
+      label: 'Umbral aviso (%)',
+      render: (r) => {
+        const d = getDraft(r.provider);
+        return (
+          <input
+            type="number"
+            step="1"
+            min="1"
+            max="100"
+            value={d.warn_pct}
+            onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), warn_pct: e.target.value } }))}
+            className="form-input admin-inline-input admin-inline-input--small"
+          />
+        );
+      },
+    },
+  ];
+
+  const alertColumns: Column<ApiUsageAlert>[] = [
+    { key: 'created_at', label: 'Fecha', render: (a) => new Date(a.created_at).toLocaleString() },
+    { key: 'provider', label: 'Proveedor', render: (a) => <span style={{ textTransform: 'capitalize' }}>{a.provider}</span> },
+    { key: 'period', label: 'Periodo' },
+    {
+      key: 'nivel',
+      label: 'Nivel',
+      render: (a) => (
+        <span style={{ color: a.nivel === 'exceeded' ? '#dc2626' : '#d97706', fontWeight: 600 }}>
+          {a.nivel}
+        </span>
+      ),
+    },
+    { key: 'porcentaje', label: '%', render: (a) => `${Number(a.porcentaje).toFixed(1)}%` },
+    { key: 'uso', label: 'Uso / Límite', render: (a) => `${Number(a.usado ?? a.valor_actual ?? 0).toFixed(2)} / ${a.limite}` },
+  ];
+
   return (
-    <div style={{ padding: 24, maxWidth: 1100 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ margin: 0, color: 'var(--text)' }}>APIs externas — consumo {data.periodo}</h2>
+    <main className="page-content">
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Consumo externo</p>
+          <h1 style={{ margin: 0, color: 'var(--text)' }}>APIs externas</h1>
+          <p className="text-muted" style={{ margin: '0.25rem 0 0' }}>Periodo: {data.periodo}</p>
+        </div>
         <button
           onClick={() => checkMut.mutate()}
           disabled={checkMut.isPending}
@@ -94,50 +165,21 @@ export function AdminApiUsagePage() {
         >
           {checkMut.isPending ? 'Verificando…' : 'Verificar ahora'}
         </button>
-      </div>
+      </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {data.rows.map((r) => <ProviderCard key={r.provider} row={r} />)}
       </div>
 
       <h3 style={{ marginTop: 32, color: 'var(--text)' }}>Límites y umbrales</h3>
-      <table className="admin-table" style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            <th style={{ padding: 8, textAlign: 'left' }}>Proveedor</th>
-            <th style={{ padding: 8, textAlign: 'left' }}>Límite mensual</th>
-            <th style={{ padding: 8, textAlign: 'left' }}>Umbral aviso (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.rows.map((r) => {
-            const d = getDraft(r.provider);
-            return (
-              <tr key={r.provider}>
-                <td style={{ padding: 8, textTransform: 'capitalize' }}>{r.provider} ({r.unidad})</td>
-                <td style={{ padding: 8 }}>
-                  <input
-                    type="number" step="0.01" min="0"
-                    value={d.limite}
-                    onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), limite: e.target.value } }))}
-                    className="form-input"
-                    style={{ width: 120 }}
-                  />
-                </td>
-                <td style={{ padding: 8 }}>
-                  <input
-                    type="number" step="1" min="1" max="100"
-                    value={d.warn_pct}
-                    onChange={(e) => setDraftLimits((s) => ({ ...s, [r.provider]: { ...getDraft(r.provider), warn_pct: e.target.value } }))}
-                    className="form-input"
-                    style={{ width: 80 }}
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <AdminTable
+        columns={limitColumns}
+        rows={data.rows}
+        rowKey={(r) => r.provider}
+        searchable={false}
+        pageSizeOptions={[]}
+        showFooter={false}
+      />
 
       <h3 style={{ marginTop: 24, color: 'var(--text)' }}>Emails extra para alertas</h3>
       <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 8px' }}>
@@ -145,7 +187,7 @@ export function AdminApiUsagePage() {
       </p>
       <input
         type="text"
-        defaultValue={data.emails_extra ?? ''}
+        value={emails}
         onChange={(e) => setEmails(e.target.value)}
         placeholder="email1@dominio.com, email2@dominio.com"
         className="form-input"
@@ -167,33 +209,17 @@ export function AdminApiUsagePage() {
       {data.alertas_recientes.length === 0 ? (
         <p style={{ color: 'var(--text-muted)' }}>Sin alertas registradas.</p>
       ) : (
-        <table className="admin-table" style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th style={{ padding: 8, textAlign: 'left' }}>Fecha</th>
-              <th style={{ padding: 8, textAlign: 'left' }}>Proveedor</th>
-              <th style={{ padding: 8, textAlign: 'left' }}>Periodo</th>
-              <th style={{ padding: 8, textAlign: 'left' }}>Nivel</th>
-              <th style={{ padding: 8, textAlign: 'left' }}>%</th>
-              <th style={{ padding: 8, textAlign: 'left' }}>Uso / Límite</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.alertas_recientes.map((a) => (
-              <tr key={a.id}>
-                <td style={{ padding: 8 }}>{new Date(a.created_at).toLocaleString()}</td>
-                <td style={{ padding: 8, textTransform: 'capitalize' }}>{a.provider}</td>
-                <td style={{ padding: 8 }}>{a.period}</td>
-                <td style={{ padding: 8, color: a.nivel === 'exceeded' ? '#dc2626' : '#d97706', fontWeight: 600 }}>
-                  {a.nivel}
-                </td>
-                <td style={{ padding: 8 }}>{Number(a.porcentaje).toFixed(1)}%</td>
-                <td style={{ padding: 8 }}>{Number(a.usado).toFixed(2)} / {a.limite}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AdminTable
+          columns={alertColumns}
+          rows={data.alertas_recientes}
+          rowKey={(a) => a.id}
+          searchable
+          searchPlaceholder="Buscar alerta"
+          getSearchText={(a) => `${a.provider} ${a.period} ${a.nivel}`}
+          pageSize={5}
+          pageSizeOptions={[5, 10, 25]}
+        />
       )}
-    </div>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listNotificaciones, getNotificacionMetricas, type Notificacion, type NotificacionMetricas } from '../../../lib/notificacionesAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminNotificacionesPage() {
   const [items, setItems] = useState<Notificacion[]>([]);
@@ -43,6 +44,30 @@ export function AdminNotificacionesPage() {
 
   const porCanal = metricas?.porCanal ?? {};
 
+  const columns: Column<Notificacion>[] = [
+    {
+      key: 'fecha',
+      label: 'Fecha',
+      render: (n) => n.enviado_en
+        ? new Date(n.enviado_en).toLocaleString()
+        : (n.created_at ? new Date(n.created_at).toLocaleString() : '—'),
+    },
+    { key: 'canal', label: 'Canal', render: (n) => <span className="badge">{n.canal}</span> },
+    { key: 'destinatario', label: 'Destinatario' },
+    { key: 'tipo', label: 'Tipo', render: (n) => <code>{n.tipo || n.plantilla_clave || '—'}</code> },
+    { key: 'asunto', label: 'Asunto', render: (n) => n.asunto || '—' },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (n) => (
+        <span className={`badge ${n.estado === 'enviado' || n.estado === 'leido' ? 'badge-success' : (n.estado === 'error' || n.estado === 'rebotado') ? 'badge-danger' : 'badge-muted'}`}>
+          {n.estado}
+        </span>
+      ),
+    },
+    { key: 'error', label: 'Error', render: (n) => <span style={{ color: '#dc2626' }}>{n.error || '—'}</span> },
+  ];
+
   return (
     <main className="page-content">
       <h1>Notificaciones enviadas</h1>
@@ -80,33 +105,19 @@ export function AdminNotificacionesPage() {
         <button type="submit" className="btn-primary">Filtrar</button>
       </form>
 
-      {loading ? <p style={{ color: 'var(--text-muted)' }}>Cargando…</p> : (
-        <table className="admin-table" style={{ width: '100%' }}>
-          <thead><tr><th>Fecha</th><th>Canal</th><th>Destinatario</th><th>Tipo</th><th>Asunto</th><th>Estado</th><th>Error</th></tr></thead>
-          <tbody>
-            {items.map((n) => (
-              <tr key={n.id}>
-                <td style={{ fontSize: '0.85em' }}>{n.enviado_en ? new Date(n.enviado_en).toLocaleString() : (n.created_at ? new Date(n.created_at).toLocaleString() : '—')}</td>
-                <td><span className="badge">{n.canal}</span></td>
-                <td>{n.destinatario}</td>
-                <td><code>{n.tipo || n.plantilla_clave || '—'}</code></td>
-                <td>{n.asunto || '—'}</td>
-                <td>
-                  <span className={`badge ${n.estado === 'enviado' || n.estado === 'leido' ? 'badge-success' : (n.estado === 'error' || n.estado === 'rebotado') ? 'badge-danger' : 'badge-muted'}`}>{n.estado}</span>
-                </td>
-                <td style={{ fontSize: '0.85em', color: '#dc2626' }}>{n.error || ''}</td>
-              </tr>
-            ))}
-            {!items.length && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Sin notificaciones.</td></tr>}
-          </tbody>
-        </table>
-      )}
-
-      <nav style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>
-        <span style={{ color: 'var(--text-muted)', padding: '0.25rem 0.5rem' }}>Página {page} de {lastPage}</span>
-        <button className="btn-secondary" disabled={page >= lastPage} onClick={() => setPage(page + 1)}>›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin notificaciones."
+        rowKey={(n) => n.id}
+        searchable={false}
+        pagination={{
+          currentPage: page,
+          lastPage,
+          onPageChange: setPage,
+        }}
+      />
     </main>
   );
 }

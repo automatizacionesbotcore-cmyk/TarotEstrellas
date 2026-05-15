@@ -11,6 +11,7 @@ import {
 import { AgenteChat } from '../../../components/agente/AgenteChat';
 import { toast } from '../../../stores/toastStore';
 import { useAuthStore } from '../../../stores/authStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -231,26 +232,33 @@ function TabNatal({ data }: { data: ClienteDetalle }) {
 }
 
 function TabPagos({ data }: { data: ClienteDetalle }) {
+  const columns: Column<ClienteDetalle['citas'][number]>[] = [
+    { key: 'codigo_referencia', label: 'Cita', render: (c) => c.codigo_referencia },
+    { key: 'inicio_utc', label: 'Fecha', render: (c) => c.inicio_utc ? new Date(c.inicio_utc).toLocaleDateString() : '—' },
+    { key: 'estado', label: 'Estado' },
+    {
+      key: 'monto',
+      label: 'Monto',
+      render: (c) => c.precio_final_centavos != null ? `${formatMoney(c.precio_final_centavos, c.moneda || 'CLP')} ${c.moneda}` : '—',
+    },
+  ];
+
   return (
     <div>
       <p className="text-muted" style={{ marginBottom: '1rem' }}>
         Resumen de ingresos: {Object.entries(data.stats.ingresos_centavos || {}).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
       </p>
-      <table className="admin-table" style={{ width: '100%' }}>
-        <thead>
-          <tr><th>Cita</th><th>Fecha</th><th>Estado</th><th style={{ textAlign: 'right' }}>Monto</th></tr>
-        </thead>
-        <tbody>
-          {data.citas.map((c) => (
-            <tr key={c.uuid}>
-              <td>{c.codigo_referencia}</td>
-              <td>{c.inicio_utc ? new Date(c.inicio_utc).toLocaleDateString() : '—'}</td>
-              <td>{c.estado}</td>
-              <td style={{ textAlign: 'right' }}>{c.precio_final_centavos != null ? `${formatMoney(c.precio_final_centavos, c.moneda || 'CLP')} ${c.moneda}` : '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <AdminTable
+        columns={columns}
+        rows={data.citas}
+        rowKey={(c) => c.uuid}
+        searchable
+        searchPlaceholder="Buscar pago"
+        getSearchText={(c) => `${c.codigo_referencia ?? ''} ${c.estado} ${c.moneda ?? ''}`}
+        pageSize={5}
+        pageSizeOptions={[5, 10, 25]}
+        emptyLabel="Sin pagos registrados."
+      />
     </div>
   );
 }

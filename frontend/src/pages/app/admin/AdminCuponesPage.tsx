@@ -9,6 +9,7 @@ import {
   type CuponPayload,
 } from '../../../lib/cuponesAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminCuponesPage() {
   const [items, setItems] = useState<Cupon[]>([]);
@@ -77,6 +78,47 @@ export function AdminCuponesPage() {
     }
   };
 
+  const columns: Column<Cupon>[] = [
+    { key: 'codigo', label: 'Código', render: (c) => <strong>{c.codigo}</strong> },
+    { key: 'descripcion', label: 'Descripción', render: (c) => c.descripcion || '—' },
+    {
+      key: 'descuento',
+      label: 'Descuento',
+      render: (c) => c.tipo_descuento === 'porcentaje' ? `${c.valor_descuento}%` : `${c.valor_descuento} ${c.moneda || ''}`,
+    },
+    {
+      key: 'vigencia',
+      label: 'Vigencia',
+      render: (c) => (
+        <span style={{ fontSize: '0.85em' }}>
+          {new Date(c.vigente_desde).toLocaleDateString()}
+          {c.vigente_hasta && ` — ${new Date(c.vigente_hasta).toLocaleDateString()}`}
+        </span>
+      ),
+    },
+    { key: 'usos', label: 'Usos', render: (c) => `${c.usos_totales}${c.uso_maximo_total ? ` / ${c.uso_maximo_total}` : ''}` },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (c) => <span className={`badge ${c.activo ? 'badge-success' : 'badge-muted'}`}>{c.activo ? 'Activo' : 'Inactivo'}</span>,
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (c) => (
+        <div className="admin-row-actions">
+          <button type="button" className="btn-secondary" onClick={() => setEditing(c)} disabled={busyCodigos.has(c.codigo)}>Editar</button>
+          <button type="button" className="btn-secondary" onClick={() => onToggle(c)} disabled={busyCodigos.has(c.codigo)}>
+            {busyCodigos.has(c.codigo) ? 'Procesando…' : (c.activo ? 'Desactivar' : 'Activar')}
+          </button>
+          <button type="button" className="btn-danger" onClick={() => onDelete(c)} disabled={busyCodigos.has(c.codigo)}>
+            {busyCodigos.has(c.codigo) ? 'Eliminando…' : 'Eliminar'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="page-content">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -100,54 +142,15 @@ export function AdminCuponesPage() {
         <button type="submit">Filtrar</button>
       </form>
 
-      {loading ? <p>Cargando…</p> : (
-        <table className="data-table" style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Descuento</th>
-              <th>Vigencia</th>
-              <th>Usos</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((c) => (
-              <tr key={c.id}>
-                <td><strong>{c.codigo}</strong></td>
-                <td>{c.descripcion || '—'}</td>
-                <td>
-                  {c.tipo_descuento === 'porcentaje' ? `${c.valor_descuento}%` : `${c.valor_descuento} ${c.moneda || ''}`}
-                </td>
-                <td style={{ fontSize: '0.85em' }}>
-                  {new Date(c.vigente_desde).toLocaleDateString()}
-                  {c.vigente_hasta && ` — ${new Date(c.vigente_hasta).toLocaleDateString()}`}
-                </td>
-                <td>{c.usos_totales}{c.uso_maximo_total ? ` / ${c.uso_maximo_total}` : ''}</td>
-                <td>
-                  <span className={`badge ${c.activo ? 'badge-success' : 'badge-muted'}`}>
-                    {c.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(c)} disabled={busyCodigos.has(c.codigo)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onToggle(c)} disabled={busyCodigos.has(c.codigo)}>{busyCodigos.has(c.codigo) ? 'Procesando…' : (c.activo ? 'Desactivar' : 'Activar')}</button>{' '}
-                  <button type="button" onClick={() => onDelete(c)} disabled={busyCodigos.has(c.codigo)} style={{ color: 'var(--danger)' }}>{busyCodigos.has(c.codigo) ? 'Eliminando…' : 'Eliminar'}</button>
-                </td>
-              </tr>
-            ))}
-            {!items.length && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>Sin cupones.</td></tr>}
-          </tbody>
-        </table>
-      )}
-
-      <nav style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>
-        <span>Página {page} de {lastPage}</span>
-        <button disabled={page >= lastPage} onClick={() => setPage(page + 1)}>›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin cupones."
+        rowKey={(c) => c.id}
+        searchable={false}
+        pagination={{ currentPage: page, lastPage, onPageChange: setPage }}
+      />
 
       {(creating || editing) && (
         <CuponModal
