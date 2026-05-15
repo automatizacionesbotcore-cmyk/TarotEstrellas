@@ -969,8 +969,20 @@ a {
 	margin-top: 1.6rem;
 	padding: 1.4rem 1.6rem;
 	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-	border-radius: 16px;
+	border-radius: 8px;
 	background: color-mix(in srgb, var(--card) 60%, transparent);
+}
+
+.booking-panel--premium {
+	box-shadow: 0 18px 50px color-mix(in srgb, #000 14%, transparent);
+}
+
+.booking-panel-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
 }
 
 .booking-panel h2 {
@@ -1033,7 +1045,7 @@ a {
 
 .wizard-steps li {
 	padding: 0.5rem 0.5rem;
-	border-radius: 10px;
+	border-radius: 8px;
 	border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
 	background: color-mix(in srgb, var(--bg) 76%, transparent);
 	font-size: 0.78rem;
@@ -1060,7 +1072,7 @@ a {
 .booking-summary {
 	border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
 	background: var(--card);
-	border-radius: 14px;
+	border-radius: 8px;
 	padding: 1rem 1.2rem;
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -1089,7 +1101,7 @@ a {
 }
 
 .slot-chip {
-	border-radius: 10px;
+	border-radius: 8px;
 	border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
 	background: color-mix(in srgb, var(--bg) 70%, transparent);
 	color: var(--text);
@@ -1118,7 +1130,7 @@ a {
 .booking-success {
 	border: 1px solid color-mix(in srgb, #4caf6e 40%, transparent);
 	background: color-mix(in srgb, #4caf6e 12%, transparent);
-	border-radius: 14px;
+	border-radius: 8px;
 	padding: 1rem 1.2rem;
 }
 
@@ -1141,7 +1153,7 @@ a {
 	margin-top: 0.8rem;
 	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 	background: var(--card);
-	border-radius: 12px;
+	border-radius: 8px;
 	padding: 0.75rem 1rem;
 	display: flex;
 	align-items: center;
@@ -1668,7 +1680,8 @@ a {
 	.consultas-header,
 	.filters-header,
 	.client-overview-panel,
-	.section-title-row {
+	.section-title-row,
+	.booking-panel-header {
 		align-items: stretch;
 		flex-direction: column;
 	}
@@ -2298,6 +2311,27 @@ p               { text-wrap: pretty; }
 	text-align: center;
 }
 
+.service-detail-page {
+	display: grid;
+	gap: 1.2rem;
+}
+
+.service-detail-card {
+	border-radius: 8px;
+	box-shadow: 0 18px 50px color-mix(in srgb, #000 14%, transparent);
+}
+
+.service-detail-meta span {
+	padding: 0.45rem 0.65rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.service-detail-meta strong {
+	color: var(--accent);
+}
+
 .compact-empty {
 	padding: 1.5rem;
 	margin-top: 0.5rem;
@@ -2780,14 +2814,30 @@ p               { text-wrap: pretty; }
 }
 
 /* ── PAGAR CITA PAGE ─────────────────────────────────────────────────────── */
-.pay-wrapper { max-width: 560px; }
+.payment-page {
+	display: grid;
+	gap: 1.25rem;
+}
+
+.payment-header .dash-subtitle {
+	max-width: 680px;
+	line-height: 1.6;
+}
+
+.pay-wrapper {
+	width: 100%;
+	max-width: 880px;
+	display: grid;
+	gap: 1rem;
+}
 
 .pay-summary-card {
 	background: var(--card);
-	border: 1px solid var(--border);
-	border-radius: 14px;
+	border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+	border-radius: 8px;
 	padding: 1.2rem 1.4rem;
-	margin-bottom: 1.4rem;
+	margin-bottom: 0;
+	box-shadow: 0 16px 44px color-mix(in srgb, #000 12%, transparent);
 }
 
 .pay-summary-row {
@@ -2816,7 +2866,25 @@ p               { text-wrap: pretty; }
 	margin: 0 0 0.7rem;
 }
 
-.pay-methods { margin-top: 0.5rem; }
+.pay-methods {
+	margin-top: 0.25rem;
+}
+
+.pay-methods-header {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.85rem;
+}
+
+.pay-methods-header p:last-child {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: 0.88rem;
+	line-height: 1.55;
+	max-width: 420px;
+}
 
 .pay-method-grid {
 	display: grid;
@@ -2827,15 +2895,16 @@ p               { text-wrap: pretty; }
 .pay-method-card {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	align-items: flex-start;
 	gap: 0.4rem;
-	padding: 1.4rem 1rem;
+	padding: 1.15rem;
 	background: var(--card);
-	border: 1px solid var(--border);
-	border-radius: 14px;
+	border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+	border-radius: 8px;
 	cursor: pointer;
 	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-	text-align: center;
+	text-align: left;
+	min-height: 126px;
 }
 
 .pay-method-card:hover {
@@ -2847,14 +2916,15 @@ p               { text-wrap: pretty; }
 .pay-method-icon { font-size: 1.8rem; }
 
 .pay-method-name {
-	font-size: 0.88rem;
+	font-size: 0.98rem;
 	color: var(--text);
 	font-weight: 600;
 }
 
 .pay-method-sub {
-	font-size: 0.75rem;
+	font-size: 0.82rem;
 	color: var(--text-muted);
+	line-height: 1.45;
 }
 
 /* Stripe */
@@ -2883,8 +2953,8 @@ p               { text-wrap: pretty; }
 
 .ref-code-box {
 	background: var(--card);
-	border: 1px solid var(--border);
-	border-radius: 12px;
+	border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+	border-radius: 8px;
 	padding: 1rem 1.2rem;
 }
 
@@ -2899,8 +2969,8 @@ p               { text-wrap: pretty; }
 
 .bank-details {
 	background: var(--card);
-	border: 1px solid var(--border);
-	border-radius: 12px;
+	border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+	border-radius: 8px;
 	padding: 1rem 1.2rem;
 }
 
@@ -2914,7 +2984,15 @@ p               { text-wrap: pretty; }
 .bank-details dt { color: var(--text-muted); font-size: 0.85rem; }
 .bank-details dd { color: var(--text); font-size: 0.85rem; margin: 0; }
 
-.comprobante-upload { display: flex; flex-direction: column; gap: 0.6rem; }
+.comprobante-upload {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	padding: 1rem;
+	border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
 
 .extend-btn { margin-top: 0.5rem; font-size: 0.82rem; }
 
@@ -2925,7 +3003,7 @@ p               { text-wrap: pretty; }
 	padding: 0.9rem 1.1rem;
 	background: color-mix(in srgb, var(--accent) 12%, transparent);
 	border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-	border-radius: 10px;
+	border-radius: 8px;
 	color: var(--accent);
 	font-size: 0.9rem;
 }
@@ -2938,7 +3016,7 @@ p               { text-wrap: pretty; }
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 18px;
+	border-radius: 8px;
 	background: var(--card);
 	border: 1px solid var(--border);
 }
@@ -2959,9 +3037,26 @@ p               { text-wrap: pretty; }
 	display: block;
 }
 
+.payment-result-card {
+	text-align: center;
+	padding: 3rem 1rem;
+}
+
 @media (max-width: 640px) {
 	.pay-method-grid { grid-template-columns: 1fr; }
 	.pay-wrapper { max-width: 100%; }
+	.pay-methods-header {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	.bank-details dl {
+		grid-template-columns: 1fr;
+		gap: 0.15rem 0;
+	}
+	.ref-code {
+		font-size: 1.15rem;
+		word-break: break-word;
+	}
 }
 
 /* ── SALA DE VIDEO ───────────────────────────────────────────────────────── */

@@ -125,7 +125,7 @@ function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancari
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
-            {file ? `📎 ${file.name}` : 'Seleccionar archivo'}
+            {file ? file.name : 'Seleccionar archivo'}
           </button>
           {file ? (
             <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
@@ -193,7 +193,6 @@ export function PagarSaldoPage() {
     return (
       <main className="page-content">
         <div className="dash-empty">
-          <span className="dash-empty-icon">✦</span>
           <p>Esta cita no tiene saldo pendiente en este momento.</p>
           <Link className="btn-primary" to="/app/mis-consultas">Ver mis consultas</Link>
         </div>
@@ -204,11 +203,11 @@ export function PagarSaldoPage() {
   const saldo = getSaldoCentavos(cita);
 
   return (
-    <main className="page-content">
-      <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-        <p className="dash-eyebrow">✦ Saldo restante (80%)</p>
+    <main className="page-content payment-page">
+      <motion.div className="payment-header" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+        <p className="dash-eyebrow">Saldo restante</p>
         <h1 className="dash-title">Pagar saldo</h1>
-        <p className="dash-subtitle">{cita.tipo_consulta?.nombre}</p>
+        <p className="dash-subtitle">{cita.tipo_consulta?.nombre}. Completa el saldo antes de tu sesión.</p>
       </motion.div>
 
       <motion.div
@@ -242,14 +241,16 @@ export function PagarSaldoPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <p className="pay-section-label">¿Cómo deseas pagar el saldo?</p>
+                <div className="pay-methods-header">
+                  <p className="pay-section-label">Método de pago</p>
+                  <p>Elige una opción para completar el saldo pendiente.</p>
+                </div>
                 <div className="pay-method-grid">
                   <button
                     type="button"
                     className="pay-method-card"
                     onClick={() => handleSelectMethod('flow')}
                   >
-                    <span className="pay-method-icon">💳</span>
                     <span className="pay-method-name">Tarjeta chilena (Flow)</span>
                     <span className="pay-method-sub">Webpay, débito y crédito Chile</span>
                   </button>
@@ -258,7 +259,6 @@ export function PagarSaldoPage() {
                     className="pay-method-card"
                     onClick={() => handleSelectMethod('paypal')}
                   >
-                    <span className="pay-method-icon">🌐</span>
                     <span className="pay-method-name">PayPal</span>
                     <span className="pay-method-sub">Pagos internacionales</span>
                   </button>
@@ -267,7 +267,6 @@ export function PagarSaldoPage() {
                     className="pay-method-card"
                     onClick={() => handleSelectMethod('transfer')}
                   >
-                    <span className="pay-method-icon">🏦</span>
                     <span className="pay-method-name">Transferencia bancaria</span>
                     <span className="pay-method-sub">Solo clientes en Chile</span>
                   </button>
@@ -286,7 +285,7 @@ export function PagarSaldoPage() {
                   style={{ marginBottom: '1rem', fontSize: '0.85rem' }}
                   onClick={() => { setMethod(null); setRedirectError(''); }}
                 >
-                  ← Cambiar método
+                  Cambiar método
                 </button>
 
                 {method === 'flow' ? (
@@ -330,7 +329,7 @@ export function PagarSaldoPage() {
             )}
 
             <div style={{ marginTop: '1.5rem' }}>
-              <Link className="btn-secondary" to="/app/mis-consultas">← Volver a mis consultas</Link>
+              <Link className="btn-secondary" to="/app/mis-consultas">Volver a mis consultas</Link>
             </div>
           </motion.div>
     </main>
