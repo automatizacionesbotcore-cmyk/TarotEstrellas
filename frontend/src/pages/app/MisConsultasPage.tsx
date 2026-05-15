@@ -96,15 +96,18 @@ export function MisConsultasPage() {
     ((error as AxiosError<{ message?: string }>)?.response?.data?.message as string | undefined) ?? null;
 
   return (
-    <main className="page-content">
+    <main className="page-content consultas-page">
       <motion.div initial="hidden" animate="visible" variants={stagger}>
 
-        <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
-          <p className="dash-eyebrow">✦ Tu historial espiritual</p>
-          <h1 className="dash-title">Mis consultas</h1>
-          <p className="dash-subtitle">
-            {isFetching && !isLoading ? 'Actualizando…' : 'Todas tus reservas y su estado actual.'}
-          </p>
+        <motion.div className="consultas-header" variants={fadeUp} transition={{ duration: 0.5 }}>
+          <div>
+            <p className="dash-eyebrow">Tu historial</p>
+            <h1 className="dash-title">Mis consultas</h1>
+            <p className="dash-subtitle">
+              {isFetching && !isLoading ? 'Actualizando…' : 'Todas tus reservas, pagos y sesiones en un solo lugar.'}
+            </p>
+          </div>
+          <Link className="btn-primary btn-shimmer" to="/servicios">Agendar consulta</Link>
         </motion.div>
 
         {isLoading ? (
@@ -124,7 +127,6 @@ export function MisConsultasPage() {
           </motion.p>
         ) : data?.data.length === 0 ? (
           <motion.div className="dash-empty" variants={fadeUp} transition={{ duration: 0.45 }}>
-            <span className="dash-empty-icon">🌙</span>
             <p>Aún no tienes consultas agendadas.</p>
             <Link className="btn-primary" to="/servicios">Explorar servicios</Link>
           </motion.div>
@@ -148,11 +150,11 @@ export function MisConsultasPage() {
                 </span>
 
                 <p className="card-detail">
-                  📅 {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.timezone_cliente) : 'Sin fecha'}
+                  {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.timezone_cliente) : 'Sin fecha'}
                 </p>
 
                 {cita.tipo_consulta?.duracion_minutos ? (
-                  <p className="card-detail">⏱ {cita.tipo_consulta.duracion_minutos} min</p>
+                  <p className="card-detail">{cita.tipo_consulta.duracion_minutos} min</p>
                 ) : null}
 
                 <div className="cita-money">
@@ -161,7 +163,7 @@ export function MisConsultasPage() {
                 </div>
 
                 {cita.tema_principal ? (
-                  <p className="card-detail cita-tema">✨ {cita.tema_principal}</p>
+                  <p className="card-detail cita-tema">{cita.tema_principal}</p>
                 ) : null}
 
                 {cita.estado === 'pendiente_abono' && (
@@ -170,7 +172,7 @@ export function MisConsultasPage() {
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
-                    💳 Pagar ahora
+                    Pagar ahora
                   </Link>
                 )}
                 {cita.estado === 'reservada' && (
@@ -179,7 +181,7 @@ export function MisConsultasPage() {
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
-                    💰 Pagar saldo
+                    Pagar saldo
                   </Link>
                 )}
                 {cita.estado === 'confirmada' && (
@@ -188,12 +190,12 @@ export function MisConsultasPage() {
                     className="btn-primary btn-shimmer"
                     style={{ textAlign: 'center', justifyContent: 'center' }}
                   >
-                    🎥 Entrar a sala
+                    Entrar a sala
                   </Link>
                 )}
                 {cita.estado !== 'pendiente_abono' && cita.estado !== 'reservada' && cita.estado !== 'confirmada' && (
                   <Link to={`/app/citas/${cita.uuid}`} className="card-link">
-                    Ver detalle →
+                    Ver detalle
                   </Link>
                 )}
               </motion.article>
@@ -214,7 +216,7 @@ export function MisConsultasPage() {
               disabled={page <= 1 || isFetching}
               onClick={() => setPage((p) => p - 1)}
             >
-              ← Anterior
+              Anterior
             </button>
             <span className="page-info">
               {page} / {lastPage}
@@ -226,7 +228,7 @@ export function MisConsultasPage() {
               disabled={page >= lastPage || isFetching}
               onClick={() => setPage((p) => p + 1)}
             >
-              Siguiente →
+              Siguiente
             </button>
           </motion.div>
         ) : null}

@@ -63,16 +63,16 @@ export function DashboardPage() {
   const total    = data?.meta?.total ?? 0;
 
   return (
-    <main className="page-content">
+    <main className="page-content client-dashboard-page">
       <motion.div initial="hidden" animate="visible" variants={stagger}>
 
         {/* Saludo */}
         <motion.div className="dash-greeting" variants={fadeUp} transition={{ duration: 0.5 }}>
-          <p className="dash-eyebrow">✦ Bienvenida de regreso</p>
+          <p className="dash-eyebrow">Bienvenida de regreso</p>
           <h1 className="dash-title">
             Hola, <span className="dash-name">{nombre}</span>
           </h1>
-          <p className="dash-subtitle">El universo tiene algo para ti hoy.</p>
+          <p className="dash-subtitle">Tu espacio para revisar próximas sesiones, continuar pagos y volver a agendar con calma.</p>
         </motion.div>
 
         {/* Stats */}
@@ -97,6 +97,21 @@ export function DashboardPage() {
           </Link>
         </motion.div>
 
+        <motion.section className="client-overview-panel" variants={fadeUp} transition={{ duration: 0.45 }}>
+          <div>
+            <p className="dash-eyebrow">Siguiente paso</p>
+            <h2>{upcoming.length > 0 ? 'Tienes sesiones por revisar' : 'Agenda cuando lo sientas necesario'}</h2>
+            <p>
+              {upcoming.length > 0
+                ? 'Revisa horarios, pagos pendientes y accesos a sala desde tu historial.'
+                : 'Explora el catálogo y elige una consulta según tu momento actual.'}
+            </p>
+          </div>
+          <Link className="btn-secondary" to={upcoming.length > 0 ? '/app/mis-consultas' : '/servicios'}>
+            {upcoming.length > 0 ? 'Abrir historial' : 'Ver catálogo'}
+          </Link>
+        </motion.section>
+
         {/* Próximas citas o estado vacío */}
         {upcoming.length > 0 ? (
           <motion.section variants={fadeUp} transition={{ duration: 0.45 }}>
@@ -116,14 +131,13 @@ export function DashboardPage() {
                   {cita.tipo_consulta?.duracion_minutos ? (
                     <p className="card-detail">{cita.tipo_consulta.duracion_minutos} min</p>
                   ) : null}
-                  <Link to="/app/mis-consultas" className="card-link">Ver detalle →</Link>
+                  <Link to="/app/mis-consultas" className="card-link">Ver detalle</Link>
                 </article>
               ))}
             </div>
           </motion.section>
         ) : (
           <motion.div className="dash-empty" variants={fadeUp} transition={{ duration: 0.45 }}>
-            <span className="dash-empty-icon">🔮</span>
             <p>Aún no tienes consultas agendadas.</p>
             <Link className="btn-primary" to="/servicios">Explorar servicios</Link>
           </motion.div>
