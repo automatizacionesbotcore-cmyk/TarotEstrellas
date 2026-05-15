@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\ProcesarReembolsoJob;
+use App\Jobs\ProcesarReembolsoPaypalJob;
 use App\Models\Cita;
 use App\Models\Pago;
 use App\Models\Reembolso;
@@ -95,6 +96,30 @@ class AdminReembolsoControllerTest extends TestCase
             ->assertJsonPath('message', 'Reembolso encolado para procesamiento.');
 
         Queue::assertPushed(ProcesarReembolsoJob::class, function ($job) use ($reembolso) {
+            $reflection = new \ReflectionObject($job);
+            $prop = $reflection->getProperty('reembolsoId');
+            $prop->setAccessible(true);
+
+            return $prop->getValue($job) === $reembolso->id;
+        });
+    }
+
+    public function test_admin_procesar_reembolso_paypal_enqueue_job(): void
+    {
+        Queue::fake();
+
+        $admin = $this->makeUserWithRole('admin_especialista');
+        Sanctum::actingAs($admin);
+
+        $reembolso = $this->createReembolsoPaypal('pendiente', 'cancelacion_24h', 'mismo_medio_pago');
+
+        $this->postJson('/api/admin/reembolsos/'.$reembolso->uuid.'/procesar', [
+            'accion' => 'procesar',
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Reembolso encolado para procesamiento.');
+
+        Queue::assertPushed(ProcesarReembolsoPaypalJob::class, function ($job) use ($reembolso) {
             $reflection = new \ReflectionObject($job);
             $prop = $reflection->getProperty('reembolsoId');
             $prop->setAccessible(true);
@@ -253,6 +278,37 @@ class AdminReembolsoControllerTest extends TestCase
         $this->assertSame('succeeded', data_get($stripeEvent, 'detalle.status'));
     }
 
+    public function test_reembolso_detail_timeline_includes_paypal_processing_event(): void
+    {
+        $admin = $this->makeUserWithRole('admin_especialista');
+        Sanctum::actingAs($admin);
+
+        $reembolso = $this->createReembolsoPaypal('completado', 'cancelacion_24h', 'mismo_medio_pago');
+        $reembolso->metadata = [
+            'paypal_refund_id' => 'REFUND-ADM-001',
+            'paypal_status' => 'COMPLETED',
+            'paypal' => [
+                'capture_id' => 'CAPTURE-ADM-001',
+                'refund_id' => 'REFUND-ADM-001',
+                'status' => 'COMPLETED',
+                'processed_at' => now()->toIso8601String(),
+            ],
+        ];
+        $reembolso->procesado_en = now();
+        $reembolso->save();
+
+        $response = $this->getJson('/api/admin/reembolsos/'.$reembolso->uuid)
+            ->assertOk();
+
+        $timeline = $response->json('data.timeline');
+        $paypalEvent = collect($timeline)->firstWhere('tipo', 'procesado_paypal');
+
+        $this->assertNotNull($paypalEvent);
+        $this->assertSame('REFUND-ADM-001', data_get($paypalEvent, 'detalle.refund_id'));
+        $this->assertSame('CAPTURE-ADM-001', data_get($paypalEvent, 'detalle.capture_id'));
+        $this->assertSame('COMPLETED', data_get($paypalEvent, 'detalle.status'));
+    }
+
     public function test_reembolso_detail_timeline_includes_failure_event_for_string_error_metadata(): void
     {
         $admin = $this->makeUserWithRole('admin_especialista');
@@ -349,5 +405,28 @@ class AdminReembolsoControllerTest extends TestCase
             'procesado_en' => $estado === 'completado' ? now() : null,
             'metadata' => ['source' => 'test'],
         ]);
+    }
+
+    private function createReembolsoPaypal(string $estado, string $razon, string $metodo): Reembolso
+    {
+        $reembolso = $this->createReembolso($estado, $razon, $metodo);
+        $reembolso->cita->forceFill([
+            'canal_pago' => 'paypal',
+            'moneda' => 'USD',
+        ])->save();
+
+        $reembolso->pago->forceFill([
+            'canal' => 'paypal',
+            'moneda' => 'USD',
+            'stripe_payment_intent_id' => null,
+            'stripe_charge_id' => null,
+            'referencia_externa' => 'paypal:ORDER-ADM-001',
+            'metadata' => [
+                'paypal_order_id' => 'ORDER-ADM-001',
+                'paypal_capture_id' => 'CAPTURE-ADM-001',
+            ],
+        ])->save();
+
+        return $reembolso->fresh(['cita', 'pago']);
     }
 }

@@ -125,4 +125,42 @@ class PaypalService
 
         return $response->json() ?? [];
     }
+
+    /**
+     * Reembolsa total o parcialmente una captura PayPal.
+     */
+    public function reembolsarCaptura(
+        string $captureId,
+        int $montoCentavos,
+        string $moneda,
+        string $requestId,
+        ?string $note = null
+    ): array {
+        if ($montoCentavos <= 0) {
+            throw new \InvalidArgumentException('El monto de reembolso PayPal debe ser mayor a cero.');
+        }
+
+        $token = $this->accessToken();
+        $body = [
+            'amount' => [
+                'currency_code' => strtoupper($moneda),
+                'value' => number_format($montoCentavos / 100, 2, '.', ''),
+            ],
+        ];
+
+        if ($note) {
+            $body['note_to_payer'] = $note;
+        }
+
+        $response = Http::withToken($token)
+            ->withHeaders(['PayPal-Request-Id' => $requestId])
+            ->timeout(45)
+            ->post($this->baseUrl . '/v2/payments/captures/' . $captureId . '/refund', $body);
+
+        if ($response->failed()) {
+            throw new \RuntimeException('PayPal refund error: ' . $response->body());
+        }
+
+        return $response->json() ?? [];
+    }
 }

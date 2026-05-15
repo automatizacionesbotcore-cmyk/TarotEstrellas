@@ -42,7 +42,7 @@ class AdminApiUsageController extends Controller
             'openai.warn_pct'    => ['sometimes', 'numeric', 'between:1,99'],
             'daily.limite'       => ['sometimes', 'numeric', 'min:0'],
             'daily.warn_pct'     => ['sometimes', 'numeric', 'between:1,99'],
-            'alert_emails'       => ['sometimes', 'string', 'max:1000'],
+            'alert_emails'       => ['sometimes', 'nullable', 'string', 'max:1000'],
         ]);
 
         // Persistir límites
@@ -60,10 +60,10 @@ class AdminApiUsageController extends Controller
             ['category' => 'api', 'value' => json_encode($current), 'editable_admin' => true]
         );
 
-        if (isset($data['alert_emails'])) {
+        if (array_key_exists('alert_emails', $data)) {
             AppSetting::query()->updateOrCreate(
                 ['key' => ApiUsageService::ALERT_EMAILS],
-                ['category' => 'api', 'value' => $data['alert_emails'], 'editable_admin' => true]
+                ['category' => 'api', 'value' => $data['alert_emails'] ?? '', 'editable_admin' => true]
             );
         }
 
@@ -76,6 +76,9 @@ class AdminApiUsageController extends Controller
     public function check(Request $request): JsonResponse
     {
         \App\Jobs\VerificarConsumoApisJob::dispatchSync();
-        return response()->json(['message' => 'Verificación ejecutada.']);
+        return response()->json([
+            'message' => 'Verificación ejecutada.',
+            ...$this->svc->snapshot(),
+        ]);
     }
 }

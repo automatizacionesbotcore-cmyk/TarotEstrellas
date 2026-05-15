@@ -2,7 +2,7 @@
 
 **Stack**: Laravel 11 (PHP 8.3) + React 18 + Vite + TanStack Query + MySQL 8 · Hostinger
 **Repo**: `automatizacionesbotcore-cmyk/TarotEstrellas`
-**PROD**: https://tarotestrellas.com (Hostinger SSH `88.223.85.175:65002` user `u402745362`)
+**PROD**: https://tarotestrellas.com (accesos Hostinger/SSH fuera de Git; usar gestor seguro del equipo)
 **Spec**: `tarotestrellas/docs/ESPECIFICACION_TECNICATarotEstrellasV2.md` (305 KB)
 
 ---
@@ -59,6 +59,7 @@ git push origin feat/nombre-feature
 - **Auth**: Sanctum + Google OAuth · roles `super_admin` / `admin_especialista` / `cliente` · reset password con email branded en español (`ResetPasswordNotification`)
 - **Catálogo + Agenda**: especialistas, tipos de consulta, slots, reserva con códigos, estados `pendiente_abono → reservada → confirmada → realizada`
 - **Pagos**: PayPal LIVE-ready (sandbox local) + Transferencia bancaria con flujo comprobante (subida cliente → notif admin → aprobar/rechazar con emails). Flow.cl **comentado** para Fase 2. Abono mínimo 20% reflejado en UI con saldo 80% explicado
+- **Reembolsos**: Stripe queda legacy. PayPal ya tiene job automatico contra capturas (`ProcesarReembolsoPaypalJob`) usando `/v2/payments/captures/{capture_id}/refund`; se enruta desde scheduler/admin segun `pago.canal`
 - **Cuentas bancarias**: CRUD admin (max 3 por especialista), expuestas al pagar
 - **Sala video**: Daily.co integrado (rooms, recording, transcription webhooks)
 - **Resúmenes IA**: post-sesión con OpenAI/Anthropic
@@ -71,22 +72,23 @@ git push origin feat/nombre-feature
 ### Deploy realizado
 
 - ✅ Frontend Vite buildeado y servido desde `public_html/`
-- ✅ Backend Laravel en `public_html/backend/` con migrations, seeders (roles + super_admin `lmgm.0303@gmail.com`)
+- ✅ Backend Laravel en `public_html/backend/` con migrations y seeders de roles/super_admin. El email real del super admin debe consultarse fuera de Git.
 - ✅ SSL activo, OAuth Google funcional, Resend dominio verificado
 - ✅ Caches recompilados: `optimize:clear`, `config:cache`, `route:cache`
+- ✅ Deploy PROD 2026-05-14: respaldo manual remoto creado antes de subir, frontend reconstruido con `VITE_API_URL=https://tarotestrellas.com/backend/public/api`, backend actualizado con API usage/reembolsos PayPal, migraciones sin pendientes, caches recompilados y smoke `health`, `/`, `/servicios`, catálogo público OK.
 
 ---
 
-## ⏳ Pendiente (11 tareas)
+## ⏳ Pendiente / estado operativo
 
 | ID | Tarea | Notas |
 |---|---|---|
-| **cfg-paypal-prod** | Configurar PayPal **LIVE** en `.env` PROD | Sandbox funcionando local. Usar credenciales de https://developer.paypal.com/dashboard/applications/live |
-| **cfg-09** | WhatsApp Meta API | Webhook `/api/webhooks/whatsapp`, plantillas recordatorio aprobadas |
-| **cfg-14** | Límites API | Configurar topes Anthropic/OpenAI/Daily desde panel super_admin → APIs Consumo + emails de alerta |
-| **cfg-15** | Smoke E2E completo | Seguir `docs/QA-CHECKLIST.md` end-to-end |
-| **cfg-05** | Queue worker Supervisor | 24/7 para jobs video/transcripción (Hostinger limitado, evaluar alternativa) |
-| **cfg-06** | Cron scheduler | `* * * * * php artisan schedule:run` para recordatorios y expirar reservas |
+| **cfg-paypal-prod** | Configurar PayPal **LIVE** en `.env` PROD | Requiere credenciales LIVE externas. Reembolsos automaticos PayPal ya implementados; checklist en `docs/OPERATIONS_RUNBOOK.md` |
+| **cfg-09** | WhatsApp Meta API | Webhook `/api/webhooks/whatsapp` existe y tiene tests; faltan app/secret/plantillas aprobadas |
+| **cfg-14** | Límites API | Implementado en backend/frontend: `/app/admin/api-usage`, job horario, emails e in-app alerts. Ultimo ajuste: serializacion `usado` para frontend y limpieza de emails extra |
+| **cfg-15** | Smoke E2E completo | Seguir `docs/QA-CHECKLIST.md` end-to-end; comandos en `docs/OPERATIONS_RUNBOOK.md` |
+| **cfg-05** | Queue worker Supervisor | Codigo usa queue database. Falta activar worker persistente o fallback cron en PROD; runbook agregado |
+| **cfg-06** | Cron scheduler | Scheduler definido en `backend/routes/console.php`; falta activar cron `php artisan schedule:run` en PROD |
 | cfg-01..04, cfg-12 | Items de infra ya cubiertos parcialmente por deploy actual; cerrar formalmente |
 
 ---
@@ -94,7 +96,7 @@ git push origin feat/nombre-feature
 ## 🐛 Bugs recientes resueltos
 
 1. **Pantalla en blanco PROD**: `index.php` vacío creado por `touch` errático que precedía a `index.html`. Solución: NO usar `touch index.php` en `public_html/` raíz
-2. **Reset password en inglés con link roto**: creado `ResetPasswordNotification` custom + `APP_LOCALE=es` + `frontend_url` en config
+2. **Reset password en inglés con link roto / emails inconsistentes**: creado `ResetPasswordNotification` custom + `APP_LOCALE=es` + `frontend_url` en config. Al 2026-05-14 todos los emails transaccionales backend usan layout corporativo común con logo, colores, tipografía, detalle alineado y CTAs.
 3. **Astrea mostraba `**` literales en widget flotante**: `AgenteWidget.tsx` no aplicaba `renderMarkdown` (solo `AgenteChat.tsx` sí). Corregido
 4. **UI pago mostraba 100% donde decía "Abono 20%"**: ahora calcula `Math.round(precio_final * 0.20)` y muestra Saldo restante
 
@@ -108,6 +110,7 @@ git push origin feat/nombre-feature
 - Deploy: `pscp` / `plink` PuTTY con `-pw '...' -batch`
   - Backend: `domains/tarotestrellas.com/public_html/backend/`
   - Frontend: `domains/tarotestrellas.com/public_html/`
+- API publica real verificada: `https://tarotestrellas.com/backend/public/api` (`/health` responde OK). El frontend PROD debe compilar con `VITE_API_URL=https://tarotestrellas.com/backend/public/api`.
 - Para reload OPcache: **NO** `touch index.php` en raíz; usar `touch backend/bootstrap/app.php` o reiniciar PHP-FPM desde panel Hostinger
 
 ---
@@ -118,8 +121,11 @@ git push origin feat/nombre-feature
 |---|---|
 | `backend/app/Http/Controllers/Api/CitaController.php` | Flujo agenda + pago |
 | `backend/app/Http/Controllers/Api/PagoController.php` | PayPal / transferencia |
+| `backend/app/Jobs/ProcesarReembolsoPaypalJob.php` | Reembolsos automaticos PayPal por capture_id |
+| `backend/app/Services/PaypalService.php` | Ordenes, capturas y reembolsos PayPal |
 | `backend/app/Services/AgenteIAService.php` | Astrea (chatbot IA) |
 | `backend/app/Notifications/ResetPasswordNotification.php` | Email branded reset |
+| `backend/resources/views/emails/layouts/branded.blade.php` | Layout corporativo para emails transaccionales |
 | `frontend/src/pages/app/PagarCitaPage.tsx` | UI pago con 20% / 80% |
 | `frontend/src/components/agente/AgenteWidget.tsx` | Chatbot flotante |
 | `frontend/src/components/agente/AgenteChat.tsx` | Chat asistente IA full-page |
@@ -127,26 +133,37 @@ git push origin feat/nombre-feature
 | `docs/ESPECIFICACION_TECNICATarotEstrellasV2.md` | Spec completa |
 | `docs/QA-CHECKLIST.md` | Protocolo de pruebas |
 | `docs/DEPLOY_HOSTINGER.md` | Manual deploy |
+| `docs/OPERATIONS_RUNBOOK.md` | Pendientes operativos: PayPal LIVE, cron, queue, API limits, E2E, WhatsApp |
 
 ---
 
 ## 🎯 Próximos pasos sugeridos (orden recomendado)
 
-1. **cfg-paypal-prod** — rápido, desbloquea cobros reales
-2. **cfg-06** Cron scheduler — recordatorios + expirar reservas pendientes
-3. **cfg-14** Límites API + alertas
-4. **cfg-15** Smoke E2E con `QA-CHECKLIST.md`
+1. **cfg-paypal-prod** — desbloquea cobros/reembolsos reales cuando existan credenciales LIVE
+2. **cfg-06/cfg-05** activar cron scheduler y queue worker/fallback en Hostinger
+3. **cfg-15** Smoke E2E con `QA-CHECKLIST.md`
+4. **Flow.cl fase 2** — preparar segunda pasarela para cobros internacionales en CLP
 5. **cfg-09** WhatsApp Meta — último, requiere aprobación de plantillas
 
 ---
 
-## 🔐 Credenciales / accesos clave (referencia interna)
+## 🔐 Accesos y secretos
 
-- **PROD SSH**: `u402745362@88.223.85.175:65002`
-- **Super admin**: `lmgm.0303@gmail.com`
-- **Anthropic model**: `claude-3-5-sonnet-latest` (configurable en `.env` `ANTHROPIC_AGENT_MODEL`)
-- **Reset link expiration**: 60 min (`config/auth.php` → `passwords.users.expire`)
+- No guardar secretos, passwords, tokens ni credenciales reales en documentos versionados.
+- Los accesos de PROD, usuarios admin y claves de proveedores deben vivir en el gestor seguro del equipo o en `.env` fuera de Git.
+- **Anthropic model**: configurable en `.env` mediante `ANTHROPIC_AGENT_MODEL`.
+- **Reset link expiration**: 60 min (`config/auth.php` → `passwords.users.expire`).
 
 ---
 
-_Última actualización: 2026-05-13_
+## 🤝 Memoria compartida para asistentes
+
+- Agregado `AGENTS.md` como memoria comun para Codex, Claude y GitHub Copilot.
+- Agregado `CLAUDE.md` para que Claude encuentre rapidamente el contexto.
+- Agregado `docs/AGENTS.md` con reglas especificas para documentacion.
+- Agregado `.github/copilot-instructions.md` con instrucciones canonicas para Copilot.
+- Mantener estos archivos sincronizados cuando cambien arquitectura, comandos, dependencias, flujos, estado real o decisiones importantes.
+
+---
+
+_Última actualización: 2026-05-14_

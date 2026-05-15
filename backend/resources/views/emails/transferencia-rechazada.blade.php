@@ -1,75 +1,50 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprobante rechazado</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f0fa; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 8px; overflow: hidden; }
-        .header { background: linear-gradient(135deg, #c0392b, #e74c3c); padding: 32px 24px; text-align: center; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 22px; }
-        .header p { color: #ffddd9; margin: 8px 0 0; font-size: 14px; }
-        .body { padding: 32px 24px; }
-        .badge { display: inline-block; background: #f8d7da; color: #721c24; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 20px; }
-        .alert-box { background: #fff3f3; border-left: 4px solid #e74c3c; padding: 16px; border-radius: 4px; margin: 20px 0; }
-        .alert-box p { margin: 0 0 6px; font-size: 14px; color: #555; }
-        .info-box { background: #f8f4ff; border-left: 4px solid #6b3fa0; padding: 16px; border-radius: 4px; margin: 20px 0; }
-        .info-box p { margin: 0 0 6px; font-size: 14px; color: #555; }
-        .cta { text-align: center; margin: 28px 0; }
-        .btn { background: #6b3fa0; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 15px; font-weight: bold; display: inline-block; }
-        .warning { background: #fff8e1; border: 1px solid #ffc107; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #856404; margin: 16px 0; }
-        .footer { background: #f4f0fa; padding: 16px 24px; text-align: center; font-size: 12px; color: #888; }
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="header">
-        <h1>⚠️ Comprobante Rechazado</h1>
-        <p>TarotEstrellas</p>
+@php
+    $frontendUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/');
+    $cita = $comprobante->cita;
+    $cliente = $cita?->cliente;
+    $clienteNombre = trim((string) ($cliente?->profile?->nombre ?? $cliente?->name ?? ''));
+    $pagarUrl = $cita?->uuid ? $frontendUrl . '/app/citas/' . $cita->uuid . '/pagar' : $frontendUrl . '/app/mis-consultas';
+@endphp
+@extends('emails.layouts.branded', [
+    'title' => 'Comprobante rechazado',
+    'eyebrow' => 'Validación de pago',
+    'badge' => 'Acción requerida',
+    'heading' => 'No pudimos validar tu comprobante',
+    'preheader' => 'Necesitamos que adjuntes un nuevo comprobante válido para mantener tu cita.',
+    'accent' => '#B2483D',
+    'accentDark' => '#7A2F28',
+])
+
+@section('content')
+    <p style="margin:0 0 16px;">Hola{{ $clienteNombre !== '' ? ', ' . $clienteNombre : '' }},</p>
+
+    <p style="margin:0 0 16px;">
+        Revisamos el comprobante enviado, pero no fue posible validarlo. Para mantener tu cita debes subir
+        un nuevo comprobante válido desde tu cuenta.
+    </p>
+
+    <div style="background:#FFF6F4;border:1px solid #E8C5BF;border-left:4px solid #B2483D;border-radius:8px;margin:22px 0;padding:16px 18px;">
+        <p style="margin:0 0 6px;color:#7A2F28;font-size:14px;font-weight:700;">Motivo del rechazo</p>
+        <p style="margin:0;color:#3C3348;font-size:15px;line-height:1.55;">{{ $razon }}</p>
     </div>
-    <div class="body">
-        <span class="badge">Acción requerida</span>
 
-        @php
-            $cita = $comprobante->cita;
-            $cliente = $cita?->cliente;
-        @endphp
+    @if($cita)
+        @include('emails.partials.detail-table', [
+            'accent' => '#B2483D',
+            'rows' => [
+                'Referencia' => e($cita->codigo_referencia ?? $cita->uuid),
+                'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta de Tarot'),
+            ],
+        ])
+    @endif
 
-        <p>Hola{{ $cliente?->profile?->nombre ? ', ' . $cliente->profile->nombre : '' }},</p>
+    <p style="margin:0 0 16px;">
+        Si no adjuntas un comprobante válido dentro del plazo establecido, la cita puede quedar anulada automáticamente.
+    </p>
 
-        <p>Lamentablemente el especialista <strong>no pudo validar</strong> tu comprobante de transferencia.</p>
-
-        <div class="alert-box">
-            <p><strong>Motivo del rechazo:</strong></p>
-            <p>{{ $razon }}</p>
-        </div>
-
-        @if($cita)
-        <div class="info-box">
-            <p><strong>Referencia:</strong> {{ $cita->codigo_referencia }}</p>
-            <p><strong>Servicio:</strong> {{ $cita->tipoConsulta?->nombre ?? 'Consulta de Tarot' }}</p>
-        </div>
-        @endif
-
-        <div class="warning">
-            ⚠️ <strong>Importante:</strong> Debes adjuntar un nuevo comprobante válido. Si no lo haces dentro del plazo establecido, tu cita quedará <strong>anulada automáticamente</strong>.
-        </div>
-
-        <p>Haz clic en el botón de abajo para adjuntar un nuevo comprobante directamente en tu cita.</p>
-
-        <div class="cta">
-            @php
-                $pagarUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/') . '/app/citas/' . ($cita?->uuid ?? '') . '/pagar';
-            @endphp
-            <a href="{{ $pagarUrl }}" class="btn">Subir nuevo comprobante</a>
-        </div>
-
-        <p style="font-size:13px; color:#888;">¿Tienes dudas? Escríbenos a contacto@tarotestrellas.com</p>
-    </div>
-    <div class="footer">
-        &copy; {{ date('Y') }} TarotEstrellas
-    </div>
-</div>
-</body>
-</html>
+    @include('emails.partials.button', [
+        'url' => $pagarUrl,
+        'label' => 'Subir nuevo comprobante',
+        'color' => '#B2483D',
+    ])
+@endsection

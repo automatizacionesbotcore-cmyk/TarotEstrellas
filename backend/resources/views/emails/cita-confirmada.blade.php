@@ -1,14 +1,39 @@
-Hola{{ $cita->cliente?->profile?->nombre ? ', ' . $cita->cliente->profile->nombre : '' }},
+@php
+    $frontendUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/');
+    $clienteNombre = trim((string) ($cita->cliente?->profile?->nombre ?? $cita->cliente?->name ?? ''));
+    $fecha = $cita->inicio_utc?->copy()?->setTimezone('America/Santiago')?->format('d/m/Y H:i');
+    $detalleUrl = $frontendUrl . '/app/citas/' . $cita->uuid;
+@endphp
+@extends('emails.layouts.branded', [
+    'title' => 'Cita confirmada',
+    'eyebrow' => 'Confirmación de cita',
+    'badge' => 'Pago confirmado',
+    'heading' => 'Tu cita está confirmada',
+    'preheader' => 'El pago total fue procesado correctamente y tu cita quedó confirmada.',
+])
 
-¡Tu cita está confirmada! El pago total fue procesado correctamente.
+@section('content')
+    <p style="margin:0 0 16px;">Hola{{ $clienteNombre !== '' ? ', ' . $clienteNombre : '' }},</p>
 
-Servicio:  {{ $cita->tipoConsulta?->nombre ?? 'Consulta' }}
-Fecha:     {{ $cita->inicio_utc?->setTimezone('America/Santiago')->format('d/m/Y H:i') }} (hora Chile)
-Duración:  {{ $cita->tipoConsulta?->duracion_minutos }} minutos
-Referencia: {{ $cita->codigo_referencia ?? $cita->uuid }}
+    <p style="margin:0 0 16px;">
+        El pago total fue procesado correctamente. Recibirás un recordatorio antes de la sesión y el enlace
+        de la sala estará disponible en tu cuenta unos minutos antes del horario agendado.
+    </p>
 
-Recibirás un recordatorio el día anterior a tu cita. El enlace para ingresar a la sala de video
-estará disponible en tu cuenta unos minutos antes de la hora agendada.
+    @include('emails.partials.detail-table', [
+        'rows' => [
+            'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta'),
+            'Fecha' => e(($fecha ?? 'Por confirmar') . ' (hora Chile)'),
+            'Duración' => e(($cita->tipoConsulta?->duracion_minutos ?? '-') . ' minutos'),
+            'Referencia' => e($cita->codigo_referencia ?? $cita->uuid),
+            'Estado' => 'Confirmada',
+        ],
+    ])
 
-Gracias por confiar en TarotEstrellas.
-El equipo de TarotEstrellas
+    @include('emails.partials.button', [
+        'url' => $detalleUrl,
+        'label' => 'Ver mi cita',
+    ])
+
+    <p style="margin:0;">Gracias por confiar en TarotEstrellas.</p>
+@endsection

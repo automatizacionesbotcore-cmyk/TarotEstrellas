@@ -20,12 +20,18 @@ class ProcesarReembolsosPendientesJob implements ShouldQueue
     public function handle(): void
     {
         Reembolso::query()
+            ->with('pago:id,canal')
             ->where('estado', 'pendiente')
             ->orderBy('id')
             ->limit($this->limit)
-            ->pluck('id')
-            ->each(function (int $id): void {
-                ProcesarReembolsoJob::dispatch($id);
+            ->get(['id', 'pago_id'])
+            ->each(function (Reembolso $reembolso): void {
+                if ($reembolso->pago?->canal === 'paypal') {
+                    ProcesarReembolsoPaypalJob::dispatch($reembolso->id);
+                    return;
+                }
+
+                ProcesarReembolsoJob::dispatch($reembolso->id);
             });
     }
 }
