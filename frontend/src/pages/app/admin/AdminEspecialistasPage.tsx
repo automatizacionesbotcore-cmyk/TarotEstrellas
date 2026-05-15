@@ -80,14 +80,20 @@ export function AdminEspecialistasPage() {
 
   return (
     <main className="page-content">
-      <h1>Especialistas</h1>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Equipo</p>
+          <h1>Especialistas</h1>
+          <p className="admin-page-subtitle">Administra perfiles, estado público y orden de aparición.</p>
+        </div>
+      </header>
 
       <div className="booking-tabs" style={{ marginBottom: '1.5rem' }}>
         <button className={`booking-tab${tab === 'lista' ? ' active' : ''}`} onClick={() => setTab('lista')}>
           Lista ({especialistas.length})
         </button>
         <button className={`booking-tab${tab === 'nuevo' ? ' active' : ''}`} onClick={() => setTab('nuevo')}>
-          + Agregar especialista
+          Agregar especialista
         </button>
       </div>
 

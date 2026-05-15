@@ -113,15 +113,15 @@ export function AdminCuentasBancariasPage() {
     <main className="page-content">
       <header className="admin-page-header">
         <div>
-          <p className="dash-eyebrow">✦ Pagos</p>
+          <p className="dash-eyebrow">Pagos</p>
           <h1>Cuentas bancarias</h1>
-          <p className="text-muted" style={{ fontSize: '0.9rem' }}>
+          <p className="admin-page-subtitle">
             Configura hasta 3 cuentas para recibir transferencias de clientes chilenos.
           </p>
         </div>
         {cuentas.length < 3 && !creating && !editing && (
           <button type="button" className="btn-primary" onClick={handleCreate}>
-            + Agregar cuenta
+            Agregar cuenta
           </button>
         )}
       </header>
@@ -211,8 +211,7 @@ export function AdminCuentasBancariasPage() {
       {isLoading ? (
         <p className="text-muted">Cargando…</p>
       ) : cuentas.length === 0 ? (
-        <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '2rem' }}>🏦</span>
+        <div className="admin-empty-card">
           <p className="text-muted">No hay cuentas bancarias configuradas.</p>
           {!creating && (
             <button type="button" className="btn-primary" onClick={handleCreate}>
@@ -221,7 +220,7 @@ export function AdminCuentasBancariasPage() {
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="admin-card-list">
           {cuentas.map((cuenta, index) => (
             <div
               key={cuenta.id}
@@ -232,11 +231,11 @@ export function AdminCuentasBancariasPage() {
                 opacity: cuenta.activa ? 1 : 0.6,
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div className="admin-card-row">
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div className="admin-card-title-row">
                     <span style={{ fontWeight: 700, fontSize: '1rem' }}>
-                      Cuenta {index + 1} — {cuenta.banco}
+                      Cuenta {index + 1} - {cuenta.banco}
                     </span>
                     <span
                       style={{
@@ -257,7 +256,7 @@ export function AdminCuentasBancariasPage() {
                     <dt style={{ color: 'var(--text-muted)' }}>RUT</dt>      <dd style={{ margin: 0 }}>{cuenta.rut_titular}</dd>
                   </dl>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                <div className="admin-row-actions">
                   <button
                     type="button"
                     className="btn-secondary"

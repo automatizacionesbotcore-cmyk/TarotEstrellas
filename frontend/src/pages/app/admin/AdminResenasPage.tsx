@@ -7,30 +7,36 @@ import {
   type ResenaAdmin,
 } from '../../../lib/resenasAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminResenasPage() {
   const [items, setItems] = useState<ResenaAdmin[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [q, setQ] = useState('');
   const [puntuacionMax, setPuntuacionMax] = useState<string>('');
   const [sinResponder, setSinResponder] = useState(false);
   const [visible, setVisible] = useState<'all' | 'true' | 'false'>('all');
   const [responding, setResponding] = useState<ResenaAdmin | null>(null);
 
-  const load = async () => {
+  const load = async (
+    targetPage = page,
+    nextFilters = { q, puntuacionMax, sinResponder, visible }
+  ) => {
     setLoading(true);
     try {
       const r = await listResenas({
-        q: q || undefined,
-        puntuacion_max: puntuacionMax ? Number(puntuacionMax) : undefined,
-        sin_responder: sinResponder || undefined,
-        visible: visible === 'all' ? undefined : visible === 'true',
-        page,
+        q: nextFilters.q || undefined,
+        puntuacion_max: nextFilters.puntuacionMax ? Number(nextFilters.puntuacionMax) : undefined,
+        sin_responder: nextFilters.sinResponder || undefined,
+        visible: nextFilters.visible === 'all' ? undefined : nextFilters.visible === 'true',
+        page: targetPage,
       });
       setItems(r.data.data);
       setLastPage(r.data.last_page);
+      setTotal(r.data.total);
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Error.');
     } finally {
@@ -61,75 +67,132 @@ export function AdminResenasPage() {
     }
   };
 
+  const resetFilters = () => {
+    const cleared = { q: '', puntuacionMax: '', sinResponder: false, visible: 'all' as const };
+    setQ('');
+    setPuntuacionMax('');
+    setSinResponder(false);
+    setVisible('all');
+    setPage(1);
+    load(1, cleared);
+  };
+
+  const columns: Column<ResenaAdmin>[] = [
+    {
+      key: 'resena',
+      label: 'Reseña',
+      render: (r) => (
+        <div className="admin-review-cell">
+          <strong className="admin-review-stars">{'★'.repeat(r.puntuacion)}{'☆'.repeat(5 - r.puntuacion)}</strong>
+          <span>{r.comentario || 'Sin comentario'}</span>
+          {r.respuesta_admin && <span className="admin-cell-muted">Respuesta: {r.respuesta_admin}</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (r) => (
+        <div className="admin-cell-stack">
+          <span className="admin-cell-title">{r.cliente?.profile?.nombre || `Cliente #${r.cliente_id}`}</span>
+          <span className="admin-cell-muted">{r.especialista?.name || `Especialista #${r.especialista_id}`}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'cita',
+      label: 'Cita',
+      render: (r) => (
+        <div className="admin-cell-stack">
+          <code>{r.cita?.codigo_referencia || `#${r.cita_id}`}</code>
+          <span className="admin-cell-muted">{new Date(r.created_at).toLocaleDateString('es-CL')}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (r) => (
+        <div className="admin-row-actions">
+          <span className={`badge ${r.visible ? 'badge-success' : 'badge-muted'}`}>{r.visible ? 'Visible' : 'Oculta'}</span>
+          <span className={`badge ${r.respuesta_admin ? 'badge-success' : 'badge-warning'}`}>{r.respuesta_admin ? 'Respondida' : 'Pendiente'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (r) => (
+        <div className="admin-row-actions">
+          <button type="button" className="btn-secondary" onClick={() => setResponding(r)}>{r.respuesta_admin ? 'Editar' : 'Responder'}</button>
+          {r.respuesta_admin && <button type="button" className="btn-secondary" onClick={() => onEliminarRespuesta(r)}>Quitar respuesta</button>}
+          <button type="button" className="btn-secondary" onClick={() => onToggleVisibilidad(r)}>{r.visible ? 'Ocultar' : 'Mostrar'}</button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="page-content">
-      <header style={{ marginBottom: '1rem' }}>
-        <h1>Reseñas</h1>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Calidad</p>
+          <h1>Reseñas</h1>
+          <p className="admin-page-subtitle">Gestiona visibilidad y respuestas del equipo administrativo.</p>
+        </div>
+        {total > 0 && <span className="admin-total-pill">{total.toLocaleString()} reseñas</span>}
       </header>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); setPage(1); load(); }}
-        style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}
+        onSubmit={(e) => { e.preventDefault(); setPage(1); load(1, { q, puntuacionMax, sinResponder, visible }); }}
+        className="admin-filter-card"
       >
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar comentario" style={{ flex: 1, minWidth: 200 }} />
-        <select value={puntuacionMax} onChange={(e) => setPuntuacionMax(e.target.value)}>
-          <option value="">Todas</option>
-          <option value="2">≤ 2★</option>
-          <option value="3">≤ 3★</option>
-        </select>
-        <select value={visible} onChange={(e) => setVisible(e.target.value as any)}>
-          <option value="all">Todas</option>
-          <option value="true">Visibles</option>
-          <option value="false">Ocultas</option>
-        </select>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <input type="checkbox" checked={sinResponder} onChange={(e) => setSinResponder(e.target.checked)} /> Sin responder
-        </label>
-        <button type="submit">Filtrar</button>
+        <div className="admin-filter-grid">
+          <label>
+            Comentario
+            <input className="form-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar comentario" />
+          </label>
+          <label>
+            Puntuación
+            <select className="form-input" value={puntuacionMax} onChange={(e) => setPuntuacionMax(e.target.value)}>
+              <option value="">Todas</option>
+              <option value="2">2 o menos</option>
+              <option value="3">3 o menos</option>
+            </select>
+          </label>
+          <label>
+            Visibilidad
+            <select className="form-input" value={visible} onChange={(e) => setVisible(e.target.value as any)}>
+              <option value="all">Todas</option>
+              <option value="true">Visibles</option>
+              <option value="false">Ocultas</option>
+            </select>
+          </label>
+          <label className="admin-checkbox-row admin-filter-check">
+            <input type="checkbox" checked={sinResponder} onChange={(e) => setSinResponder(e.target.checked)} />
+            <span>Sin responder</span>
+          </label>
+        </div>
+        <div className="admin-filter-actions">
+          <button type="submit" className="btn-primary">Filtrar</button>
+          <button type="button" className="btn-secondary" onClick={resetFilters}>Limpiar</button>
+        </div>
       </form>
 
-      {loading ? <p>Cargando…</p> : (
-        <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.75rem' }}>
-          {items.map((r) => (
-            <li key={r.uuid} className="card" style={{ padding: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div>
-                  <strong>{'★'.repeat(r.puntuacion)}{'☆'.repeat(5 - r.puntuacion)}</strong>{' '}
-                  <span style={{ color: 'var(--text-muted)' }}>
-                    {r.cliente?.profile?.nombre || `Cliente #${r.cliente_id}`} → {r.especialista?.name || `Especialista #${r.especialista_id}`}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>
-                  {new Date(r.created_at).toLocaleDateString()} · {r.cita?.codigo_referencia}
-                </div>
-              </div>
-              {r.comentario && <p style={{ marginTop: '0.5rem' }}>{r.comentario}</p>}
-
-              {r.respuesta_admin ? (
-                <blockquote style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', borderLeft: '3px solid var(--primary, #6c5ce7)', background: 'rgba(108,92,231,0.05)' }}>
-                  <strong>Respuesta admin:</strong> {r.respuesta_admin}
-                  <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    {r.respondida_en && new Date(r.respondida_en).toLocaleString()}
-                  </div>
-                </blockquote>
-              ) : null}
-
-              <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button type="button" onClick={() => setResponding(r)}>{r.respuesta_admin ? 'Editar respuesta' : 'Responder'}</button>
-                {r.respuesta_admin && <button type="button" onClick={() => onEliminarRespuesta(r)}>Eliminar respuesta</button>}
-                <button type="button" onClick={() => onToggleVisibilidad(r)}>{r.visible ? 'Ocultar' : 'Mostrar'}</button>
-              </div>
-            </li>
-          ))}
-          {!items.length && <li style={{ textAlign: 'center', padding: '2rem' }}>Sin reseñas.</li>}
-        </ul>
-      )}
-
-      <nav style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>
-        <span>Página {page} de {lastPage}</span>
-        <button disabled={page >= lastPage} onClick={() => setPage(page + 1)}>›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin reseñas para los filtros seleccionados."
+        rowKey={(r) => r.uuid}
+        searchable={false}
+        pagination={{
+          currentPage: page,
+          lastPage,
+          total,
+          onPageChange: setPage,
+        }}
+      />
 
       {responding && (
         <ResponderModal

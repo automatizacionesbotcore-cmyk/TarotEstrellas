@@ -23,7 +23,7 @@ const ACTION_BADGE: Record<string, string> = {
 function ActionBadge({ action }: { action: string }) {
   const cls = ACTION_BADGE[action] ?? 'badge-gray';
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${cls}`}>
+    <span className={`admin-status-badge ${cls}`}>
       {action}
     </span>
   );
@@ -31,17 +31,17 @@ function ActionBadge({ action }: { action: string }) {
 
 function ChangesDetail({ changes }: { changes: UnifiedAuditLog['changes'] }) {
   const [open, setOpen] = useState(false);
-  if (!changes || Object.keys(changes).length === 0) return <span style={{ color: 'var(--text-muted)' }}>—</span>;
+  if (!changes || Object.keys(changes).length === 0) return <span className="text-muted">—</span>;
   return (
-    <div>
+    <div className="admin-audit-changes">
       <button
         onClick={() => setOpen((p) => !p)}
-        style={{ fontSize: '0.75rem', color: 'var(--accent)', textDecoration: 'underline', background: 'none', border: 0, cursor: 'pointer' }}
+        className="admin-text-button"
       >
-        {open ? 'Ocultar ▲' : 'Ver detalle ▼'}
+        {open ? 'Ocultar' : 'Ver detalle'}
       </button>
       {open && (
-        <pre style={{ marginTop: '0.25rem', fontSize: '0.75rem', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '0.25rem', overflow: 'auto', maxHeight: '12rem', maxWidth: '20rem' }}>
+        <pre className="admin-audit-pre">
           {JSON.stringify(changes, null, 2)}
         </pre>
       )}
@@ -121,10 +121,10 @@ export function AdminAuditPage() {
       key: 'usuario',
       label: 'Usuario',
       render: (a) => (
-        <div style={{ maxWidth: '18rem' }}>
-          <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
+        <div className="admin-cell-stack">
+          <div className="admin-cell-title">{a.user?.name ?? a.user_email ?? `#${a.user_id ?? '?'}`}</div>
           {a.user_email && a.user?.name && (
-            <div style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.user_email}</div>
+            <div className="admin-cell-muted">{a.user_email}</div>
           )}
         </div>
       ),
@@ -140,13 +140,13 @@ export function AdminAuditPage() {
           {a.auditable_id && <span style={{ color: 'var(--text-muted)' }}> #{a.auditable_id}</span>}
         </span>
       ) : (
-        <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '18rem', display: 'block' }} title={a.url ?? ''}>
+        <span className="admin-cell-muted admin-cell-truncate" title={a.url ?? ''}>
           {a.method && <span style={{ fontFamily: 'monospace', marginRight: '0.25rem' }}>{a.method}</span>}
           {a.route ?? a.url ?? '—'}
         </span>
       ),
     },
-    { key: 'ip', label: 'IP', render: (a) => <span style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{a.ip ?? '—'}</span> },
+    { key: 'ip', label: 'IP', render: (a) => <span className="admin-mono-muted">{a.ip ?? '—'}</span> },
     {
       key: 'status_code',
       label: 'Estado HTTP',
@@ -161,25 +161,24 @@ export function AdminAuditPage() {
 
   return (
     <main className="page-content">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+      <header className="admin-page-header">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Auditoría del sistema</h1>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Registro de todas las acciones de usuarios — solo visible para super admins.
+          <p className="dash-eyebrow">Super admin</p>
+          <h1>Auditoría del sistema</h1>
+          <p className="admin-page-subtitle">
+            Registro de acciones, accesos y cambios sensibles del sistema.
           </p>
         </div>
         {total > 0 && (
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{total.toLocaleString()} registros</span>
+          <span className="admin-total-pill">{total.toLocaleString()} registros</span>
         )}
-      </div>
+      </header>
 
-      {/* Filters */}
-      <form onSubmit={handleSearch} className="card" style={{ padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+      <form onSubmit={handleSearch} className="admin-filter-card">
+        <div className="admin-filter-grid admin-filter-grid--audit">
           <input
             className="form-input"
-            style={{ gridColumn: 'span 2' }}
-            placeholder="Buscar email, URL, acción…"
+            placeholder="Buscar email, URL o acción"
             value={filters.q ?? ''}
             onChange={(e) => setF('q', e.target.value)}
           />
@@ -198,7 +197,7 @@ export function AdminAuditPage() {
           <input type="date" className="form-input" value={filters.desde ?? ''} onChange={(e) => setF('desde', e.target.value)} title="Desde" />
           <input type="date" className="form-input" value={filters.hasta ?? ''} onChange={(e) => setF('hasta', e.target.value)} title="Hasta" />
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="admin-filter-actions">
           <button type="submit" className="btn-primary">Buscar</button>
           <button type="button" className="btn-secondary" onClick={handleReset}>Limpiar</button>
         </div>
