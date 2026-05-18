@@ -299,7 +299,7 @@ class AuthController extends Controller
 
     public function googleCallback(): RedirectResponse
     {
-        $frontendUrl = rtrim((string) env('FRONTEND_URL', 'http://localhost:5173'), '/');
+        $frontendUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
 
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
