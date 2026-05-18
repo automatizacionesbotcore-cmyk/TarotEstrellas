@@ -10,6 +10,7 @@ use App\Services\BriefingIAService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use RuntimeException;
 
 class AdminClientesController extends Controller
@@ -281,6 +282,34 @@ class AdminClientesController extends Controller
         });
 
         return response()->json(['message' => 'Cliente eliminado definitivamente.']);
+    }
+
+    /**
+     * POST /api/admin/clientes/{uuid}/reset-password
+     * Envia un correo para que el cliente configure una nueva contrasena. Solo super_admin.
+     */
+    public function resetPassword(Request $request, string $uuid): JsonResponse
+    {
+        $user = $request->user();
+        $isSuper = $user && $user->roles()->where('nombre', 'super_admin')->exists();
+        if (! $isSuper) {
+            return response()->json(['message' => 'Solo super_admin puede restablecer contrasenas de clientes.'], 403);
+        }
+
+        $cliente = User::query()
+            ->where('uuid', $uuid)
+            ->whereHas('roles', fn ($q) => $q->where('nombre', 'cliente'))
+            ->firstOrFail();
+
+        $status = Password::sendResetLink(['email' => $cliente->email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json(['message' => __($status)], 422);
+        }
+
+        return response()->json([
+            'message' => 'Se envio un enlace de restablecimiento al cliente.',
+        ]);
     }
 
     /**

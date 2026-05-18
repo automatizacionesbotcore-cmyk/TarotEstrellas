@@ -30,6 +30,7 @@ export function AdminEspecialistasPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<'lista' | 'nuevo'>('lista');
   const [editId, setEditId] = useState<number | null>(null);
+  const [resetId, setResetId] = useState<number | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editForm, setEditForm] = useState(EMPTY_EDIT);
 
@@ -65,6 +66,19 @@ export function AdminEspecialistasPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'especialistas'] }),
     onError: () => toast.error('No se pudo cambiar el estado'),
   });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: (id: number) => api.post<{ message: string }>(`/admin/especialistas/${id}/reset-password`),
+    onMutate: (id) => setResetId(id),
+    onSuccess: (res) => toast.success(res.data?.message ?? 'Correo de restablecimiento enviado.'),
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'No se pudo enviar el correo de restablecimiento.'),
+    onSettled: () => setResetId(null),
+  });
+
+  function handleResetPassword(e: Especialista) {
+    if (!window.confirm(`Enviar un correo de restablecimiento de contrasena a "${e.nombre}" (${e.email})?`)) return;
+    resetPasswordMutation.mutate(e.id);
+  }
 
   function startEdit(e: Especialista) {
     setEditId(e.id);
@@ -166,6 +180,14 @@ export function AdminEspecialistasPage() {
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button className="btn-secondary" style={{ fontSize: '0.82rem', padding: '0.3rem 0.8rem' }} onClick={() => startEdit(e)}>
                         Editar
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        style={{ fontSize: '0.82rem', padding: '0.3rem 0.8rem' }}
+                        disabled={resetPasswordMutation.isPending}
+                        onClick={() => handleResetPassword(e)}
+                      >
+                        {resetId === e.id ? 'Enviando…' : 'Reset password'}
                       </button>
                       <button
                         className="btn-secondary"

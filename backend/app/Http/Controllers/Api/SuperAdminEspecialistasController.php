@@ -143,6 +143,23 @@ class SuperAdminEspecialistasController extends Controller
         return response()->json(['data' => ['activo' => $perfil->fresh()->activo]]);
     }
 
+    public function resetPassword(int $id): JsonResponse
+    {
+        $user = User::query()
+            ->whereHas('roles', fn ($q) => $q->where('nombre', 'admin_especialista'))
+            ->findOrFail($id);
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json(['message' => __($status)], 422);
+        }
+
+        return response()->json([
+            'message' => 'Se envio un enlace de restablecimiento al especialista.',
+        ]);
+    }
+
     private function formatEspecialista(User $u): array
     {
         return [

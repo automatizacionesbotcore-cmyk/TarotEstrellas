@@ -202,6 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('super_admin')->prefix('admin/especialistas')->group(function () {
         Route::get('/', [SuperAdminEspecialistasController::class, 'index']);
         Route::post('/', [SuperAdminEspecialistasController::class, 'store']);
+        Route::post('{id}/reset-password', [SuperAdminEspecialistasController::class, 'resetPassword']);
         Route::put('{id}', [SuperAdminEspecialistasController::class, 'update']);
         Route::patch('{id}/toggle', [SuperAdminEspecialistasController::class, 'toggle']);
     });
@@ -295,6 +296,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{uuid}', [AdminClientesController::class, 'show']);
         Route::get('{uuid}/estadisticas', [AdminClientesController::class, 'estadisticas']);
         Route::patch('{uuid}/notas', [AdminClientesController::class, 'actualizarNotas']);
+        Route::post('{uuid}/reset-password', [AdminClientesController::class, 'resetPassword'])->middleware('super_admin');
         Route::middleware('throttle:20,1')->get('{uuid}/briefing', [AdminClientesController::class, 'briefing']);
         Route::delete('{uuid}', [AdminClientesController::class, 'destroy']);
     });

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   actualizarNotasCliente,
   eliminarCliente,
+  enviarResetPasswordCliente,
   getClienteBriefing,
   getClienteDetalle,
   type BriefingResponse,
@@ -49,6 +50,7 @@ export function AdminClienteDetallePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   async function handleEliminar(force = false) {
     if (!uuid || !data) return;
@@ -75,6 +77,22 @@ export function AdminClienteDetallePage() {
       }
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!uuid || !data) return;
+    const nombre = data.profile?.nombre || data.name;
+    if (!window.confirm(`Enviar un correo de restablecimiento de contrasena a "${nombre}" (${data.email})?`)) return;
+
+    setResettingPassword(true);
+    try {
+      const res = await enviarResetPasswordCliente(uuid);
+      toast.success(res.message || 'Correo de restablecimiento enviado.');
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'No se pudo enviar el correo de restablecimiento.');
+    } finally {
+      setResettingPassword(false);
     }
   }
 
@@ -106,14 +124,24 @@ export function AdminClienteDetallePage() {
           </p>
         </div>
         {isSuperAdmin && (
-          <button
-            type="button"
-            onClick={() => handleEliminar(false)}
-            disabled={deleting}
-            className="btn-danger"
-          >
-            {deleting ? 'Eliminando…' : 'Eliminar cliente'}
-          </button>
+          <div className="admin-header-actions">
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={resettingPassword}
+              className="btn-secondary"
+            >
+              {resettingPassword ? 'Enviando…' : 'Enviar reset password'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleEliminar(false)}
+              disabled={deleting}
+              className="btn-danger"
+            >
+              {deleting ? 'Eliminando…' : 'Eliminar cliente'}
+            </button>
+          </div>
         )}
       </header>
 

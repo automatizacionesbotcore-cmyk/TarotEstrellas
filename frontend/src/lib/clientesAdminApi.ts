@@ -118,6 +118,11 @@ export async function eliminarCliente(uuid: string, force = false): Promise<{ me
   return data;
 }
 
+export async function enviarResetPasswordCliente(uuid: string): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>(`/admin/clientes/${uuid}/reset-password`);
+  return data;
+}
+
 export async function getClienteBriefing(uuid: string, citaUuid?: string): Promise<{ data: BriefingResponse }> {
   const { data } = await api.get<{ data: BriefingResponse }>(`/admin/clientes/${uuid}/briefing`, {
     params: citaUuid ? { cita_uuid: citaUuid } : {},

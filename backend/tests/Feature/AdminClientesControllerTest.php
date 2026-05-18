@@ -10,7 +10,9 @@ use App\Models\Role;
 use App\Models\TipoConsulta;
 use App\Models\Transcripcion;
 use App\Models\User;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -122,6 +124,37 @@ class AdminClientesControllerTest extends TestCase
         ]);
     }
 
+    public function test_super_admin_envia_reset_password_a_cliente(): void
+    {
+        Notification::fake();
+
+        $superAdmin = $this->makeSuperAdmin();
+        $cliente = $this->makeClient(['email' => 'cliente-reset@example.com']);
+
+        Sanctum::actingAs($superAdmin);
+
+        $this->postJson('/api/admin/clientes/'.$cliente->uuid.'/reset-password')
+            ->assertOk()
+            ->assertJsonPath('message', 'Se envio un enlace de restablecimiento al cliente.');
+
+        Notification::assertSentTo($cliente, ResetPasswordNotification::class);
+    }
+
+    public function test_admin_no_super_admin_no_puede_enviar_reset_password_a_cliente(): void
+    {
+        Notification::fake();
+
+        $admin = $this->makeAdmin();
+        $cliente = $this->makeClient(['email' => 'cliente-no-reset@example.com']);
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/admin/clientes/'.$cliente->uuid.'/reset-password')
+            ->assertStatus(403);
+
+        Notification::assertNothingSent();
+    }
+
     public function test_admin_estadisticas_endpoint(): void
     {
         $admin = $this->makeAdmin();
@@ -158,6 +191,16 @@ class AdminClientesControllerTest extends TestCase
         $u->profile()->create(['nombre' => 'Admin']);
         $u->roles()->syncWithoutDetaching([
             Role::query()->where('nombre', 'admin_especialista')->value('id') => ['asignado_en' => now()],
+        ]);
+        return $u;
+    }
+
+    private function makeSuperAdmin(): User
+    {
+        $u = User::factory()->create(['email_verified_at' => now()]);
+        $u->profile()->create(['nombre' => 'Super Admin']);
+        $u->roles()->syncWithoutDetaching([
+            Role::query()->where('nombre', 'super_admin')->value('id') => ['asignado_en' => now()],
         ]);
         return $u;
     }
