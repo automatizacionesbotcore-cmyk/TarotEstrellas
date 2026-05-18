@@ -12,13 +12,6 @@ use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorAuthController extends Controller
 {
-    private Google2FA $g2fa;
-
-    public function __construct()
-    {
-        $this->g2fa = new Google2FA();
-    }
-
     /**
      * Inicia el flujo: genera secret y devuelve QR PNG en base64.
      */
@@ -30,11 +23,12 @@ class TwoFactorAuthController extends Controller
             return response()->json(['message' => 'Ya tienes 2FA habilitado.'], 422);
         }
 
-        $secret = $this->g2fa->generateSecretKey(32);
+        $g2fa = $this->google2fa();
+        $secret = $g2fa->generateSecretKey(32);
         $user->forceFill(['two_factor_secret' => $secret])->save();
 
         $appName = config('app.name', 'TarotEstrella');
-        $otpauth = $this->g2fa->getQRCodeUrl($appName, $user->email, $secret);
+        $otpauth = $g2fa->getQRCodeUrl($appName, $user->email, $secret);
 
         $qrPng = null;
         try {
@@ -64,7 +58,7 @@ class TwoFactorAuthController extends Controller
             return response()->json(['message' => 'Inicia el setup primero.'], 422);
         }
 
-        if (! $this->g2fa->verifyKey($user->two_factor_secret, $data['code'])) {
+        if (! $this->google2fa()->verifyKey($user->two_factor_secret, $data['code'])) {
             return response()->json(['message' => 'Codigo invalido.'], 422);
         }
 
@@ -95,7 +89,7 @@ class TwoFactorAuthController extends Controller
         $code = trim($data['code']);
 
         if (preg_match('/^\d{6}$/', $code)) {
-            if ($this->g2fa->verifyKey($user->two_factor_secret, $code)) {
+            if ($this->google2fa()->verifyKey($user->two_factor_secret, $code)) {
                 return response()->json(['valid' => true]);
             }
         }
@@ -108,6 +102,11 @@ class TwoFactorAuthController extends Controller
         }
 
         return response()->json(['message' => 'Codigo invalido.'], 422);
+    }
+
+    private function google2fa(): Google2FA
+    {
+        return new Google2FA();
     }
 
     public function regenerateRecoveryCodes(Request $request): JsonResponse
