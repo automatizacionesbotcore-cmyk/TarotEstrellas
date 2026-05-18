@@ -38,4 +38,25 @@ test.describe('Responsive UI smoke', () => {
       });
     }
   }
+
+  test('Astrea publico mantiene controles visibles en mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    await page.getByRole('button', { name: /abrir asistente astrea/i }).click();
+
+    const dialog = page.getByRole('dialog', { name: /astrea/i });
+    await expect(dialog).toBeVisible();
+    await expect(page.getByRole('button', { name: /pantalla completa/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^cerrar$/i })).toBeVisible();
+
+    const dialogBox = await dialog.boundingBox();
+    expect(dialogBox?.y ?? -1).toBeGreaterThanOrEqual(0);
+
+    await page.getByRole('button', { name: /pantalla completa/i }).click();
+    await expect(page.getByRole('button', { name: /restaurar chat/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^cerrar$/i }).click();
+    await expect(dialog).toBeHidden();
+  });
 });

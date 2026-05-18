@@ -89,6 +89,7 @@ export function AgenteWidget() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [teaserVisible, setTeaserVisible] = useState(false);
   const [teaserDismissed, setTeaserDismissed] = useState(() => {
     return sessionStorage.getItem('astrea-teaser-dismissed') === '1';
@@ -209,6 +210,10 @@ export function AgenteWidget() {
   };
 
   const expandir = () => {
+    if (mode === 'publico') {
+      setExpanded((value) => !value);
+      return;
+    }
     setOpen(false);
     navigate(isAdmin ? '/app/admin/asistente-ia' : '/app/asistente-ia');
   };
@@ -273,7 +278,11 @@ export function AgenteWidget() {
       )}
 
       {open && (
-        <div className="astrea-widget" role="dialog" aria-label="Astrea — Asistente de TarotEstrellas">
+        <div
+          className={`astrea-widget ${expanded ? 'astrea-widget--expanded' : ''}`}
+          role="dialog"
+          aria-label="Astrea — Asistente de TarotEstrellas"
+        >
           <header className="astrea-widget__header">
             <div className="astrea-widget__title">
               <span className="astrea-widget__avatar" aria-hidden="true">
@@ -286,10 +295,18 @@ export function AgenteWidget() {
             </div>
             <div className="astrea-widget__actions">
               <button type="button" onClick={nuevoChat} title="Nuevo chat" aria-label="Nuevo chat">＋</button>
-              {(mode === 'self' || mode === 'admin') && (
-                <button type="button" onClick={expandir} title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
-              )}
-              <button type="button" onClick={() => setOpen(false)} title="Cerrar" aria-label="Cerrar">×</button>
+              <button
+                type="button"
+                onClick={expandir}
+                title={expanded ? 'Restaurar' : 'Pantalla completa'}
+                aria-label={expanded ? 'Restaurar chat' : 'Pantalla completa'}
+              >⛶</button>
+              <button
+                type="button"
+                onClick={() => { setOpen(false); setExpanded(false); }}
+                title="Cerrar"
+                aria-label="Cerrar"
+              >×</button>
             </div>
           </header>
 
