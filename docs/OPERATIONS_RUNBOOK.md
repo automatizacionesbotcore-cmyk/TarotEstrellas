@@ -34,6 +34,20 @@ Estado: completado.
   - `https://tarotestrellas.com/servicios`
   - `https://tarotestrellas.com/backend/public/api/public/tipos-consulta`
 
+## Deploy PROD 2026-05-18
+
+Estado: completado.
+
+- Respaldo manual remoto creado antes del deploy: `backup-predeploy-ui-20260518-110522.tar.gz` en home del usuario Hostinger.
+- Frontend desplegado desde `frontend/dist`, compilado con `VITE_API_URL=https://tarotestrellas.com/backend/public/api`.
+- Cambio publicado: footer publico incluye credito con enlace a `https://automatizatech.cl`.
+- No se desplegaron cambios backend ni se tocaron migraciones.
+- Smoke test OK:
+  - `https://tarotestrellas.com/backend/public/api/health`
+  - `https://tarotestrellas.com/`
+  - `https://tarotestrellas.com/servicios`
+  - Bundle PROD verificado con `https://automatizatech.cl` y texto `Desarrollado por`.
+
 ## cfg-paypal-prod: PayPal LIVE
 
 Estado: requiere credenciales externas.
