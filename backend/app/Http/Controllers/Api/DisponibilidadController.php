@@ -199,14 +199,19 @@ class DisponibilidadController extends Controller
         $horarios = DisponibilidadBase::query()
             ->where('especialista_id', $especialista->id)
             ->where('dia_semana', $diaSemana)
-            ->where('activo', true)
             ->get();
 
         if ($horarios->isEmpty()) {
+            return $this->fallbackWindow($date);
+        }
+
+        $horariosActivos = $horarios->where('activo', true);
+
+        if ($horariosActivos->isEmpty()) {
             return [];
         }
 
-        $windows = $horarios->map(function ($h) use ($date) {
+        $windows = $horariosActivos->map(function ($h) use ($date) {
             $start = CarbonImmutable::parse($date.' '.$h->hora_inicio, 'America/Santiago')->setTimezone('UTC');
             $end = CarbonImmutable::parse($date.' '.$h->hora_fin, 'America/Santiago')->setTimezone('UTC');
             return ['start' => $start, 'end' => $end];
