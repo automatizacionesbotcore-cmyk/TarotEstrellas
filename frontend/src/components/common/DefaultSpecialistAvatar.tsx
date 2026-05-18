@@ -21,9 +21,10 @@ export function DefaultSpecialistAvatar({ name, className = '' }: Props) {
             <stop offset="1" stopColor="#10091f" />
           </linearGradient>
         </defs>
-        <circle cx="60" cy="60" r="56" fill="url(#specialistAvatarCard)" />
+        <circle className="default-specialist-avatar__base" cx="60" cy="60" r="56" fill="url(#specialistAvatarCard)" />
         <circle cx="60" cy="60" r="50" fill="none" stroke="#d7ad43" strokeOpacity="0.55" strokeWidth="2" />
         <path
+          className="default-specialist-avatar__moon"
           d="M73.2 24.5c-12.8 3.2-22.4 14.8-22.4 28.6 0 15.6 12.1 28.4 27.4 29.4-5.2 4.2-11.8 6.7-19 6.7-16.8 0-30.4-13.6-30.4-30.4 0-17.3 14.5-31.2 32-30.3 4.4.2 8.6 1.4 12.4 3.4Z"
           fill="url(#specialistAvatarGlow)"
         />
