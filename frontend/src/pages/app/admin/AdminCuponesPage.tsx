@@ -121,25 +121,40 @@ export function AdminCuponesPage() {
 
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Cupones</h1>
-        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>+ Nuevo cupón</button>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Ventas</p>
+          <h1>Cupones</h1>
+          <p className="admin-page-subtitle">Administra descuentos, vigencia y límites de uso.</p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>Nuevo cupón</button>
       </header>
 
       <form
         onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-        style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}
+        className="admin-filter-card"
       >
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar código o descripción" style={{ flex: 1, minWidth: 200 }} />
-        <select value={activo} onChange={(e) => setActivo(e.target.value as any)}>
-          <option value="all">Todos</option>
-          <option value="true">Activos</option>
-          <option value="false">Inactivos</option>
-        </select>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <input type="checkbox" checked={vigentes} onChange={(e) => setVigentes(e.target.checked)} /> Solo vigentes
-        </label>
-        <button type="submit">Filtrar</button>
+        <div className="admin-filter-grid">
+          <label>
+            Buscar
+            <input className="form-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Código o descripción" />
+          </label>
+          <label>
+            Estado
+            <select className="form-input" value={activo} onChange={(e) => setActivo(e.target.value as any)}>
+              <option value="all">Todos</option>
+              <option value="true">Activos</option>
+              <option value="false">Inactivos</option>
+            </select>
+          </label>
+          <label className="admin-checkbox-row admin-filter-check">
+            <input type="checkbox" checked={vigentes} onChange={(e) => setVigentes(e.target.checked)} />
+            <span>Solo vigentes</span>
+          </label>
+        </div>
+        <div className="admin-filter-actions">
+          <button type="submit" className="btn-primary">Filtrar</button>
+        </div>
       </form>
 
       <AdminTable

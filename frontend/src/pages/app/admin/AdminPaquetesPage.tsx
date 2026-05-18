@@ -95,25 +95,42 @@ export function AdminPaquetesPage() {
 
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Paquetes y membresías</h1>
-        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>+ Nuevo</button>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Oferta</p>
+          <h1>Paquetes y membresías</h1>
+          <p className="admin-page-subtitle">Gestiona productos recurrentes, destacados y vigencias.</p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>Nuevo paquete</button>
       </header>
 
       <form onSubmit={(e) => { e.preventDefault(); setPage(1); load(); }}
-        style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar nombre o slug" style={{ flex: 1, minWidth: 200 }} />
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
-          <option value="all">Todos los tipos</option>
-          <option value="paquete">Paquetes</option>
-          <option value="membresia">Membresías</option>
-        </select>
-        <select value={activo} onChange={(e) => setActivo(e.target.value as any)}>
-          <option value="all">Todos</option>
-          <option value="true">Activos</option>
-          <option value="false">Inactivos</option>
-        </select>
-        <button type="submit">Filtrar</button>
+        className="admin-filter-card">
+        <div className="admin-filter-grid">
+          <label>
+            Buscar
+            <input className="form-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre o slug" />
+          </label>
+          <label>
+            Tipo
+            <select className="form-input" value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
+              <option value="all">Todos los tipos</option>
+              <option value="paquete">Paquetes</option>
+              <option value="membresia">Membresías</option>
+            </select>
+          </label>
+          <label>
+            Estado
+            <select className="form-input" value={activo} onChange={(e) => setActivo(e.target.value as any)}>
+              <option value="all">Todos</option>
+              <option value="true">Activos</option>
+              <option value="false">Inactivos</option>
+            </select>
+          </label>
+        </div>
+        <div className="admin-filter-actions">
+          <button type="submit" className="btn-primary">Filtrar</button>
+        </div>
       </form>
 
       <AdminTable

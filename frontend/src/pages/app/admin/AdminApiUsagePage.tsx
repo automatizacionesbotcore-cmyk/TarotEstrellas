@@ -18,26 +18,20 @@ const ESTADO_LABEL: Record<ApiUsageRow['estado'], string> = {
 function ProviderCard({ row }: { row: ApiUsageRow }) {
   const pct = Math.min(100, row.porcentaje);
   return (
-    <div style={{
-      border: '1px solid var(--border-subtle)',
-      borderLeft: `6px solid ${ESTADO_COLOR[row.estado]}`,
-      borderRadius: 8,
-      padding: 16,
-      background: 'var(--card)',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <h4 style={{ margin: 0, textTransform: 'capitalize', color: 'var(--text)' }}>{row.provider}</h4>
-        <span style={{ color: ESTADO_COLOR[row.estado], fontWeight: 600, fontSize: 12 }}>
+    <div className={`admin-provider-card admin-provider-card--${row.estado}`}>
+      <div className="admin-provider-card__head">
+        <h4>{row.provider}</h4>
+        <span className={`badge ${row.estado === 'ok' ? 'badge-success' : row.estado === 'warning' ? 'badge-warning' : 'badge-danger'}`}>
           {ESTADO_LABEL[row.estado]}
         </span>
       </div>
-      <div style={{ marginTop: 8, fontSize: 14, color: 'var(--text-muted)' }}>
+      <div className="admin-provider-card__usage">
         {row.usado.toFixed(2)} / {row.limite} {row.unidad}
       </div>
-      <div style={{ marginTop: 8, height: 8, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: ESTADO_COLOR[row.estado] }} />
+      <div className="admin-progress">
+        <div style={{ width: `${pct}%`, background: ESTADO_COLOR[row.estado] }} />
       </div>
-      <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+      <div className="admin-provider-card__meta">
         {row.porcentaje.toFixed(1)}% (umbral: {row.warn_pct}%)
       </div>
     </div>
@@ -65,8 +59,8 @@ export function AdminApiUsagePage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-api-usage'] }),
   });
 
-  if (isLoading) return <p style={{ color: 'var(--text)' }}>Cargando consumo de APIs…</p>;
-  if (error || !data) return <p style={{ color: '#dc2626' }}>Error al cargar el dashboard.</p>;
+  if (isLoading) return <main className="page-content"><p>Cargando consumo de APIs…</p></main>;
+  if (error || !data) return <main className="page-content"><p className="form-error">Error al cargar el dashboard.</p></main>;
 
   const limites = data.limites ?? {};
   const getDraft = (p: string) =>
@@ -94,7 +88,7 @@ export function AdminApiUsagePage() {
     {
       key: 'provider',
       label: 'Proveedor',
-      render: (r) => <span style={{ textTransform: 'capitalize' }}>{r.provider} ({r.unidad})</span>,
+      render: (r) => <span className="admin-capitalize">{r.provider} ({r.unidad})</span>,
     },
     {
       key: 'limite',
@@ -135,13 +129,13 @@ export function AdminApiUsagePage() {
 
   const alertColumns: Column<ApiUsageAlert>[] = [
     { key: 'created_at', label: 'Fecha', render: (a) => new Date(a.created_at).toLocaleString() },
-    { key: 'provider', label: 'Proveedor', render: (a) => <span style={{ textTransform: 'capitalize' }}>{a.provider}</span> },
+    { key: 'provider', label: 'Proveedor', render: (a) => <span className="admin-capitalize">{a.provider}</span> },
     { key: 'period', label: 'Periodo' },
     {
       key: 'nivel',
       label: 'Nivel',
       render: (a) => (
-        <span style={{ color: a.nivel === 'exceeded' ? '#dc2626' : '#d97706', fontWeight: 600 }}>
+        <span className={`badge ${a.nivel === 'exceeded' ? 'badge-danger' : 'badge-warning'}`}>
           {a.nivel}
         </span>
       ),
@@ -155,8 +149,8 @@ export function AdminApiUsagePage() {
       <header className="admin-page-header">
         <div>
           <p className="dash-eyebrow">Consumo externo</p>
-          <h1 style={{ margin: 0, color: 'var(--text)' }}>APIs externas</h1>
-          <p className="text-muted" style={{ margin: '0.25rem 0 0' }}>Periodo: {data.periodo}</p>
+          <h1>APIs externas</h1>
+          <p className="admin-page-subtitle">Periodo: {data.periodo}</p>
         </div>
         <button
           onClick={() => checkMut.mutate()}
@@ -167,59 +161,66 @@ export function AdminApiUsagePage() {
         </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+      <section className="admin-provider-grid">
         {data.rows.map((r) => <ProviderCard key={r.provider} row={r} />)}
-      </div>
+      </section>
 
-      <h3 style={{ marginTop: 32, color: 'var(--text)' }}>Límites y umbrales</h3>
-      <AdminTable
-        columns={limitColumns}
-        rows={data.rows}
-        rowKey={(r) => r.provider}
-        searchable={false}
-        pageSizeOptions={[]}
-        showFooter={false}
-      />
-
-      <h3 style={{ marginTop: 24, color: 'var(--text)' }}>Emails extra para alertas</h3>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 8px' }}>
-        Destinatarios actuales por rol: {data.destinatarios.join(', ') || '—'}
-      </p>
-      <input
-        type="text"
-        value={emails}
-        onChange={(e) => setEmails(e.target.value)}
-        placeholder="email1@dominio.com, email2@dominio.com"
-        className="form-input"
-        style={{ width: '100%', maxWidth: 600 }}
-      />
-
-      <div style={{ marginTop: 16 }}>
-        <button
-          onClick={onSave}
-          disabled={saveMut.isPending}
-          className="btn-primary"
-        >
-          {saveMut.isPending ? 'Guardando…' : 'Guardar cambios'}
-        </button>
-        {saveMut.isSuccess && <span style={{ marginLeft: 12, color: 'var(--accent)' }}>✓ Guardado</span>}
-      </div>
-
-      <h3 style={{ marginTop: 32, color: 'var(--text)' }}>Alertas recientes</h3>
-      {data.alertas_recientes.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)' }}>Sin alertas registradas.</p>
-      ) : (
+      <section className="admin-section-block">
+        <h2 className="admin-section-title">Límites y umbrales</h2>
         <AdminTable
-          columns={alertColumns}
-          rows={data.alertas_recientes}
-          rowKey={(a) => a.id}
-          searchable
-          searchPlaceholder="Buscar alerta"
-          getSearchText={(a) => `${a.provider} ${a.period} ${a.nivel}`}
-          pageSize={5}
-          pageSizeOptions={[5, 10, 25]}
+          columns={limitColumns}
+          rows={data.rows}
+          rowKey={(r) => r.provider}
+          searchable={false}
+          pageSizeOptions={[]}
+          showFooter={false}
         />
-      )}
+      </section>
+
+      <section className="admin-filter-card admin-alert-config">
+        <div>
+          <h2 className="admin-section-title">Emails extra para alertas</h2>
+          <p className="admin-page-subtitle">
+            Destinatarios actuales por rol: {data.destinatarios.join(', ') || '—'}
+          </p>
+        </div>
+        <input
+          type="text"
+          value={emails}
+          onChange={(e) => setEmails(e.target.value)}
+          placeholder="email1@dominio.com, email2@dominio.com"
+          className="form-input"
+        />
+
+        <div className="admin-filter-actions">
+          <button
+            onClick={onSave}
+            disabled={saveMut.isPending}
+            className="btn-primary"
+          >
+            {saveMut.isPending ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+          {saveMut.isSuccess && <span className="badge badge-success">Guardado</span>}
+        </div>
+      </section>
+
+      <section className="admin-section-block">
+        <h2 className="admin-section-title">Alertas recientes</h2>
+        {data.alertas_recientes.length === 0 ? (
+          <div className="admin-empty-card"><p className="text-muted">Sin alertas registradas.</p></div>
+        ) : (
+          <AdminTable
+            columns={alertColumns}
+            rows={data.alertas_recientes}
+            rowKey={(a) => a.id}
+            searchable
+            searchPlaceholder="Buscar alerta"
+            getSearchText={(a) => `${a.provider} ${a.period} ${a.nivel}`}
+            pageSize={5}
+            pageSizeOptions={[5, 10, 25]}
+          />
+        )}
+      </section>
     </main>
   );
 }

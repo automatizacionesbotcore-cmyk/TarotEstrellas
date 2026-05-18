@@ -23,11 +23,11 @@ type PaginatedComprobantes = {
 
 const ESTADO_LABELS: Record<string, string> = {
   pendiente:            'Pendiente IA',
-  aprobado_automatico:  '✅ Aprobado auto',
-  rechazado_automatico: '❌ Rechazado auto',
-  revision_requerida:   '🔍 Revisión manual',
-  aprobado_manual:      '✅ Aprobado',
-  rechazado_manual:     '❌ Rechazado',
+  aprobado_automatico:  'Aprobado auto',
+  rechazado_automatico: 'Rechazado auto',
+  revision_requerida:   'Revisión manual',
+  aprobado_manual:      'Aprobado',
+  rechazado_manual:     'Rechazado',
 };
 
 function estadoBadge(estado: string) {
@@ -88,22 +88,20 @@ export function AdminComprobantesPage() {
       key: 'acciones',
       label: 'Acciones',
       render: (r) => isPending(r.estado_validacion) ? (
-        <>
+        <div className="admin-row-actions">
           <button
             className="btn-primary"
-            style={{ marginRight: '.25rem', fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
             onClick={(e) => { e.stopPropagation(); setPendingAprobar(r.id); }}
           >
-            Confirmar ✓
+            Confirmar
           </button>
           <button
             className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
             onClick={(e) => { e.stopPropagation(); setPendingRechazar({ id: r.id, razon: '' }); }}
           >
-            Rechazar ✗
+            Rechazar
           </button>
-        </>
+        </div>
       ) : (
         <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>—</span>
       ),
@@ -114,22 +112,20 @@ export function AdminComprobantesPage() {
     <main className="page-content">
       <header className="admin-page-header">
         <div>
-          <p className="dash-eyebrow">✦ Pagos Chile</p>
+          <p className="dash-eyebrow">Pagos Chile</p>
           <h1>Comprobantes de transferencia</h1>
-          <p className="text-muted" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
+          <p className="admin-page-subtitle">
             Revisa el comprobante en tu banco y confirma o rechaza cada transferencia.
           </p>
         </div>
       </header>
 
-      {/* Filtro estado */}
-      <div className="admin-filters">
+      <div className="admin-filter-card admin-filter-pills">
         {['', 'revision_requerida', 'pendiente', 'aprobado_manual', 'rechazado_manual'].map((e) => (
           <button
             key={e}
             type="button"
             className={filtroEstado === e ? 'btn-primary' : 'btn-secondary'}
-            style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
             onClick={() => setFiltroEstado(e)}
           >
             {e === '' ? 'Todos' : (ESTADO_LABELS[e] ?? e)}
@@ -157,7 +153,7 @@ export function AdminComprobantesPage() {
                 disabled={aprobarMutation.isPending}
                 onClick={() => aprobarMutation.mutate(pendingAprobar)}
               >
-                {aprobarMutation.isPending ? 'Confirmando…' : '✓ Confirmar transferencia'}
+                {aprobarMutation.isPending ? 'Confirmando…' : 'Confirmar transferencia'}
               </button>
             </div>
           </div>
@@ -196,7 +192,7 @@ export function AdminComprobantesPage() {
                   razon: pendingRechazar.razon.trim(),
                 })}
               >
-                {rechazarMutation.isPending ? 'Rechazando…' : '✗ Rechazar'}
+                {rechazarMutation.isPending ? 'Rechazando…' : 'Rechazar'}
               </button>
             </div>
           </div>

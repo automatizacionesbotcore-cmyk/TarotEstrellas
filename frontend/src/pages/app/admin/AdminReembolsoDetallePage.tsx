@@ -56,8 +56,16 @@ export function AdminReembolsoDetallePage() {
 
   return (
     <main className="page-content">
-      <Link to="/app/admin/reembolsos">← Volver</Link>
-      <h1>Reembolso {reembolso.uuid.slice(0, 8)}…</h1>
+      <header className="admin-page-header">
+        <div>
+          <Link to="/app/admin/reembolsos" className="admin-back-link">Volver a reembolsos</Link>
+          <p className="dash-eyebrow">Reembolso</p>
+          <h1>Solicitud {reembolso.uuid.slice(0, 8)}…</h1>
+          <p className="admin-page-subtitle">
+            {reembolso.cliente?.email ?? 'Cliente sin email'} · {reembolso.solicitado_en ? new Date(reembolso.solicitado_en).toLocaleString('es-CL') : 'Sin fecha'}
+          </p>
+        </div>
+      </header>
 
       <section className="dash-stats">
         <div className="stat-card"><span className="stat-value">{reembolso.estado}</span><span className="stat-label">Estado</span></div>
@@ -67,8 +75,8 @@ export function AdminReembolsoDetallePage() {
       </section>
 
       <section>
-        <h2>Acciones</h2>
-       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <h2 className="admin-section-title">Acciones</h2>
+       <div className="admin-filter-actions" style={{ marginTop: '0.75rem' }}>
           {reembolso.estado === 'pendiente' && (
             <button className="btn-primary" onClick={() => setAction('procesar')} disabled={procesar.isPending}>Procesar</button>
           )}
@@ -82,7 +90,7 @@ export function AdminReembolsoDetallePage() {
       </section>
 
       <section>
-        <h2>Timeline</h2>
+        <h2 className="admin-section-title">Timeline</h2>
         <Timeline events={timeline} />
       </section>
 

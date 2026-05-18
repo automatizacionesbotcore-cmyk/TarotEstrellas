@@ -50,10 +50,10 @@ export function AdminClientesPage() {
       key: 'cliente',
       label: 'Cliente',
       render: (c) => (
-        <>
-          <strong>{c.profile?.nombre || c.name}{c.profile?.apellido ? ` ${c.profile.apellido}` : ''}</strong>
-          <div style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{c.email}</div>
-        </>
+        <div className="admin-cell-stack">
+          <strong className="admin-cell-title">{c.profile?.nombre || c.name}{c.profile?.apellido ? ` ${c.profile.apellido}` : ''}</strong>
+          <span className="admin-cell-muted">{c.email}</span>
+        </div>
       ),
     },
     { key: 'pais', label: 'País', render: (c) => c.profile?.pais_residencia || '—' },
@@ -89,50 +89,68 @@ export function AdminClientesPage() {
 
   return (
     <main className="page-content">
-      <header style={{ marginBottom: '1.5rem' }}>
-        <h1>Clientes</h1>
-        <p style={{ color: 'var(--text-muted)' }}>
-          Búsqueda y gestión de la base de clientes. Click en un cliente para abrir su ficha 360°.
-        </p>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Clientes</p>
+          <h1>Base de clientes</h1>
+          <p className="admin-page-subtitle">
+            Búsqueda y gestión de la base de clientes. Abre cada ficha para ver el historial completo.
+          </p>
+        </div>
+        {meta && <span className="admin-total-pill">{meta.total.toLocaleString()} clientes</span>}
       </header>
 
-      <section className="card" style={{ padding: '1rem', marginBottom: '1rem', display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-        <input
-          type="search"
-          className="input-field"
-          placeholder="Buscar por nombre, email o teléfono"
-          value={filters.q || ''}
-          onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value, page: 1 }))}
-        />
-        <input
-          type="text"
-          className="input-field"
-          placeholder="País (CL, AR…)"
-          maxLength={2}
-          value={filters.pais || ''}
-          onChange={(e) => setFilters((f) => ({ ...f, pais: e.target.value.toUpperCase() || undefined, page: 1 }))}
-        />
-        <select
-          className="input-field"
-          value={filters.frecuencia ?? ''}
-          onChange={(e) => setFilters((f) => ({ ...f, frecuencia: (e.target.value || undefined) as ClienteListaParams['frecuencia'], page: 1 }))}
-        >
-          {FRECUENCIAS.map((f) => (
-            <option key={f.label} value={f.value ?? ''}>{f.label}</option>
-          ))}
-        </select>
-        <select
-          className="input-field"
-          value={filters.activos === undefined ? '' : String(filters.activos)}
-          onChange={(e) => setFilters((f) => ({ ...f, activos: e.target.value === '' ? undefined : (Number(e.target.value) as 0 | 1), page: 1 }))}
-        >
-          <option value="">Activos: todos</option>
-          <option value="1">Activos (login &lt; 60d)</option>
-          <option value="0">Inactivos</option>
-        </select>
+      <section className="admin-filter-card">
+        <div className="admin-filter-grid">
+          <label>
+            Buscar
+            <input
+              type="search"
+              className="input-field"
+              placeholder="Nombre, email o teléfono"
+              value={filters.q || ''}
+              onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value, page: 1 }))}
+            />
+          </label>
+          <label>
+            País
+            <input
+              type="text"
+              className="input-field"
+              placeholder="CL, AR"
+              maxLength={2}
+              value={filters.pais || ''}
+              onChange={(e) => setFilters((f) => ({ ...f, pais: e.target.value.toUpperCase() || undefined, page: 1 }))}
+            />
+          </label>
+          <label>
+            Frecuencia
+            <select
+              className="input-field"
+              value={filters.frecuencia ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, frecuencia: (e.target.value || undefined) as ClienteListaParams['frecuencia'], page: 1 }))}
+            >
+              {FRECUENCIAS.map((f) => (
+                <option key={f.label} value={f.value ?? ''}>{f.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Actividad
+            <select
+              className="input-field"
+              value={filters.activos === undefined ? '' : String(filters.activos)}
+              onChange={(e) => setFilters((f) => ({ ...f, activos: e.target.value === '' ? undefined : (Number(e.target.value) as 0 | 1), page: 1 }))}
+            >
+              <option value="">Todos</option>
+              <option value="1">Activos</option>
+              <option value="0">Inactivos</option>
+            </select>
+          </label>
+        </div>
       </section>
 
-      {error && <p style={{ color: '#c0392b' }}>{error}</p>}
+      {error && <p className="form-error">{error}</p>}
 
       <AdminTable
         columns={columns}
@@ -150,7 +168,7 @@ export function AdminClientesPage() {
       />
 
       {meta && (
-        <p style={{ color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+        <p className="admin-page-subtitle">
           Ingresos visibles: {Object.entries(totalIngresos).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
         </p>
       )}

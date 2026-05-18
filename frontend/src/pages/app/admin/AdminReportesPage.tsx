@@ -51,18 +51,22 @@ function DateFilters({
   desde, hasta, today, onChange, onRefetch,
 }: { desde: string; hasta: string; today: string; onChange: (d: string, h: string) => void; onRefetch: () => void }) {
   return (
-    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1.5rem', alignItems: 'flex-end' }}>
-      <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Desde</label>
+    <div className="admin-filter-card">
+      <div className="admin-filter-grid">
+        <label>
+          Desde
         <input type="date" className="form-input" value={desde} max={hasta}
           onChange={(e) => onChange(e.target.value, hasta)} />
-      </div>
-      <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Hasta</label>
+        </label>
+        <label>
+          Hasta
         <input type="date" className="form-input" value={hasta} min={desde} max={today}
           onChange={(e) => onChange(desde, e.target.value)} />
+        </label>
       </div>
-      <button type="button" className="btn-primary" onClick={onRefetch}>Actualizar</button>
+      <div className="admin-filter-actions">
+        <button type="button" className="btn-primary" onClick={onRefetch}>Actualizar</button>
+      </div>
     </div>
   );
 }
@@ -98,18 +102,18 @@ function TabIngresos() {
       {report && (
         <>
           {report.resumen.length > 0 && (
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+            <div className="admin-metric-grid">
               {report.resumen.map((r) => (
-                <div key={r.moneda} className="metric-card" style={{ minWidth: 180 }}>
-                  <p className="metric-label">{r.moneda}</p>
-                  <p className="metric-value">{fmtMoney(r.total_centavos, r.moneda)}</p>
-                  <p className="metric-sub">{r.cantidad} pago{r.cantidad !== 1 ? 's' : ''}</p>
+                <div key={r.moneda} className="admin-metric-card">
+                  <span className="admin-metric-label">{r.moneda}</span>
+                  <strong className="admin-metric-value">{fmtMoney(r.total_centavos, r.moneda)}</strong>
+                  <span className="admin-cell-muted">{r.cantidad} pago{r.cantidad !== 1 ? 's' : ''}</span>
                 </div>
               ))}
             </div>
           )}
-          <section style={{ marginTop: '2rem' }}>
-            <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Detalle de pagos ({report.pagos.length})</h2>
+          <section className="admin-section-block">
+            <h2 className="admin-section-title">Detalle de pagos ({report.pagos.length})</h2>
             {report.pagos.length === 0 ? (
               <p className="text-muted">No hay pagos en este período.</p>
             ) : (
@@ -158,7 +162,7 @@ function TabConsultas() {
       {isError && <p className="form-error" style={{ marginTop: '1rem' }}>Error al cargar.</p>}
       {r && (
         <>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+          <div className="admin-metric-grid">
             {[
               { label: 'Total citas',       value: r.total },
               { label: 'Finalizadas',        value: r.finalizadas },
@@ -166,16 +170,16 @@ function TabConsultas() {
               { label: 'No-show',            value: `${r.no_show} (${r.tasa_no_show}%)` },
               { label: 'Duración promedio',  value: `${r.duracion_promedio} min` },
             ].map(({ label, value }) => (
-              <div key={label} className="metric-card" style={{ minWidth: 160 }}>
-                <p className="metric-label">{label}</p>
-                <p className="metric-value" style={{ fontSize: '1.4rem' }}>{value}</p>
+              <div key={label} className="admin-metric-card">
+                <span className="admin-metric-label">{label}</span>
+                <strong className="admin-metric-value">{value}</strong>
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por estado</h3>
+          <div className="admin-report-grid">
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Por estado</h3>
               <AdminTable
                 columns={breakdownColumns}
                 rows={Object.entries(r.por_estado)}
@@ -185,8 +189,8 @@ function TabConsultas() {
                 showFooter={false}
               />
             </section>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por tipo de consulta</h3>
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Por tipo de consulta</h3>
               <AdminTable
                 columns={breakdownColumns}
                 rows={Object.entries(r.por_tipo)}
@@ -250,14 +254,16 @@ function TabClientes() {
       {isError && <p className="form-error" style={{ marginTop: '1rem' }}>Error al cargar.</p>}
       {r && (
         <>
-          <div className="metric-card" style={{ marginTop: '2rem', minWidth: 180, display: 'inline-block' }}>
-            <p className="metric-label">Clientes nuevos</p>
-            <p className="metric-value">{r.nuevos_clientes}</p>
+          <div className="admin-metric-grid">
+            <div className="admin-metric-card">
+              <span className="admin-metric-label">Clientes nuevos</span>
+              <strong className="admin-metric-value">{r.nuevos_clientes}</strong>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Top 10 por ingresos</h3>
+          <div className="admin-report-grid">
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Top 10 por ingresos</h3>
               <AdminTable
                 columns={topIngresosColumns}
                 rows={r.top_ingresos}
@@ -267,8 +273,8 @@ function TabClientes() {
                 showFooter={false}
               />
             </section>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Top 10 por consultas</h3>
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Top 10 por consultas</h3>
               <AdminTable
                 columns={topConsultasColumns}
                 rows={r.top_consultas}
@@ -318,22 +324,22 @@ function TabFiscal() {
       {isError && <p className="form-error" style={{ marginTop: '1rem' }}>Error al cargar.</p>}
       {r && (
         <>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+          <div className="admin-metric-grid">
             {[
               { label: 'Ingresos brutos', cents: r.ingresos_brutos_centavos },
               { label: 'Comisiones Stripe (est.)', cents: r.comisiones_stripe_centavos },
               { label: 'Ingresos netos', cents: r.ingresos_netos_centavos },
             ].map(({ label, cents }) => (
-              <div key={label} className="metric-card" style={{ minWidth: 200 }}>
-                <p className="metric-label">{label}</p>
-                <p className="metric-value" style={{ fontSize: '1.3rem' }}>{fmtMoney(cents, 'CLP')}</p>
+              <div key={label} className="admin-metric-card">
+                <span className="admin-metric-label">{label}</span>
+                <strong className="admin-metric-value">{fmtMoney(cents, 'CLP')}</strong>
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por tipo de servicio</h3>
+          <div className="admin-report-grid">
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Por tipo de servicio</h3>
               <AdminTable
                 columns={tipoColumns}
                 rows={r.desglose_por_tipo}
@@ -343,8 +349,8 @@ function TabFiscal() {
                 showFooter={false}
               />
             </section>
-            <section>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Por mes</h3>
+            <section className="admin-section-block">
+              <h3 className="admin-section-title">Por mes</h3>
               <AdminTable
                 columns={mesColumns}
                 rows={r.desglose_por_mes}
@@ -375,19 +381,21 @@ export function AdminReportesPage() {
 
   return (
     <main className="page-content">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <p className="dash-eyebrow">✦ Reportes</p>
-        <h1 className="dash-title">Reportes</h1>
-      </motion.div>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Reportes</p>
+          <h1>Reportes</h1>
+          <p className="admin-page-subtitle">Consulta ingresos, actividad, clientes y resumen fiscal por periodo.</p>
+        </div>
+      </header>
 
-      <div className="admin-tabs" style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', borderBottom: '1px solid rgba(245,230,211,0.15)', paddingBottom: '0.25rem' }}>
+      <div className="admin-detail-tabs">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={activeTab === tab.id ? 'btn-primary' : 'btn-secondary'}
-            style={{ fontSize: '0.9rem', padding: '0.4rem 1rem' }}
+            className={activeTab === tab.id ? 'is-active' : ''}
           >
             {tab.label}
           </button>

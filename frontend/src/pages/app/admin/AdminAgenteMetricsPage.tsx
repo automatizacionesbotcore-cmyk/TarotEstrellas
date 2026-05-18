@@ -16,7 +16,7 @@ export function AdminAgenteMetricsPage() {
   if (isLoading) return <main className="page-content"><p>Cargando…</p></main>;
   if (isError) return (
     <main className="page-content">
-      <p style={{ color: 'crimson' }}>Error: {(error as Error).message}</p>
+      <p className="form-error">Error: {(error as Error).message}</p>
     </main>
   );
   if (!data) return null;
@@ -51,24 +51,27 @@ export function AdminAgenteMetricsPage() {
 
   return (
     <main className="page-content">
-      <header style={{ marginBottom: '1.5rem' }}>
-        <h1>Agente IA — Métricas y costos</h1>
-        <p style={{ color: 'var(--text-muted)' }}>
-          Periodo: {new Date(data.desde).toLocaleDateString()} → {new Date(data.hasta).toLocaleDateString()}
-        </p>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Astrea IA</p>
+          <h1>Métricas y costos</h1>
+          <p className="admin-page-subtitle">
+            Periodo: {new Date(data.desde).toLocaleDateString()} - {new Date(data.hasta).toLocaleDateString()}
+          </p>
+        </div>
       </header>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <section className="admin-metric-grid">
         <Card label="Conversaciones" value={fmtN(data.totales.conversaciones)} />
         <Card label="Tokens entrada" value={fmtN(data.totales.tokens_in)} />
         <Card label="Tokens salida"  value={fmtN(data.totales.tokens_out)} />
         <Card label="Costo total USD" value={fmtUsd(data.totales.costo_usd)} accent />
-        <Card label="Errores" value={fmtN(data.totales.errores)} />
+        <Card label="Errores" value={fmtN(data.totales.errores)} danger={data.totales.errores > 0} />
         <Card label="Latencia prom." value={`${data.totales.latencia_avg_ms} ms`} />
       </section>
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Costo por modelo</h2>
+      <section className="admin-section-block">
+        <h2 className="admin-section-title">Costo por modelo</h2>
         <AdminTable
           columns={modelColumns}
           rows={data.por_modelo}
@@ -81,8 +84,8 @@ export function AdminAgenteMetricsPage() {
         />
       </section>
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Top 10 usuarios por costo</h2>
+      <section className="admin-section-block">
+        <h2 className="admin-section-title">Top 10 usuarios por costo</h2>
         <AdminTable
           columns={userColumns}
           rows={data.top_usuarios}
@@ -96,8 +99,8 @@ export function AdminAgenteMetricsPage() {
         />
       </section>
 
-      <section>
-        <h2>Serie diaria</h2>
+      <section className="admin-section-block">
+        <h2 className="admin-section-title">Serie diaria</h2>
         <AdminTable
           columns={dailyColumns}
           rows={data.serie_diaria}
@@ -112,18 +115,13 @@ export function AdminAgenteMetricsPage() {
   );
 }
 
-function Card({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Card({ label, value, accent, danger }: { label: string; value: string; accent?: boolean; danger?: boolean }) {
   return (
-    <div
-      style={{
-        padding: '1rem',
-        borderRadius: 8,
-        border: '1px solid var(--border)',
-        background: accent ? 'var(--accent-bg)' : 'var(--surface)',
-      }}
-    >
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{value}</div>
+    <div className="admin-metric-card">
+      <span className="admin-metric-label">{label}</span>
+      <strong className={`admin-metric-value${danger ? ' admin-metric-value--danger' : ''}${accent ? ' admin-metric-value--accent' : ''}`}>
+        {value}
+      </strong>
     </div>
   );
 }

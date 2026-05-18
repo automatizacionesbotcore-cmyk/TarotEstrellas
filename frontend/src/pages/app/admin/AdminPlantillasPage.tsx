@@ -61,20 +61,27 @@ export function AdminPlantillasPage() {
 
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Plantillas de notificación</h1>
-        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>+ Nueva</button>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Comunicaciones</p>
+          <h1>Plantillas de notificación</h1>
+          <p className="admin-page-subtitle">Edita mensajes por canal y valida versiones antes de enviarlas.</p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>Nueva plantilla</button>
       </header>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label>Canal{' '}
-          <select value={canal} onChange={(e) => { setCanal(e.target.value as any); setPage(1); }}>
+      <div className="admin-filter-card">
+        <div className="admin-filter-grid">
+          <label>
+            Canal
+            <select className="form-input" value={canal} onChange={(e) => { setCanal(e.target.value as any); setPage(1); }}>
             <option value="all">Todos</option>
             <option value="email">Email</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="sms">SMS</option>
           </select>
-        </label>
+          </label>
+        </div>
       </div>
 
       <AdminTable
