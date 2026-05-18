@@ -127,7 +127,9 @@ class AuthControllerTest extends TestCase
             'email' => 'reset@example.com',
         ]);
 
-        $forgotResponse->assertOk();
+        $forgotResponse
+            ->assertOk()
+            ->assertJsonPath('message', 'Te enviamos un enlace para restablecer tu contraseña.');
 
         $token = Password::broker()->createToken($user);
 
@@ -138,7 +140,9 @@ class AuthControllerTest extends TestCase
             'password_confirmation' => 'NewPassword123!',
         ]);
 
-        $resetResponse->assertOk();
+        $resetResponse
+            ->assertOk()
+            ->assertJsonPath('message', 'Tu contraseña fue restablecida correctamente.');
 
         $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
     }

@@ -7,6 +7,7 @@ use App\Models\Consentimiento;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\PasswordResetMessages;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -203,12 +204,12 @@ class AuthController extends Controller
 
         if ($status === Password::RESET_LINK_SENT) {
             return response()->json([
-                'message' => __($status),
+                'message' => PasswordResetMessages::get($status),
             ]);
         }
 
         return response()->json([
-            'message' => __($status),
+            'message' => PasswordResetMessages::get($status),
         ], 422);
     }
 
@@ -232,12 +233,12 @@ class AuthController extends Controller
 
         if ($status === Password::PASSWORD_RESET) {
             return response()->json([
-                'message' => __($status),
+                'message' => PasswordResetMessages::get($status),
             ]);
         }
 
         return response()->json([
-            'message' => __($status),
+            'message' => PasswordResetMessages::get($status),
         ], 422);
     }
 

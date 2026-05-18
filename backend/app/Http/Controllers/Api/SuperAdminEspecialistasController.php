@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PerfilEspecialista;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\PasswordResetMessages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,7 +153,7 @@ class SuperAdminEspecialistasController extends Controller
         $status = Password::sendResetLink(['email' => $user->email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
-            return response()->json(['message' => __($status)], 422);
+            return response()->json(['message' => PasswordResetMessages::get($status)], 422);
         }
 
         return response()->json([

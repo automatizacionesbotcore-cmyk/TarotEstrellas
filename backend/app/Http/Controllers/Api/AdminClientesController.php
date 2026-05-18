@@ -7,6 +7,7 @@ use App\Models\Cita;
 use App\Models\Pago;
 use App\Models\User;
 use App\Services\BriefingIAService;
+use App\Support\PasswordResetMessages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -304,7 +305,7 @@ class AdminClientesController extends Controller
         $status = Password::sendResetLink(['email' => $cliente->email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
-            return response()->json(['message' => __($status)], 422);
+            return response()->json(['message' => PasswordResetMessages::get($status)], 422);
         }
 
         return response()->json([
