@@ -210,7 +210,7 @@ export function ServicioDetallePage() {
   const availabilityQuery = useQuery({
     queryKey: ['disponibilidad-dia', servicio?.slug, agendaDate, selectedTimezone, selectedEspecialistaId],
     queryFn: async () => {
-      const r = await api.get('/public/disponibilidad', {
+      const r = await api.get('/disponibilidad', {
         params: {
           tipo_consulta_slug: servicio!.slug,
           date: agendaDate,
