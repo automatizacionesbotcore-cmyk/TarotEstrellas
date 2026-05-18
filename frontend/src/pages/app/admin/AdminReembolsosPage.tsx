@@ -42,11 +42,12 @@ export function AdminReembolsosPage() {
   const navigate     = useNavigate();
   const queryClient  = useQueryClient();
   const [filters, setFilters] = useState<FilterValues>({});
+  const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
 
   const listQuery = useQuery({
-    queryKey: ['admin', 'reembolsos', 'list', filters],
-    queryFn:  async () => (await api.get<PaginatedReembolsos>('/admin/reembolsos', { params: filters })).data,
+    queryKey: ['admin', 'reembolsos', 'list', filters, page],
+    queryFn:  async () => (await api.get<PaginatedReembolsos>('/admin/reembolsos', { params: { ...filters, page, per_page: 25 } })).data,
   });
 
   const exportMutation = useMutation({
@@ -85,7 +86,7 @@ export function AdminReembolsosPage() {
 
       <AdminFilters
         values={filters}
-        onChange={setFilters}
+        onChange={(next) => { setFilters(next); setPage(1); }}
         estados={ESTADOS}
         metodos={METODOS}
       />
@@ -96,6 +97,13 @@ export function AdminReembolsosPage() {
         loading={listQuery.isLoading}
         rowKey={(r) => r.uuid}
         onRowClick={(r) => navigate(`/app/admin/reembolsos/${r.uuid}`)}
+        searchable={false}
+        pagination={listQuery.data?.meta ? {
+          currentPage: listQuery.data.meta.current_page,
+          lastPage: listQuery.data.meta.last_page,
+          total: listQuery.data.meta.total,
+          onPageChange: setPage,
+        } : undefined}
       />
 
       {showModal && (

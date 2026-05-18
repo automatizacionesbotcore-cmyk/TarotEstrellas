@@ -17,8 +17,10 @@ export type ApiUsageAlert = {
   nivel: 'warning' | 'exceeded';
   porcentaje: number;
   usado: number;
+  valor_actual?: number;
   limite: number;
   notificado_at: string | null;
+  notificado_en?: string | null;
   created_at: string;
 };
 
@@ -41,12 +43,12 @@ export async function updateApiLimits(payload: {
   openai?: { limite?: number; warn_pct?: number };
   daily?: { limite?: number; warn_pct?: number };
   alert_emails?: string;
-}): Promise<{ ok: true }> {
+}): Promise<{ message: string; limits: ApiUsageResponse['limites'] }> {
   const { data } = await api.patch('/admin/api-usage/limits', payload);
   return data;
 }
 
-export async function triggerApiCheck(): Promise<{ ok: true; rows: ApiUsageRow[] }> {
+export async function triggerApiCheck(): Promise<{ message: string; rows: ApiUsageRow[] }> {
   const { data } = await api.post('/admin/api-usage/check', {});
   return data;
 }

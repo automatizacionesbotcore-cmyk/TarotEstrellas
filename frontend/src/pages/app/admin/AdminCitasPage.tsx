@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { AdminFilters, type FilterValues } from '../../../components/admin/AdminFilters';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 type Cita = {
   uuid:           string;
@@ -138,6 +139,59 @@ export function AdminCitasPage() {
   const rows = data?.data ?? [];
   const meta = data?.meta;
 
+  const columns: Column<Cita>[] = [
+    {
+      key: 'codigo_referencia',
+      label: 'Código',
+      sortable: true,
+      render: (r) => r.codigo_referencia || `${r.uuid.slice(0, 8)}…`,
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: true,
+      render: (r) => <span className={`service-pill estado-${r.estado}`}>{r.estado}</span>,
+    },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      render: (r) => r.tipo_consulta?.nombre ?? '—',
+    },
+    {
+      key: 'inicio_utc',
+      label: 'Inicio',
+      sortable: true,
+      render: (r) => new Date(r.inicio_utc).toLocaleString('es-CL'),
+    },
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (r) => r.cliente?.email ?? r.cliente_email ?? '—',
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (r) => (
+        <div className="admin-row-actions">
+          {(r.estado === 'reservada' || r.estado === 'confirmada') && (
+            <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={() => setTargetUuid(r.uuid)}>
+              No-show
+            </button>
+          )}
+          <button
+            className="btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+            title="Descargar transcripción cruda (admin)"
+            onClick={() => descargarTranscripcion(r.uuid)}
+            disabled={transcribiendo === r.uuid}
+          >
+            {transcribiendo === r.uuid ? 'Descargando…' : 'Transcripción'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="page-content">
       <header className="admin-page-header">
@@ -161,65 +215,22 @@ export function AdminCitasPage() {
 
       <AdminFilters values={filters} onChange={setFilters} estados={ESTADOS} />
 
-      {loading ? (
-        <p className="admin-table-empty">Cargando…</p>
-      ) : rows.length === 0 ? (
-        <p className="admin-table-empty">No se encontraron citas con esos filtros.</p>
-      ) : (
-        <>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <SortableHeader field="codigo_referencia" label="Código" sortBy={sortBy} sortDir={sortDir} onToggle={toggleSort} />
-                <SortableHeader field="estado" label="Estado" sortBy={sortBy} sortDir={sortDir} onToggle={toggleSort} />
-                <th>Tipo</th>
-                <SortableHeader field="inicio_utc" label="Inicio" sortBy={sortBy} sortDir={sortDir} onToggle={toggleSort} />
-                <th>Cliente</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.uuid}>
-                  <td>{r.codigo_referencia || r.uuid.slice(0, 8) + '…'}</td>
-                  <td><span className={`service-pill estado-${r.estado}`}>{r.estado}</span></td>
-                  <td>{r.tipo_consulta?.nombre ?? '—'}</td>
-                  <td>{new Date(r.inicio_utc).toLocaleString('es-CL')}</td>
-                  <td>{r.cliente?.email ?? r.cliente_email ?? '—'}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      {(r.estado === 'reservada' || r.estado === 'confirmada') && (
-                        <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={() => setTargetUuid(r.uuid)}>
-                          No-show
-                        </button>
-                      )}
-                      <button
-                        className="btn-secondary"
-                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
-                        title="Descargar transcripción cruda (admin)"
-                        onClick={() => descargarTranscripcion(r.uuid)}
-                        disabled={transcribiendo === r.uuid}
-                      >
-                        {transcribiendo === r.uuid ? '⏳' : '📝'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {meta && (
-            <nav style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
-              <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage(1)}>«</button>
-              <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
-              <span className="text-muted">Página {meta.current_page} de {meta.last_page} · {meta.total} citas</span>
-              <button className="btn-secondary" disabled={page >= meta.last_page} onClick={() => setPage((p) => p + 1)}>›</button>
-              <button className="btn-secondary" disabled={page >= meta.last_page} onClick={() => setPage(meta.last_page)}>»</button>
-            </nav>
-          )}
-        </>
-      )}
+      <AdminTable
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        emptyLabel="No se encontraron citas con esos filtros."
+        rowKey={(r) => r.uuid}
+        searchable={false}
+        pageSizeOptions={[]}
+        sort={{ sortBy, sortDir, onSort: (field) => toggleSort(field as SortField) }}
+        pagination={meta ? {
+          currentPage: meta.current_page,
+          lastPage: meta.last_page,
+          total: meta.total,
+          onPageChange: setPage,
+        } : undefined}
+      />
 
       <ConfirmDialog
         open={!!targetUuid}
@@ -233,31 +244,6 @@ export function AdminCitasPage() {
   );
 }
 
-function SortableHeader({
-  field,
-  label,
-  sortBy,
-  sortDir,
-  onToggle,
-}: {
-  field: SortField;
-  label: string;
-  sortBy: SortField;
-  sortDir: 'asc' | 'desc';
-  onToggle: (f: SortField) => void;
-}) {
-  const isActive = sortBy === field;
-  return (
-    <th
-      onClick={() => onToggle(field)}
-      style={{ cursor: 'pointer', userSelect: 'none' }}
-      title={`Ordenar por ${label}`}
-    >
-      {label} {isActive && (sortDir === 'asc' ? '▲' : '▼')}
-    </th>
-  );
-}
-
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -266,4 +252,3 @@ function useDebounce<T>(value: T, delay: number): T {
   }, [value, delay]);
   return debouncedValue;
 }
-

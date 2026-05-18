@@ -2,6 +2,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  CalendarCheck,
+  ChevronDown,
+  Clock,
+  CreditCard,
+  Lock,
+  Moon,
+  Shield,
+  Sparkles,
+  Star,
+  Video,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuthModalStore } from '../../stores/authModalStore';
 
@@ -23,21 +37,45 @@ const STARS = [
 
 const INFO_CARDS = [
   {
-    icon: '🌙',
-    title: 'Sobre nuestra especialista',
-    body: 'Más de 20 años guiando procesos personales con enfoque humano y práctico. Especialista en tarot, astrología natal y lectura de runas.',
+    icon: Moon,
+    title: 'Lecturas con contexto',
+    body: 'Más de 20 años guiando procesos personales con tarot, astrología natal y lectura de runas.',
   },
   {
-    icon: '✨',
-    title: 'Cómo funciona',
-    body: 'Elige tu servicio, agenda una fecha y realiza tu consulta por videollamada. Tu historial queda guardado para seguimiento continuo.',
+    icon: Sparkles,
+    title: 'Seguimiento continuo',
+    body: 'Tu historial queda guardado para revisar avances, acuerdos y próximos pasos cuando lo necesites.',
   },
   {
-    icon: '🔮',
+    icon: Shield,
     title: 'Privacidad total',
-    body: 'Tus datos y lecturas son completamente confidenciales. Te acompañamos con respeto, sin juicios y con absoluta discreción.',
+    body: 'Tus datos, lecturas y grabaciones son confidenciales, con acceso privado desde tu cuenta.',
   },
-];
+] satisfies { icon: LucideIcon; title: string; body: string }[];
+
+const TRUST_POINTS = [
+  { icon: Video, label: 'Consulta por videollamada' },
+  { icon: Lock, label: 'Espacio privado y confidencial' },
+  { icon: CalendarCheck, label: 'Agenda simple con recordatorios' },
+] satisfies { icon: LucideIcon; label: string }[];
+
+const FLOW_STEPS = [
+  {
+    icon: Star,
+    title: 'Elige tu lectura',
+    body: 'Compara servicios, duración y foco de la consulta antes de reservar.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Reserva tu horario',
+    body: 'Selecciona una disponibilidad y confirma con un abono inicial.',
+  },
+  {
+    icon: Video,
+    title: 'Conéctate y revisa',
+    body: 'Realiza la sesión online y conserva tu historial para seguimiento.',
+  },
+] satisfies { icon: LucideIcon; title: string; body: string }[];
 
 type FeaturedServicio = {
   id: number;
@@ -74,7 +112,7 @@ const FAQS = [
   },
   {
     q: '¿Cómo se realiza el pago?',
-    a: 'Aceptamos tarjeta de crédito/débito (Stripe) y transferencia bancaria para clientes en Chile. Al reservar se cobra un abono del 20% para asegurar tu hora, y el saldo restante antes de la sesión.',
+    a: 'Aceptamos PayPal y transferencia bancaria para clientes en Chile. Al reservar se cobra un abono del 20% para asegurar tu hora, y el saldo restante antes de la sesión.',
   },
   {
     q: '¿Puedo reagendar o cancelar mi cita?',
@@ -143,16 +181,13 @@ export function LandingPage() {
   }, []);
 
   return (
-    <main>
-      {/* ── HERO con cielo estrellado 3D ── */}
-      <section className="hero hero-full" aria-label="Hero TarotEstrellas">
+    <main className="landing-page">
+      <section className="hero hero-full landing-hero" aria-label="TarotEstrellas">
 
-        {/* Fondo 3D — solo modo oscuro (stars blancas invisibles en claro) */}
         <Suspense fallback={null}>
           <StarField />
         </Suspense>
 
-        {/* Estrellas CSS — visibles en ambos modos (usan --accent) */}
         {STARS.map((s, i) => (
           <motion.span
             key={i}
@@ -164,64 +199,97 @@ export function LandingPage() {
         ))}
 
         <motion.div
-          className="hero-content"
+          className="landing-hero-grid"
           initial="hidden"
           animate="visible"
           variants={stagger}
         >
-          <motion.p className="hero-eyebrow" variants={fadeUp} transition={{ duration: 0.55 }}>
-            ✦ Lecturas espirituales online ✦
-          </motion.p>
+          <div className="hero-content">
+            <motion.p className="hero-eyebrow" variants={fadeUp} transition={{ duration: 0.55 }}>
+              Lecturas espirituales online
+            </motion.p>
 
-          <motion.h1 className="hero-title" variants={fadeUp} transition={{ duration: 0.7 }}>
-            Claridad para tus<br />
-            <span className="hero-title-accent">decisiones más importantes</span>
-          </motion.h1>
+            <motion.h1 className="hero-title" variants={fadeUp} transition={{ duration: 0.7 }}>
+              TarotEstrellas
+              <span className="hero-title-accent">claridad para decidir con calma</span>
+            </motion.h1>
 
-          <motion.p className="hero-tagline" variants={fadeUp} transition={{ duration: 0.65 }}>
-            Tarot, astrología y carta astral en videollamada.<br />
-            Historial personal, recordatorios y guía continua con nuestra especialista.
-          </motion.p>
+            <motion.p className="hero-tagline" variants={fadeUp} transition={{ duration: 0.65 }}>
+              Tarot, astrología y guía espiritual por videollamada, con agenda simple,
+              acompañamiento humano y seguimiento privado desde tu cuenta.
+            </motion.p>
 
-          <motion.div className="cta-row" variants={fadeUp} transition={{ duration: 0.6 }}>
-            <Link className="btn-primary btn-shimmer" to="/servicios">
-              Ver servicios
-            </Link>
-            <button type="button" className="btn-primary btn-shimmer-alt" onClick={openRegister}>
-              Crear cuenta gratis
-            </button>
-          </motion.div>
+            <motion.div className="cta-row" variants={fadeUp} transition={{ duration: 0.6 }}>
+              <Link className="btn-primary btn-shimmer" to="/servicios">
+                Ver servicios <ArrowRight size={17} strokeWidth={2.1} aria-hidden="true" />
+              </Link>
+              <button type="button" className="btn-primary btn-shimmer-alt" onClick={openRegister}>
+                Crear cuenta gratis
+              </button>
+            </motion.div>
+
+            <motion.ul className="landing-trust-list" variants={fadeUp} transition={{ duration: 0.55 }}>
+              {TRUST_POINTS.map(({ icon: Icon, label }) => (
+                <li key={label}>
+                  <Icon size={16} strokeWidth={2.1} aria-hidden="true" />
+                  <span>{label}</span>
+                </li>
+              ))}
+            </motion.ul>
+          </div>
+
+          <motion.aside className="landing-hero-panel" variants={fadeUp} transition={{ duration: 0.7 }} aria-label="Resumen de experiencia">
+            <div className="hero-panel-card">
+              <p className="hero-panel-kicker">Próxima lectura</p>
+              <h2>Consulta espiritual online</h2>
+              <div className="hero-panel-meta">
+                <span><Clock size={15} aria-hidden="true" /> 45 a 60 min</span>
+                <span><CreditCard size={15} aria-hidden="true" /> Abono 20%</span>
+              </div>
+              <div className="hero-panel-divider" />
+              <ul className="hero-panel-list">
+                <li><span /> Agenda disponible desde el catálogo</li>
+                <li><span /> Sesión privada por videollamada</li>
+                <li><span /> Historial para seguimiento personal</li>
+              </ul>
+            </div>
+          </motion.aside>
         </motion.div>
       </section>
 
-      <p className="section-ornament" aria-hidden="true">——✦——</p>
-
-      {/* ── INFO CARDS ── */}
       <motion.section
-        className="grid-section"
+        className="landing-section landing-intro"
         aria-label="Por qué TarotEstrellas"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-70px' }}
         variants={stagger}
       >
-        {INFO_CARDS.map((card) => (
-          <motion.article
-            key={card.title}
-            className="info-card"
-            variants={fadeUp}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="info-card-icon" aria-hidden="true">{card.icon}</span>
-            <h3>{card.title}</h3>
-            <p>{card.body}</p>
-          </motion.article>
-        ))}
+        <motion.div className="landing-section-header" variants={fadeUp} transition={{ duration: 0.5 }}>
+          <p className="section-kicker">Acompañamiento claro y reservado</p>
+          <h2 className="section-heading">Una lectura espiritual que termina con próximos pasos</h2>
+          <p className="section-sub">
+            La experiencia está pensada para que encuentres orientación, reserves sin fricción
+            y puedas volver a lo conversado cuando necesites continuidad.
+          </p>
+        </motion.div>
+
+        <motion.div className="grid-section landing-info-grid" variants={stagger}>
+          {INFO_CARDS.map(({ icon: Icon, title, body }) => (
+            <motion.article
+              key={title}
+              className="info-card landing-info-card"
+              variants={fadeUp}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="info-card-icon" aria-hidden="true"><Icon size={22} strokeWidth={2} /></span>
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </motion.article>
+          ))}
+        </motion.div>
       </motion.section>
 
-      <p className="section-ornament" aria-hidden="true">——✦——</p>
-
-      {/* ── SERVICIOS DESTACADOS ── */}
       <section className="landing-section" aria-label="Servicios destacados">
         <motion.div
           initial="hidden"
@@ -229,12 +297,15 @@ export function LandingPage() {
           viewport={{ once: true, margin: '-60px' }}
           variants={stagger}
         >
-          <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
-            Servicios más consultados
-          </motion.h2>
-          <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
-            Elige el que mejor resuene con tu momento actual.
-          </motion.p>
+          <motion.div className="landing-section-header split" variants={fadeUp} transition={{ duration: 0.5 }}>
+            <div>
+              <p className="section-kicker">Servicios destacados</p>
+              <h2 className="section-heading">Elige la consulta que conversa con tu momento</h2>
+            </div>
+            <Link to="/servicios" className="btn-secondary landing-section-action">
+              Ver catálogo <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </motion.div>
 
           <motion.div className="cards-grid" variants={stagger}>
             {featuredServices.map((s, i) => {
@@ -249,39 +320,60 @@ export function LandingPage() {
                   transition={{ duration: 0.5 }}
                   whileHover={{ y: -4, transition: { duration: 0.25 } }}
                 >
+                  <span className="service-pill">Consulta online</span>
                   <h3>{s.nombre}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1 }}>{s.descripcion}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    <span>⏱ {s.duracion_minutos} min</span>
-                    {precio && <strong style={{ color: 'var(--accent)' }}>{precio}</strong>}
+                  <p className="service-card-desc">{s.descripcion}</p>
+                  <div className="service-card-meta">
+                    <span><Clock size={15} aria-hidden="true" /> {s.duracion_minutos} min</span>
+                    {precio && <strong>{precio}</strong>}
                   </div>
                   <Link
                     to={`/servicios/${s.slug}`}
                     className="btn-secondary"
-                    style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
                   >
-                    Ver detalle
+                    Ver detalle <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 </motion.article>
               );
             })}
           </motion.div>
 
-          <motion.div
-            variants={fadeUp}
-            transition={{ duration: 0.5 }}
-            style={{ textAlign: 'center', marginTop: '1.8rem' }}
-          >
-            <Link to="/servicios" className="btn-primary btn-shimmer">
-              Ver todos los servicios
-            </Link>
+          {featuredServices.length === 0 && (
+            <motion.div className="landing-empty-state" variants={fadeUp} transition={{ duration: 0.5 }}>
+              <p>El catálogo se está cargando. Puedes ir directo a servicios para ver todas las opciones disponibles.</p>
+              <Link to="/servicios" className="btn-primary btn-shimmer">
+                Ver servicios <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </motion.div>
+          )}
+        </motion.div>
+      </section>
+
+      <section className="landing-section" aria-label="Cómo funciona">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={stagger}
+        >
+          <motion.div className="landing-section-header" variants={fadeUp} transition={{ duration: 0.5 }}>
+            <p className="section-kicker">Cómo funciona</p>
+            <h2 className="section-heading">De la inquietud a una sesión reservada en tres pasos</h2>
+          </motion.div>
+
+          <motion.div className="landing-flow" variants={stagger}>
+            {FLOW_STEPS.map(({ icon: Icon, title, body }, index) => (
+              <motion.article className="flow-step" key={title} variants={fadeUp} transition={{ duration: 0.5 }}>
+                <span className="flow-step-number">{String(index + 1).padStart(2, '0')}</span>
+                <span className="flow-step-icon" aria-hidden="true"><Icon size={22} strokeWidth={2} /></span>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </motion.article>
+            ))}
           </motion.div>
         </motion.div>
       </section>
 
-      <p className="section-ornament" aria-hidden="true">——✦——</p>
-
-      {/* ── NUESTROS ESPECIALISTAS ── */}
       {especialistas.length > 0 && (
         <section className="landing-section" aria-label="Nuestros especialistas">
           <motion.div
@@ -290,14 +382,15 @@ export function LandingPage() {
             viewport={{ once: true, margin: '-60px' }}
             variants={stagger}
           >
-            <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
-              Nuestros especialistas
-            </motion.h2>
-            <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
-              Conoce a quienes te acompañarán en tu proceso.
-            </motion.p>
+            <motion.div className="landing-section-header" variants={fadeUp} transition={{ duration: 0.5 }}>
+              <p className="section-kicker">Especialistas</p>
+              <h2 className="section-heading">Acompañamiento con experiencia y criterio humano</h2>
+              <p className="section-sub">
+                Conoce a quienes te acompañarán en tu proceso y revisa el enfoque de cada perfil.
+              </p>
+            </motion.div>
 
-            <motion.div className="especialista-cards" variants={stagger}>
+            <motion.div className="especialista-cards landing-specialist-grid" variants={stagger}>
               {especialistas.map((e) => (
                 <motion.article
                   key={e.slug}
@@ -317,9 +410,8 @@ export function LandingPage() {
                   <Link
                     to={`/especialistas/${e.slug}`}
                     className="btn-secondary"
-                    style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
                   >
-                    Ver perfil
+                    Ver perfil <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 </motion.article>
               ))}
@@ -328,9 +420,6 @@ export function LandingPage() {
         </section>
       )}
 
-      <p className="section-ornament" aria-hidden="true">——✦——</p>
-
-      {/* ── FAQs ── */}
       <section className="landing-section" aria-label="Preguntas frecuentes">
         <motion.div
           initial="hidden"
@@ -338,12 +427,10 @@ export function LandingPage() {
           viewport={{ once: true, margin: '-60px' }}
           variants={stagger}
         >
-          <motion.h2 className="section-heading" variants={fadeUp} transition={{ duration: 0.5 }}>
-            Preguntas frecuentes
-          </motion.h2>
-          <motion.p className="section-sub" variants={fadeUp} transition={{ duration: 0.5 }}>
-            Todo lo que necesitas saber antes de tu primera consulta.
-          </motion.p>
+          <motion.div className="landing-section-header" variants={fadeUp} transition={{ duration: 0.5 }}>
+            <p className="section-kicker">Preguntas frecuentes</p>
+            <h2 className="section-heading">Lo esencial antes de reservar</h2>
+          </motion.div>
 
           <motion.div className="faq-list" variants={stagger}>
             {FAQS.map((faq, i) => (
@@ -354,7 +441,7 @@ export function LandingPage() {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span>{faq.q}</span>
-                  <span className={`faq-chevron${openFaq === i ? ' open' : ''}`} aria-hidden="true">▾</span>
+                  <ChevronDown className={`faq-chevron${openFaq === i ? ' open' : ''}`} size={18} aria-hidden="true" />
                 </button>
                 <AnimatePresence initial={false}>
                   {openFaq === i && (
@@ -375,9 +462,6 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      <p className="section-ornament" aria-hidden="true">——✦——</p>
-
-      {/* ── CTA FINAL ── */}
       <motion.section
         className="landing-section landing-cta"
         aria-label="Llamada a la acción"
@@ -386,14 +470,15 @@ export function LandingPage() {
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="section-heading">¿Lista para tu primera lectura?</h2>
-        <p className="section-sub">Crea tu cuenta gratis y agenda cuando quieras.</p>
+        <p className="section-kicker">Empieza cuando estés lista</p>
+        <h2 className="section-heading">Agenda una lectura con claridad desde el primer paso</h2>
+        <p className="section-sub">Crea tu cuenta gratis, revisa servicios y reserva el horario que mejor calce contigo.</p>
         <div className="cta-row" style={{ justifyContent: 'center' }}>
           <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
             Comenzar ahora
           </button>
           <Link to="/servicios" className="btn-secondary">
-            Explorar servicios
+            Explorar servicios <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </motion.section>

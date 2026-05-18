@@ -323,6 +323,7 @@ export function MiCuentaPage() {
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
           <p className="dash-eyebrow">Tu espacio personal</p>
           <h1 className="dash-title">Mi Cuenta</h1>
+          <p className="dash-subtitle">Actualiza tus datos, seguridad y preferencias desde un panel claro y privado.</p>
         </motion.div>
 
         <div className="cuenta-grid">
@@ -330,7 +331,7 @@ export function MiCuentaPage() {
             <motion.section className="cuenta-section" variants={fadeUp} transition={{ duration: 0.45 }}>
               <h2 className="dash-section-title">Perfil</h2>
               <form className="auth-form cuenta-form" onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="auth-row">
                   <label>
                     Nombre
                     <input type="text" value={nombre}
@@ -363,7 +364,7 @@ export function MiCuentaPage() {
                     title="Solo dígitos (7 a 15)"
                     autoComplete="tel" placeholder="912345678" />
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="auth-row">
                   <label>
                     Género
                     <select value={genero} onChange={(e) => setGenero(e.target.value)}>

@@ -4,6 +4,7 @@ import {
   type Paquete, type PaquetePayload,
 } from '../../../lib/paquetesAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminPaquetesPage() {
   const [items, setItems] = useState<Paquete[]>([]);
@@ -55,68 +56,92 @@ export function AdminPaquetesPage() {
     finally { setBusyIds((prev) => { const next = new Set(prev); next.delete(p.id); return next; }); }
   };
 
+  const columns: Column<Paquete>[] = [
+    {
+      key: 'nombre',
+      label: 'Nombre',
+      render: (p) => <><strong>{p.nombre}</strong><br /><small>{p.slug}</small></>,
+    },
+    { key: 'tipo', label: 'Tipo', render: (p) => <span className="badge">{p.tipo}</span> },
+    { key: 'consultas', label: 'Consultas', render: (p) => p.consultas_incluidas },
+    { key: 'vigencia', label: 'Vigencia', render: (p) => p.vigencia_dias ? `${p.vigencia_dias} días` : '—' },
+    { key: 'precio', label: 'Precio', render: (p) => `${(p.precio_centavos / 100).toLocaleString()} ${p.moneda}` },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (p) => (
+        <>
+          <span className={`badge ${p.activo ? 'badge-success' : 'badge-muted'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span>
+          {p.destacado && <span className="badge badge-warning" style={{ marginLeft: 4 }}>★</span>}
+        </>
+      ),
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (p) => (
+        <div className="admin-row-actions">
+          <button type="button" className="btn-secondary" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>
+          <button type="button" className="btn-secondary" onClick={() => onToggle(p)} disabled={busyIds.has(p.id)}>
+            {busyIds.has(p.id) ? 'Procesando…' : (p.activo ? 'Desactivar' : 'Activar')}
+          </button>
+          <button type="button" className="btn-danger" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)}>
+            {busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Paquetes y membresías</h1>
-        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>+ Nuevo</button>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Oferta</p>
+          <h1>Paquetes y membresías</h1>
+          <p className="admin-page-subtitle">Gestiona productos recurrentes, destacados y vigencias.</p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>Nuevo paquete</button>
       </header>
 
       <form onSubmit={(e) => { e.preventDefault(); setPage(1); load(); }}
-        style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar nombre o slug" style={{ flex: 1, minWidth: 200 }} />
-        <select value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
-          <option value="all">Todos los tipos</option>
-          <option value="paquete">Paquetes</option>
-          <option value="membresia">Membresías</option>
-        </select>
-        <select value={activo} onChange={(e) => setActivo(e.target.value as any)}>
-          <option value="all">Todos</option>
-          <option value="true">Activos</option>
-          <option value="false">Inactivos</option>
-        </select>
-        <button type="submit">Filtrar</button>
+        className="admin-filter-card">
+        <div className="admin-filter-grid">
+          <label>
+            Buscar
+            <input className="form-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre o slug" />
+          </label>
+          <label>
+            Tipo
+            <select className="form-input" value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
+              <option value="all">Todos los tipos</option>
+              <option value="paquete">Paquetes</option>
+              <option value="membresia">Membresías</option>
+            </select>
+          </label>
+          <label>
+            Estado
+            <select className="form-input" value={activo} onChange={(e) => setActivo(e.target.value as any)}>
+              <option value="all">Todos</option>
+              <option value="true">Activos</option>
+              <option value="false">Inactivos</option>
+            </select>
+          </label>
+        </div>
+        <div className="admin-filter-actions">
+          <button type="submit" className="btn-primary">Filtrar</button>
+        </div>
       </form>
 
-      {loading ? <p>Cargando…</p> : (
-        <table className="data-table" style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Nombre</th><th>Tipo</th><th>Consultas</th><th>Vigencia</th>
-              <th>Precio</th><th>Estado</th><th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((p) => (
-              <tr key={p.id}>
-                <td><strong>{p.nombre}</strong><br /><small>{p.slug}</small></td>
-                <td><span className="badge">{p.tipo}</span></td>
-                <td>{p.consultas_incluidas}</td>
-                <td>{p.vigencia_dias ? `${p.vigencia_dias} días` : '—'}</td>
-                <td>{(p.precio_centavos / 100).toLocaleString()} {p.moneda}</td>
-                <td>
-                  <span className={`badge ${p.activo ? 'badge-success' : 'badge-muted'}`}>
-                    {p.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                  {p.destacado && <span className="badge badge-warning" style={{ marginLeft: 4 }}>★</span>}
-                </td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onToggle(p)} disabled={busyIds.has(p.id)}>{busyIds.has(p.id) ? 'Procesando…' : (p.activo ? 'Desactivar' : 'Activar')}</button>{' '}
-                  <button type="button" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)} style={{ color: 'var(--danger)' }}>{busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}</button>
-                </td>
-              </tr>
-            ))}
-            {!items.length && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>Sin paquetes.</td></tr>}
-          </tbody>
-        </table>
-      )}
-
-      <nav style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>
-        <span>Página {page} de {lastPage}</span>
-        <button disabled={page >= lastPage} onClick={() => setPage(page + 1)}>›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin paquetes."
+        rowKey={(p) => p.id}
+        searchable={false}
+        pagination={{ currentPage: page, lastPage, onPageChange: setPage }}
+      />
 
       {(creating || editing) && (
         <PaqueteModal initial={editing} onClose={() => { setCreating(false); setEditing(null); }}

@@ -391,7 +391,7 @@ export function ServicioDetallePage() {
   }, [bookingMutation.isSuccess, currentStep, reservadaHasta]);
 
   return (
-    <main className="page-content">
+    <main className="page-content service-detail-page">
       {isLoading ? <p>Cargando detalle...</p> : null}
       {servicio ? (
         <>
@@ -401,18 +401,18 @@ export function ServicioDetallePage() {
             transition={{ duration: 0.5 }}
             style={{ marginBottom: '1.2rem' }}
           >
-            <p className="dash-eyebrow">✦ Detalle del servicio</p>
+            <p className="dash-eyebrow">Detalle del servicio</p>
             <h1 className="dash-title">{servicio.nombre}</h1>
           </motion.div>
 
-          <motion.section className="detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+          <motion.section className="detail-card service-detail-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
           <div className="detail-hero">
             <div>
               <p>{servicio.descripcion}</p>
-              <div className="detail-meta-row">
-                <span>Duración: {servicio.duracion_minutos} minutos</span>
-                <span>Precio: {formatPrice(servicio.precio_referencial_centavos, servicio.moneda)}</span>
-                <span>{servicio.requiere_datos_natales ? 'Requiere datos natales' : 'No requiere datos natales'}</span>
+              <div className="detail-meta-row service-detail-meta">
+                <span><strong>{servicio.duracion_minutos}</strong> minutos</span>
+                <span><strong>{formatPrice(servicio.precio_referencial_centavos, servicio.moneda)}</strong></span>
+                <span>{servicio.requiere_datos_natales ? 'Requiere datos natales' : 'Sin datos natales'}</span>
               </div>
             </div>
 
@@ -454,9 +454,14 @@ export function ServicioDetallePage() {
             </Link>
           </div>
 
-          <section className="booking-panel" aria-label="Panel de agendamiento" ref={bookingRef}>
-            <h2>Agendar esta consulta</h2>
-            <p className="wizard-step-hint">{stepHint}</p>
+          <section className="booking-panel booking-panel--premium" aria-label="Panel de agendamiento" ref={bookingRef}>
+            <div className="booking-panel-header">
+              <div>
+                <p className="dash-eyebrow">Reserva</p>
+                <h2>Agendar esta consulta</h2>
+              </div>
+              <p className="wizard-step-hint">{stepHint}</p>
+            </div>
 
             <ol className="wizard-steps" aria-label="Progreso de agendamiento">
               <li className={currentStep >= 1 ? 'active' : ''}>{multiEspecialista ? 'Especialista y hora' : 'Fecha y hora'}</li>
@@ -512,7 +517,7 @@ export function ServicioDetallePage() {
                           style={{ fontSize: '0.82rem', padding: '0.3rem 0.75rem' }}
                           onClick={() => { setSelectedEspecialistaId(null); setSelectedSlot(''); }}
                         >
-                          ← Cambiar especialista
+                          Cambiar especialista
                         </button>
                         <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                           {especialistas.find((e) => e.id === selectedEspecialistaId)?.nombre}
@@ -625,7 +630,7 @@ export function ServicioDetallePage() {
                         checked={canalPago === 'stripe'}
                         onChange={() => setCanalPago('stripe')}
                       />
-                      <span>💳 Tarjeta de crédito / débito</span>
+                      <span>Tarjeta de crédito / débito</span>
                     </label>
                     <label className={`canal-pago-option${canalPago === 'transferencia' ? ' selected' : ''}`}>
                       <input
@@ -635,7 +640,7 @@ export function ServicioDetallePage() {
                         checked={canalPago === 'transferencia'}
                         onChange={() => setCanalPago('transferencia')}
                       />
-                      <span>🏦 Transferencia bancaria (Chile)</span>
+                      <span>Transferencia bancaria (Chile)</span>
                     </label>
                   </div>
                 </div>
@@ -731,7 +736,7 @@ export function ServicioDetallePage() {
                 transition={{ duration: 0.25 }}
               >
                 <div className="booking-success">
-                  <h3>✦ ¡Reserva creada!</h3>
+                  <h3>Reserva creada</h3>
                   <p>
                     Tu hora está reservada. Tienes hasta el{' '}
                     <strong>
@@ -760,7 +765,7 @@ export function ServicioDetallePage() {
                         className="btn-primary btn-shimmer"
                         to={`/app/citas/${bookingMutation.data.data.uuid}/pagar`}
                       >
-                        Ir a pagar →
+                        Ir a pagar
                       </Link>
                     ) : null}
                   </div>

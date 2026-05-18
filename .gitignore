@@ -8,6 +8,7 @@
 .claude/settings.local.json
 .claude/cache/
 .claude/.cache/
+deploy/
 
 # Sistema
 .DS_Store

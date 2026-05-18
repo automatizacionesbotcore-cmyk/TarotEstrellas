@@ -14,6 +14,7 @@ Esta guía es la versión original. La instalación real en PROD difiere en algu
 | **Dominio** | `tarotestrellas.cl` + subdominio `api.tarotestrellas.cl` | `tarotestrellas.com` (TLD `.com`, sin subdominio API separado) |
 | **Backend path** | `/home/u123456789/backend/public/` (subdominio independiente) | `/home/u402745362/domains/tarotestrellas.com/public_html/backend/` (mismo dominio, ruta `/backend`) |
 | **Frontend path** | `public_html/` | `domains/tarotestrellas.com/public_html/` |
+| **API URL frontend** | `https://api.tarotestrellas.cl/api` | `https://tarotestrellas.com/backend/public/api` |
 | **PHP** | 8.2 | **8.3** (PATH local tiene 7.4 — usar `C:\wamp64\bin\php\php8.3.14\php.exe`) |
 | **Pasarela de pago** | Stripe (`STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`, `VITE_STRIPE_PUBLIC_KEY`) | **PayPal** (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_BASE_URL`) + Transferencia bancaria. Flow.cl comentado para Fase 2 |
 | **Reload OPcache** | `php artisan config:cache` | **NO** usar `touch index.php` en `public_html/` raíz (rompió el sitio: creaba un `index.php` vacío que precedía a `index.html`). Usar `touch backend/bootstrap/app.php` o reiniciar PHP-FPM desde panel Hostinger |
@@ -35,6 +36,8 @@ Esta guía es la versión original. La instalación real en PROD difiere en algu
 > ⚠️ **`VITE_STRIPE_PUBLIC_KEY`** ya no es necesario en `.env.production` del frontend.
 
 > ✅ Lo que sigue válido: arquitectura general (frontend SPA + Laravel backend), pasos de DB, migrate, storage:link, cron scheduler (`* * * * * php artisan schedule:run`), webhooks Daily/Resend/WhatsApp, OAuth Google.
+>
+> ✅ Health real verificado: `https://tarotestrellas.com/backend/public/api/health`.
 
 ---
 
@@ -75,11 +78,10 @@ export default defineConfig(() => ({
 ### 1.2 Crear `frontend/.env.production`
 
 ```env
-VITE_API_URL=https://api.tarotestrellas.cl/api
-VITE_STRIPE_PUBLIC_KEY=pk_live_XXXXXXXXXXXXXXXXXXXXXXXX
+VITE_API_URL=https://tarotestrellas.com/backend/public/api
 ```
 
-> ⚠️ Usa la clave **live** de Stripe (no la test).
+> ⚠️ Stripe no es pasarela principal en el flujo actual. No incluir `VITE_STRIPE_PUBLIC_KEY` salvo que se reactive compatibilidad legacy que lo requiera.
 
 ### 1.3 Construir el frontend
 

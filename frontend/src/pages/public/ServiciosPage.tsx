@@ -132,23 +132,38 @@ export function ServiciosPage() {
   const clearFilters = () => setSearchParams(new URLSearchParams(), { replace: true });
 
   return (
-    <main className="page-content">
+    <main className="page-content catalog-page">
       <motion.div
+        className="catalog-hero"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ marginBottom: '1.4rem' }}
       >
-        <p className="dash-eyebrow">✦ Lecturas y guía espiritual</p>
-        <h1 className="dash-title">Catálogo de Servicios</h1>
-        <p className="dash-subtitle">Elige el servicio que mejor resuene con tu momento.</p>
+        <div>
+          <p className="dash-eyebrow">Lecturas y guía espiritual</p>
+          <h1 className="dash-title">Catálogo de servicios</h1>
+          <p className="dash-subtitle">Encuentra una sesión clara, cercana y alineada con lo que necesitas resolver hoy.</p>
+        </div>
+        <div className="catalog-hero-summary" aria-label="Resumen del catálogo">
+          <strong>{data?.data.length ?? 0}</strong>
+          <span>{data?.data.length === 1 ? 'servicio visible' : 'servicios visibles'}</span>
+        </div>
       </motion.div>
 
       <Suspense fallback={<div className="canvas-loading" aria-hidden="true" />}>
         <FloatingCard />
       </Suspense>
 
-      <section className="filters-card" aria-label="Filtros del catálogo">
+      <section className="filters-card catalog-filters" aria-label="Filtros del catálogo">
+        <header className="filters-header">
+          <div>
+            <h2>Filtrar servicios</h2>
+            <p>Afina por categoría, moneda, duración o precio.</p>
+          </div>
+          <button className="btn-secondary" type="button" onClick={clearFilters}>
+            Limpiar filtros
+          </button>
+        </header>
         <div className="filters-grid">
           <label>
             Buscar servicio
@@ -226,19 +241,27 @@ export function ServiciosPage() {
         </div>
 
         <div className="filters-actions">
-          <button className="btn-secondary" type="button" onClick={clearFilters}>
-            Limpiar filtros
-          </button>
           {isFetching ? <span>Actualizando...</span> : null}
         </div>
       </section>
 
-      {isLoading ? <p>Cargando servicios...</p> : null}
+      {isLoading ? (
+        <section className="cards-grid catalog-results">
+          {[1, 2, 3].map((n) => (
+            <article key={n} className="service-card skeleton-card">
+              <div className="skeleton-line skeleton-title" />
+              <div className="skeleton-line" />
+              <div className="skeleton-line skeleton-short" />
+              <div className="skeleton-line skeleton-pill" />
+            </article>
+          ))}
+        </section>
+      ) : null}
       {errorText ? <p className="form-error">{errorText}</p> : null}
 
       {/* Cards con whileInView + stagger según spec 6.6.3 */}
       <motion.section
-        className="cards-grid"
+        className="cards-grid catalog-results"
         aria-label="Servicios disponibles"
         initial="hidden"
         whileInView="visible"
@@ -253,14 +276,17 @@ export function ServiciosPage() {
             variants={cardVariants}
             whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
           >
-            <h3>{tipo.nombre}</h3>
-            <p>{tipo.descripcion}</p>
-            <div className="service-card-pills">
-              <span className="service-pill primera-consulta-pill">🎉 10% primera consulta</span>
+            <div className="service-card-topline">
+              <span>{tipo.duracion_minutos} min</span>
+              {tipo.requiere_datos_natales ? <span>Datos natales</span> : <span>Sin datos natales</span>}
             </div>
-            <strong>{getDisplayPrice(tipo, filters.moneda)}</strong>
-            <span>{tipo.duracion_minutos} min</span>
-            <Link to={`/servicios/${tipo.slug}`} className="btn-secondary" style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}>
+            <h3>{tipo.nombre}</h3>
+            <p className="service-card-desc">{tipo.descripcion}</p>
+            <div className="service-card-pills">
+              <span className="service-pill primera-consulta-pill">10% primera consulta</span>
+            </div>
+            <strong className="service-card-price">{getDisplayPrice(tipo, filters.moneda)}</strong>
+            <Link to={`/servicios/${tipo.slug}`} className="btn-secondary service-card-action">
               Ver detalle
             </Link>
           </motion.article>
@@ -268,7 +294,10 @@ export function ServiciosPage() {
       </motion.section>
 
       {!isLoading && data?.data.length === 0 ? (
-        <p>No se encontraron servicios con los filtros actuales.</p>
+        <div className="dash-empty compact-empty">
+          <p>No se encontraron servicios con los filtros actuales.</p>
+          <button className="btn-secondary" type="button" onClick={clearFilters}>Quitar filtros</button>
+        </div>
       ) : null}
     </main>
   );

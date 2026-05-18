@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcesarReembolsoJob;
+use App\Jobs\ProcesarReembolsoPaypalJob;
 use App\Models\Cita;
 use App\Models\Pago;
 use App\Models\Reembolso;
@@ -138,7 +139,7 @@ class ReembolsoController extends Controller
             ->with([
                 'cita:id,uuid,codigo_referencia,cliente_id,estado',
                 'cliente:id,uuid,email,name',
-                'pago:id,uuid,stripe_payment_intent_id,stripe_charge_id,canal,estado,monto_centavos',
+                'pago:id,uuid,stripe_payment_intent_id,stripe_charge_id,canal,estado,monto_centavos,metadata',
             ])
             ->latest('created_at');
 
@@ -294,7 +295,7 @@ class ReembolsoController extends Controller
             ->with([
                 'cita:id,uuid,codigo_referencia,estado,cliente_id',
                 'cliente:id,uuid,email,name',
-                'pago:id,uuid,estado,canal,monto_centavos,stripe_payment_intent_id,stripe_charge_id',
+                'pago:id,uuid,estado,canal,monto_centavos,stripe_payment_intent_id,stripe_charge_id,metadata',
             ])
             ->where('uuid', $uuid)
             ->firstOrFail();
@@ -326,6 +327,17 @@ class ReembolsoController extends Controller
 
         $stripeBalanceTx = data_get($metadata, 'stripe.balance_transaction')
             ?? data_get($metadata, 'stripe_response.balance_transaction');
+
+        $paypalRefundId = data_get($metadata, 'paypal.refund_id')
+            ?? data_get($metadata, 'paypal_refund_id')
+            ?? data_get($metadata, 'paypal_response.id');
+
+        $paypalStatus = data_get($metadata, 'paypal.status')
+            ?? data_get($metadata, 'paypal_status')
+            ?? data_get($metadata, 'paypal_response.status');
+
+        $paypalCaptureId = data_get($metadata, 'paypal.capture_id')
+            ?? data_get($reembolso, 'pago.metadata.paypal_capture_id');
 
         $timeline[] = [
             'tipo' => 'creado',
@@ -374,6 +386,20 @@ class ReembolsoController extends Controller
                     'refund_id' => $stripeRefundId,
                     'status' => $stripeStatus,
                     'balance_transaction' => $stripeBalanceTx,
+                ],
+            ];
+        }
+
+        if ($paypalRefundId) {
+            $timeline[] = [
+                'tipo' => 'procesado_paypal',
+                'timestamp' => data_get($metadata, 'paypal.processed_at')
+                    ?? optional($reembolso->procesado_en)->toIso8601String(),
+                'actor' => 'system',
+                'detalle' => [
+                    'refund_id' => $paypalRefundId,
+                    'capture_id' => $paypalCaptureId,
+                    'status' => $paypalStatus,
                 ],
             ];
         }
@@ -520,7 +546,11 @@ class ReembolsoController extends Controller
         }
 
         if ($reembolso->metodo === 'mismo_medio_pago') {
-            ProcesarReembolsoJob::dispatch($reembolso->id);
+            if ($reembolso->pago?->canal === 'paypal') {
+                ProcesarReembolsoPaypalJob::dispatch($reembolso->id);
+            } else {
+                ProcesarReembolsoJob::dispatch($reembolso->id);
+            }
 
             return response()->json([
                 'message' => 'Reembolso encolado para procesamiento.',

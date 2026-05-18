@@ -1,9 +1,33 @@
-Hola,
+@php
+    $frontendUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/');
+    $citaUrl = $cita?->uuid ? $frontendUrl . '/app/citas/' . $cita->uuid : $frontendUrl . '/app/mis-consultas';
+    $clienteNombre = trim((string) ($cita?->cliente?->profile?->nombre ?? $cita?->cliente?->name ?? ''));
+@endphp
+@extends('emails.layouts.branded', [
+    'title' => 'Resumen listo',
+    'eyebrow' => 'Resumen de sesión',
+    'badge' => 'Disponible en tu cuenta',
+    'heading' => 'Tu resumen ya está listo',
+    'preheader' => 'El resumen de tu sesión en TarotEstrellas ya está disponible.',
+])
 
-Tu resumen de la sesion en TarotEstrellas ya esta listo.
+@section('content')
+    <p style="margin:0 0 16px;">Hola{{ $clienteNombre !== '' ? ', ' . $clienteNombre : '' }},</p>
 
-Referencia de cita: {{ $cita?->codigo_referencia ?? 'sin referencia' }}
+    <p style="margin:0 0 16px;">
+        Ya puedes revisar el resumen de tu sesión desde tu cuenta. Lo dejamos asociado a tu consulta para
+        que puedas volver a leerlo cuando lo necesites.
+    </p>
 
-Puedes revisarlo iniciando sesion en tu cuenta.
+    @include('emails.partials.detail-table', [
+        'rows' => [
+            'Referencia de cita' => e($cita?->codigo_referencia ?? 'Sin referencia'),
+            'Servicio' => e($cita?->tipoConsulta?->nombre ?? 'Consulta'),
+        ],
+    ])
 
-Gracias por confiar en TarotEstrellas.
+    @include('emails.partials.button', [
+        'url' => $citaUrl,
+        'label' => 'Ver resumen',
+    ])
+@endsection

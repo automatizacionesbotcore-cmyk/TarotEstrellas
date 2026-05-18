@@ -124,7 +124,13 @@ export function AdminDisponibilidadPage() {
 
   return (
     <main className="page-content">
-      <h1>Disponibilidad</h1>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Agenda</p>
+          <h1>Disponibilidad</h1>
+          <p className="admin-page-subtitle">Gestiona horarios base, bloqueos y aperturas extraordinarias.</p>
+        </div>
+      </header>
 
       {isSuperAdmin && especialistas.length > 0 && (
         <div style={{ marginBottom: '1.25rem', maxWidth: 320 }}>
@@ -220,7 +226,7 @@ export function AdminDisponibilidadPage() {
           {/* Feriados chilenos por defecto */}
           <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <strong style={{ display: 'block', marginBottom: '0.25rem' }}>🇨🇱 Feriados chilenos</strong>
+              <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Feriados chilenos</strong>
               <small className="text-muted">Carga los feriados oficiales del año (no se duplican si ya existen).</small>
             </div>
             <select
@@ -244,7 +250,7 @@ export function AdminDisponibilidadPage() {
           </div>
           {seedFeriados.isSuccess && seedFeriados.data && (
             <p style={{ color: 'var(--accent)', marginTop: '-0.75rem', marginBottom: '1rem' }}>
-              ✓ {seedFeriados.data.creados} feriados nuevos · {seedFeriados.data.omitidos_existentes} ya existían
+              {seedFeriados.data.creados} feriados nuevos · {seedFeriados.data.omitidos_existentes} ya existían
             </p>
           )}
 
@@ -303,7 +309,9 @@ export function AdminDisponibilidadPage() {
             <div className="admin-breakdown-grid">
               {bloqueos.map((b) => (
                 <div key={b.id} className={`admin-breakdown-card${b.tipo === 'bloqueo' ? ' admin-breakdown-pendiente' : ''}`} style={{ borderLeftColor: b.tipo === 'bloqueo' ? 'var(--red, #e05555)' : 'var(--green, #4caf6e)', borderLeftWidth: 3, borderLeftStyle: 'solid' }}>
-                  <span className="admin-breakdown-count">{b.tipo === 'bloqueo' ? '🔴' : '🟢'}</span>
+                  <span className={`badge ${b.tipo === 'bloqueo' ? 'badge-danger' : 'badge-success'}`}>
+                    {b.tipo === 'bloqueo' ? 'Bloqueo' : 'Apertura'}
+                  </span>
                   <span className="admin-breakdown-label">{b.motivo}{b.descripcion ? ` · ${b.descripcion}` : ''}</span>
                   <span className="admin-breakdown-amount">{fmt(b.fecha_inicio_utc)} → {fmt(b.fecha_fin_utc)}</span>
                   <button

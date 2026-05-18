@@ -1,23 +1,10 @@
-# Instrucciones para GitHub Copilot — TarotEstrellas
+# Instrucciones historicas para GitHub Copilot
 
-## Stack
-- Backend: Laravel 11, PHP 8.3, MariaDB 10.11, Redis 7
-- Frontend: React 18 + TypeScript + Vite + Tailwind CSS
-- Pagos: Stripe (Laravel Cashier)
-- Video: Daily.co
-- IA: OpenAI Whisper + Anthropic Claude
-- Storage: Cloudflare R2
-- Email: Resend
-- WhatsApp: Meta Cloud API o YCloud
+Este archivo se conserva por compatibilidad con referencias anteriores. La fuente canonica actual es:
 
-## Convenciones
-- Tablas en plural snake_case
-- UUIDs en entidades públicas (citas, pagos, grabaciones)
-- Enteros en campos monetarios (centavos)
-- Fechas siempre en UTC en BD
-- Soft deletes donde la especificación lo indica
-- Cifrar campos sensibles con Laravel Encrypted Casts
+- `.github/copilot-instructions.md`
+- `AGENTS.md`
 
-## Referencia principal
-Toda la arquitectura, modelo de datos y lógica de negocio está en:
-docs/ESPECIFICACION_TECNICATarotEstrellas V2.md
+No usar este archivo como fuente principal si contradice el estado documentado el 2026-05-13. En particular, las referencias antiguas a Stripe como pasarela principal, Cloudflare R2 como storage operativo o dominios `.cl` pueden estar desactualizadas frente al handoff actual.
+
+_Ultima actualizacion: 2026-05-13._

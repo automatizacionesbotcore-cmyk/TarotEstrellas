@@ -63,6 +63,21 @@ class ApiUsageDashboardTest extends TestCase
         $this->assertEquals(70.0, $limits['anthropic']['warn_pct']);
     }
 
+    public function test_update_limits_allows_clearing_extra_alert_emails(): void
+    {
+        Sanctum::actingAs($this->makeSuperAdmin());
+        AppSetting::query()->updateOrCreate(
+            ['key' => ApiUsageService::ALERT_EMAILS],
+            ['category' => 'api', 'value' => 'extra@example.com', 'editable_admin' => true]
+        );
+
+        $this->patchJson('/api/admin/api-usage/limits', [
+            'alert_emails' => '',
+        ])->assertOk();
+
+        $this->assertSame('', AppSetting::query()->where('key', ApiUsageService::ALERT_EMAILS)->value('value'));
+    }
+
     public function test_job_dispara_alerta_y_email_cuando_excede(): void
     {
         Mail::fake();
@@ -103,5 +118,26 @@ class ApiUsageDashboardTest extends TestCase
         // Idempotencia: re-correr no duplica
         (new VerificarConsumoApisJob())->handle($svc);
         $this->assertSame(1, ApiUsageAlert::where('provider', 'anthropic')->where('nivel', 'exceeded')->count());
+    }
+
+    public function test_alertas_recientes_expose_usado_for_frontend(): void
+    {
+        Sanctum::actingAs($this->makeSuperAdmin());
+
+        ApiUsageAlert::query()->create([
+            'provider' => 'daily',
+            'period' => now()->format('Y-m'),
+            'nivel' => 'warning',
+            'valor_actual' => 81.25,
+            'limite' => 100,
+            'porcentaje' => 81.25,
+            'unidad' => 'minutes',
+            'notificado_en' => now(),
+        ]);
+
+        $this->getJson('/api/admin/api-usage')
+            ->assertOk()
+            ->assertJsonPath('alertas_recientes.0.usado', 81.25)
+            ->assertJsonPath('alertas_recientes.0.valor_actual', 81.25);
     }
 }

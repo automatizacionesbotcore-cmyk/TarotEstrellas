@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../../../lib/api';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 type MiCita = {
   uuid: string;
@@ -36,6 +37,22 @@ export function EspecialistaMisCitasPage() {
   const citas = data?.data ?? [];
   const proximas = citas.filter((c) => c.estado !== 'finalizada');
   const pasadas = citas.filter((c) => c.estado === 'finalizada');
+  const proximasColumns: Column<MiCita>[] = [
+    { key: 'inicio_utc', label: 'Fecha', render: (c) => fmtDate(c.inicio_utc) },
+    { key: 'servicio', label: 'Servicio', render: (c) => c.servicio ?? '—' },
+    { key: 'cliente_nombre', label: 'Cliente', render: (c) => c.cliente_nombre ?? '—' },
+    { key: 'duracion_minutos', label: 'Duración', render: (c) => `${c.duracion_minutos} min` },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (c) => (
+        <span className={`service-pill estado-${c.estado}`}>
+          {ESTADO_LABELS[c.estado] ?? c.estado}
+        </span>
+      ),
+    },
+  ];
+  const historialColumns: Column<MiCita>[] = proximasColumns.filter((column) => column.key !== 'estado');
 
   return (
     <main className="page-content">
@@ -54,62 +71,32 @@ export function EspecialistaMisCitasPage() {
             {proximas.length === 0 ? (
               <p className="text-muted">No tienes citas próximas.</p>
             ) : (
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Servicio</th>
-                      <th>Cliente</th>
-                      <th>Duración</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {proximas.map((c) => (
-                      <tr key={c.uuid}>
-                        <td>{fmtDate(c.inicio_utc)}</td>
-                        <td>{c.servicio ?? '—'}</td>
-                        <td>{c.cliente_nombre ?? '—'}</td>
-                        <td>{c.duracion_minutos} min</td>
-                        <td>
-                          <span className={`service-pill estado-${c.estado}`}>
-                            {ESTADO_LABELS[c.estado] ?? c.estado}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={proximasColumns}
+                rows={proximas}
+                rowKey={(c) => c.uuid}
+                searchable
+                searchPlaceholder="Buscar cita"
+                getSearchText={(c) => `${c.servicio ?? ''} ${c.cliente_nombre ?? ''} ${c.estado}`}
+                pageSize={5}
+                pageSizeOptions={[5, 10, 25]}
+              />
             )}
           </section>
 
           {pasadas.length > 0 && (
             <section style={{ marginTop: '2rem' }}>
               <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Historial</h2>
-              <div className="admin-table-wrap">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Servicio</th>
-                      <th>Cliente</th>
-                      <th>Duración</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pasadas.map((c) => (
-                      <tr key={c.uuid}>
-                        <td>{fmtDate(c.inicio_utc)}</td>
-                        <td>{c.servicio ?? '—'}</td>
-                        <td>{c.cliente_nombre ?? '—'}</td>
-                        <td>{c.duracion_minutos} min</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminTable
+                columns={historialColumns}
+                rows={pasadas}
+                rowKey={(c) => c.uuid}
+                searchable
+                searchPlaceholder="Buscar en historial"
+                getSearchText={(c) => `${c.servicio ?? ''} ${c.cliente_nombre ?? ''}`}
+                pageSize={5}
+                pageSizeOptions={[5, 10, 25]}
+              />
             </section>
           )}
         </>

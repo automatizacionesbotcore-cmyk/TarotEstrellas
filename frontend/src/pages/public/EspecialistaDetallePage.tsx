@@ -110,14 +110,14 @@ export function EspecialistaDetallePage() {
   const { especialista, servicios } = data;
 
   return (
-    <main className="page-content">
+    <main className="page-content especialista-page">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
       >
         {/* ── Hero del especialista ── */}
-        <section className="especialista-hero">
+        <section className="especialista-hero especialista-hero--featured">
           {especialista.avatar_url ? (
             <img
               className="especialista-hero-avatar"
@@ -131,7 +131,7 @@ export function EspecialistaDetallePage() {
           )}
 
           <div className="especialista-hero-info">
-            <p className="dash-eyebrow">✦ Especialista</p>
+            <p className="dash-eyebrow">Especialista</p>
             <h1 className="dash-title">{especialista.nombre}</h1>
             {especialista.especialidad && (
               <p className="especialista-hero-especialidad">{especialista.especialidad}</p>
@@ -140,7 +140,17 @@ export function EspecialistaDetallePage() {
               <p className="especialista-hero-bio">{especialista.biografia}</p>
             )}
 
-            <div className="cta-row" style={{ marginTop: '1.25rem' }}>
+            {resenasData && resenasData.total > 0 && (
+              <div className="especialista-trust-row">
+                {resenasData.promedio !== null && (
+                  <span><StarRating value={Math.round(resenasData.promedio)} /> {resenasData.promedio.toFixed(1)}</span>
+                )}
+                <span>{resenasData.total} {resenasData.total === 1 ? 'reseña' : 'reseñas'}</span>
+                <span>{servicios.length} {servicios.length === 1 ? 'servicio' : 'servicios'}</span>
+              </div>
+            )}
+
+            <div className="cta-row especialista-cta-row">
               {isAuthenticated ? (
                 <Link
                   className="btn-primary btn-shimmer"
@@ -162,8 +172,13 @@ export function EspecialistaDetallePage() {
 
         {/* ── Servicios disponibles ── */}
         {servicios.length > 0 && (
-          <section style={{ marginTop: '2.5rem' }}>
-            <h2 style={{ marginBottom: '1.25rem' }}>Servicios disponibles</h2>
+          <section className="public-section">
+            <div className="section-title-row">
+              <div>
+                <p className="dash-eyebrow">Agenda</p>
+                <h2>Servicios disponibles</h2>
+              </div>
+            </div>
             <div className="especialista-servicios-grid">
               {servicios.map((s) => (
                 <Link
@@ -194,11 +209,14 @@ export function EspecialistaDetallePage() {
         )}
         {/* ── Reseñas ── */}
         {resenasData && resenasData.total > 0 && (
-          <section style={{ marginTop: '2.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
-              <h2 style={{ margin: 0 }}>Reseñas</h2>
+          <section className="public-section">
+            <div className="section-title-row">
+              <div>
+                <p className="dash-eyebrow">Experiencia</p>
+                <h2>Reseñas</h2>
+              </div>
               {resenasData.promedio !== null && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span className="rating-summary">
                   <StarRating value={Math.round(resenasData.promedio)} />
                   <strong>{resenasData.promedio.toFixed(1)}</strong>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -207,7 +225,7 @@ export function EspecialistaDetallePage() {
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="resenas-list">
               {resenasData.resenas.map((r) => (
                 <div key={r.uuid} className="resena-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>

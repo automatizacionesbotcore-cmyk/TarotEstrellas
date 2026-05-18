@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url): MailMessage {
+            $appName = config('app.name', 'TarotEstrellas');
+            $nombre = trim((string) ($notifiable->profile?->nombre ?? $notifiable->name ?? ''));
+            $saludo = $nombre !== '' ? 'Hola, ' . $nombre : 'Hola';
+
+            return (new MailMessage)
+                ->subject('Verifica tu correo · ' . $appName)
+                ->view('emails.verify-email', [
+                    'saludo' => $saludo,
+                    'verificationUrl' => $url,
+                ]);
+        });
+
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Mail\Events\MessageSending::class,
             [\App\Listeners\RegistrarEmailEnviado::class, 'handleSending']

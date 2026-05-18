@@ -350,7 +350,7 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
             className="btn-secondary"
             onClick={() => fileRef.current?.click()}
           >
-            {file ? `📎 ${file.name}` : 'Seleccionar archivo'}
+            {file ? file.name : 'Seleccionar archivo'}
           </button>
           {file ? (
             <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
@@ -422,7 +422,7 @@ function SuccessScreen({ cita, usedMembresia = false }: { cita: Cita; usedMembre
               })
             }
           >
-            📅 Agregar al calendario
+            Agregar al calendario
           </button>
           <Link className="btn-primary btn-shimmer" to="/app/mis-consultas">
             Ver mis consultas
@@ -505,11 +505,11 @@ export function PagarCitaPage() {
   }
 
   return (
-    <main className="page-content">
-      <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-        <p className="dash-eyebrow">✦ Abono del 20%</p>
+    <main className="page-content payment-page">
+      <motion.div className="payment-header" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+        <p className="dash-eyebrow">Abono del 20%</p>
         <h1 className="dash-title">Confirmar pago</h1>
-        <p className="dash-subtitle">{cita.tipo_consulta?.nombre}</p>
+        <p className="dash-subtitle">Reserva tu sesión pagando el abono inicial. El saldo queda claro antes de confirmar.</p>
       </motion.div>
 
       <AnimatePresence mode="wait">
@@ -527,7 +527,7 @@ export function PagarCitaPage() {
             <div className="pay-summary-card">
               {cita.primera_consulta && (
                 <div className="primera-consulta-badge">
-                  🎉 10% de descuento — ¡primera consulta!
+                  10% de descuento por primera consulta
                 </div>
               )}
               <div className="pay-summary-row">
@@ -553,7 +553,7 @@ export function PagarCitaPage() {
                 <strong>{formatMoney(cita.precio_final_centavos, cita.moneda)}</strong>
               </div>
               <div className="pay-summary-row pay-abono-row">
-                <span>Abono hoy (20% mínimo) ✦</span>
+                <span>Abono hoy (20% mínimo)</span>
                 <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
               </div>
               <div className="pay-summary-row" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -565,7 +565,7 @@ export function PagarCitaPage() {
                 lineHeight: 1.4, padding: '0.5rem 0.75rem', borderRadius: '8px',
                 background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
               }}>
-                ℹ️ Para confirmar tu reserva debes pagar al menos el <strong>20%</strong> del valor total.
+                Para confirmar tu reserva debes pagar al menos el <strong>20%</strong> del valor total.
                 El saldo restante (80%) se cancela el día de la consulta.
               </p>
             </div>
@@ -588,7 +588,10 @@ export function PagarCitaPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <p className="pay-section-label">¿Cómo deseas pagar?</p>
+                <div className="pay-methods-header">
+                  <p className="pay-section-label">Método de pago</p>
+                  <p>Elige PayPal o transferencia. Ambas opciones mantienen el mismo abono.</p>
+                </div>
                 <div className="pay-method-grid">
                   {/* Flow.cl — TODO FASE 2: reactivar cuando se integre Webpay/Flow Chile
                   <div className="pay-method-card pay-method-card--disabled" title="Próximamente disponible">
@@ -606,7 +609,6 @@ export function PagarCitaPage() {
                     className="pay-method-card"
                     onClick={() => handleSelectMethod('paypal')}
                   >
-                    <span className="pay-method-icon">🌐</span>
                     <span className="pay-method-name">PayPal</span>
                     <span className="pay-method-sub">Tarjeta o saldo PayPal</span>
                   </button>
@@ -615,7 +617,6 @@ export function PagarCitaPage() {
                     className="pay-method-card"
                     onClick={() => handleSelectMethod('transfer')}
                   >
-                    <span className="pay-method-icon">🏦</span>
                     <span className="pay-method-name">Transferencia bancaria</span>
                     <span className="pay-method-sub">Solo clientes en Chile</span>
                   </button>
@@ -634,7 +635,7 @@ export function PagarCitaPage() {
                   style={{ marginBottom: '1rem', fontSize: '0.85rem' }}
                   onClick={() => { setMethod(null); setRedirectError(''); }}
                 >
-                  ← Cambiar método
+                  Cambiar método
                 </button>
 
                 {method === 'flow' ? (

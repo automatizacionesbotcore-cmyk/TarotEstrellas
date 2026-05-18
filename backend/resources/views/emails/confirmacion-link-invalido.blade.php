@@ -1,4 +1,22 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><title>Enlace inválido — TarotEstrellas</title>
-<style>body{font-family:system-ui,sans-serif;background:#fafafa;color:#222;padding:3rem;text-align:center}h1{color:#b00}</style></head>
-<body><h1>Enlace inválido o expirado</h1><p>El enlace de confirmación ya no es válido. Ingresa a tu cuenta para gestionar tu cita.</p></body></html>
+@extends('emails.layouts.branded', [
+    'title' => 'Enlace inválido',
+    'eyebrow' => 'Confirmación de asistencia',
+    'badge' => 'Enlace no disponible',
+    'heading' => 'El enlace ya no es válido',
+    'preheader' => 'El enlace de confirmación es inválido o expiró.',
+    'accent' => '#B2483D',
+    'accentDark' => '#7A2F28',
+])
+
+@section('content')
+    <p style="margin:0 0 16px;">
+        El enlace de confirmación ya no es válido o expiró. Ingresa a tu cuenta para gestionar tu cita y
+        revisar su estado actual.
+    </p>
+
+    @include('emails.partials.button', [
+        'url' => rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/') . '/app/mis-consultas',
+        'label' => 'Ir a mi cuenta',
+        'color' => '#B2483D',
+    ])
+@endsection

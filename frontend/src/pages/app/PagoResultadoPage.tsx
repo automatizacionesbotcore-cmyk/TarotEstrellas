@@ -59,7 +59,7 @@ export function PagoResultadoPage() {
   }, []);
 
   return (
-    <main className="page-content">
+    <main className="page-content payment-page">
       <AnimatePresence mode="wait">
         {status === 'loading' ? (
           <motion.div
@@ -67,9 +67,9 @@ export function PagoResultadoPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="pay-wrapper"
-            style={{ textAlign: 'center', padding: '3rem 1rem' }}
+            className="pay-wrapper payment-result-card"
           >
+            <p className="dash-eyebrow">Confirmación</p>
             <p className="dash-subtitle">Confirmando tu pago…</p>
             <p style={{ color: 'var(--color-text-muted, rgba(245,230,211,0.6))', marginTop: '0.5rem' }}>
               Por favor espera un momento.
@@ -84,13 +84,6 @@ export function PagoResultadoPage() {
             transition={{ duration: 0.5 }}
           >
             <div className="pay-success-content">
-              <motion.span
-                className="pay-success-icon"
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                ✦
-              </motion.span>
               <h2>¡Pago recibido!</h2>
               <p>Tu pago fue procesado correctamente. Recibirás una confirmación por correo.</p>
               <div className="wizard-actions" style={{ marginTop: '1.5rem' }}>
@@ -105,10 +98,8 @@ export function PagoResultadoPage() {
             key="error"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="pay-wrapper"
-            style={{ textAlign: 'center', padding: '3rem 1rem' }}
+            className="pay-wrapper payment-result-card"
           >
-            <span style={{ fontSize: '2.5rem' }}>✦</span>
             <h2 style={{ marginTop: '1rem' }}>No pudimos confirmar tu pago</h2>
             <p className="form-error" style={{ marginTop: '0.5rem' }}>{errorMsg}</p>
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>

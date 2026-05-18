@@ -4,6 +4,7 @@ import {
   VARIABLES_BASE, type Plantilla, type PlantillaPayload,
 } from '../../../lib/plantillasAdminApi';
 import { toast } from '../../../stores/toastStore';
+import { AdminTable, type Column } from '../../../components/admin/AdminTable';
 
 export function AdminPlantillasPage() {
   const [items, setItems] = useState<Plantilla[]>([]);
@@ -34,51 +35,64 @@ export function AdminPlantillasPage() {
     finally { setBusyIds((prev) => { const next = new Set(prev); next.delete(p.id); return next; }); }
   };
 
+  const columns: Column<Plantilla>[] = [
+    { key: 'clave', label: 'Clave', render: (p) => <code>{p.clave}</code> },
+    { key: 'canal', label: 'Canal', render: (p) => <span className="badge">{p.canal}</span> },
+    { key: 'asunto', label: 'Asunto', render: (p) => p.asunto || '—' },
+    { key: 'version', label: 'Versión', render: (p) => `v${p.version}` },
+    {
+      key: 'estado',
+      label: 'Estado',
+      render: (p) => <span className={`badge ${p.activo ? 'badge-success' : 'badge-muted'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span>,
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      render: (p) => (
+        <div className="admin-row-actions">
+          <button type="button" className="btn-secondary" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>
+          <button type="button" className="btn-danger" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)}>
+            {busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="page-content">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Plantillas de notificación</h1>
-        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>+ Nueva</button>
+      <header className="admin-page-header">
+        <div>
+          <p className="dash-eyebrow">Comunicaciones</p>
+          <h1>Plantillas de notificación</h1>
+          <p className="admin-page-subtitle">Edita mensajes por canal y valida versiones antes de enviarlas.</p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>Nueva plantilla</button>
       </header>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label>Canal{' '}
-          <select value={canal} onChange={(e) => { setCanal(e.target.value as any); setPage(1); }}>
+      <div className="admin-filter-card">
+        <div className="admin-filter-grid">
+          <label>
+            Canal
+            <select className="form-input" value={canal} onChange={(e) => { setCanal(e.target.value as any); setPage(1); }}>
             <option value="all">Todos</option>
             <option value="email">Email</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="sms">SMS</option>
           </select>
-        </label>
+          </label>
+        </div>
       </div>
 
-      {loading ? <p>Cargando…</p> : (
-        <table className="data-table" style={{ width: '100%' }}>
-          <thead><tr><th>Clave</th><th>Canal</th><th>Asunto</th><th>Versión</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            {items.map((p) => (
-              <tr key={p.id}>
-                <td><code>{p.clave}</code></td>
-                <td><span className="badge">{p.canal}</span></td>
-                <td>{p.asunto || '—'}</td>
-                <td>v{p.version}</td>
-                <td><span className={`badge ${p.activo ? 'badge-success' : 'badge-muted'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span></td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  <button type="button" onClick={() => setEditing(p)} disabled={busyIds.has(p.id)}>Editar</button>{' '}
-                  <button type="button" onClick={() => onDelete(p)} disabled={busyIds.has(p.id)} style={{ color: 'var(--danger)' }}>{busyIds.has(p.id) ? 'Eliminando…' : 'Eliminar'}</button>
-                </td>
-              </tr>
-            ))}
-            {!items.length && <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>Sin plantillas.</td></tr>}
-          </tbody>
-        </table>
-      )}
-
-      <nav style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>
-        <span>Página {page} de {lastPage}</span>
-        <button disabled={page >= lastPage} onClick={() => setPage(page + 1)}>›</button>
-      </nav>
+      <AdminTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyLabel="Sin plantillas."
+        rowKey={(p) => p.id}
+        searchable={false}
+        pagination={{ currentPage: page, lastPage, onPageChange: setPage }}
+      />
 
       {(creating || editing) && (
         <PlantillaModal initial={editing} onClose={() => { setCreating(false); setEditing(null); }}
