@@ -61,6 +61,22 @@ Estado: completado.
   - Callback Google sin code redirige a `https://tarotestrellas.com/auth/login?error=google_failed`, no a localhost.
   - Inicio OAuth redirige a Google correctamente.
 
+## Hotfix PROD 2026-05-18: Astrea mobile público
+
+Estado: completado.
+
+- Respaldo manual remoto creado antes del hotfix: `backup-predeploy-astrea-mobile-20260518-115334.tar.gz` en home del usuario Hostinger.
+- Causa: en Chrome mobile el widget flotante usaba `100vh`; en algunos Samsung la barra del navegador podia dejar el header fuera del area visible. Además el boton de pantalla completa no se renderizaba para visitantes publicos.
+- Fix desplegado: Astrea publico ahora muestra boton de pantalla completa/restaurar, el panel usa `100svh`/`100dvh` con safe-area y mantiene los controles superiores visibles.
+- Pruebas locales:
+  - `pnpm build`
+  - `pnpm test`
+  - `pnpm test:e2e e2e/responsive.spec.ts` con caso mobile de Astrea publico.
+- Smoke test PROD OK:
+  - `https://tarotestrellas.com/`
+  - `https://tarotestrellas.com/backend/public/api/health`
+  - CSS PROD verificado con `100dvh`, `safe-area-inset-top` y `astrea-widget--expanded`.
+
 ## cfg-paypal-prod: PayPal LIVE
 
 Estado: requiere credenciales externas.
