@@ -48,13 +48,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const url = String(error.config?.url ?? '');
 
     if (status === 401) {
       useAuthStore.getState().clearSession();
       if (window.location.pathname !== '/auth/login') {
         window.location.href = '/auth/login';
       }
-    } else if (status === 403) {
+    } else if (status === 403 && !url.includes('/auth/login')) {
       useToastStore.getState().addToast('error', 'No tienes permisos para realizar esta acción.');
     } else if (status >= 500 || error.code === 'ECONNABORTED') {
       useToastStore.getState().addToast('error', 'Error temporal del servidor. Reintenta en unos segundos.');

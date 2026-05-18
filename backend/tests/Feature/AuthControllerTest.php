@@ -147,6 +147,32 @@ class AuthControllerTest extends TestCase
         $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
     }
 
+    public function test_reset_password_verifica_correo_y_permite_login(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset-unverified@example.com',
+            'email_verified_at' => null,
+            'password' => Hash::make('OldPassword123!'),
+        ]);
+
+        $token = Password::broker()->createToken($user);
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => 'reset-unverified@example.com',
+            'token' => $token,
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
+        ])->assertOk();
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'reset-unverified@example.com',
+            'password' => 'NewPassword123!',
+        ])->assertOk()
+          ->assertJsonStructure(['token', 'user']);
+    }
+
     public function test_resend_verification_sends_notification_for_unverified_user(): void
     {
         Notification::fake();

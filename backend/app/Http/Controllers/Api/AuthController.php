@@ -164,7 +164,7 @@ class AuthController extends Controller
                 'changes'    => ['reason' => 'email_not_verified'],
             ]);
             return response()->json([
-                'message' => 'Debes verificar tu correo electronico para iniciar sesion.',
+                'message' => 'Debes verificar tu correo electrónico para iniciar sesión.',
             ], 403);
         }
 
@@ -228,6 +228,10 @@ class AuthController extends Controller
                     'password' => $password,
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                if (! $user->hasVerifiedEmail()) {
+                    $user->markEmailAsVerified();
+                }
             }
         );
 
