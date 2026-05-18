@@ -48,6 +48,19 @@ Estado: completado.
   - `https://tarotestrellas.com/servicios`
   - Bundle PROD verificado con `https://automatizatech.cl` y texto `Desarrollado por`.
 
+## Hotfix PROD 2026-05-18: Google OAuth frontend URL
+
+Estado: completado.
+
+- Respaldo manual remoto creado antes del hotfix: `backup-predeploy-oauth-20260518-112903.tar.gz` en home del usuario Hostinger.
+- Causa: `AuthController::googleCallback()` usaba `env('FRONTEND_URL', 'http://localhost:5173')` dentro del controller; con configuracion cacheada de Laravel podia caer al default local.
+- Fix desplegado: usar `config('app.frontend_url', config('app.url'))`.
+- Post-deploy ejecutado: `optimize:clear`, `config:cache`, `route:cache`, `view:cache`, `queue:restart` y reload OPcache tocando `backend/bootstrap/app.php`.
+- Smoke test OK:
+  - `https://tarotestrellas.com/backend/public/api/health`
+  - Callback Google sin code redirige a `https://tarotestrellas.com/auth/login?error=google_failed`, no a localhost.
+  - Inicio OAuth redirige a Google correctamente.
+
 ## cfg-paypal-prod: PayPal LIVE
 
 Estado: requiere credenciales externas.
