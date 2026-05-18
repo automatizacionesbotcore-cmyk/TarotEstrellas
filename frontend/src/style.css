@@ -5030,6 +5030,65 @@ p               { text-wrap: pretty; }
 	object-fit: cover;
 	margin-bottom: 0.25rem;
 	border: 2px solid var(--border-subtle);
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--accent) 8%, var(--card));
+	flex: 0 0 auto;
+}
+
+.especialista-card-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: inherit;
+	display: block;
+}
+
+.default-specialist-avatar {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at 32% 18%, color-mix(in srgb, var(--accent) 38%, transparent), transparent 34%),
+		linear-gradient(145deg, #241437, #10091f 68%);
+	box-shadow:
+		inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
+		0 0 18px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.default-specialist-avatar svg {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.default-specialist-avatar__halo {
+	position: absolute;
+	inset: 13%;
+	border-radius: 50%;
+	background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 66%);
+	filter: blur(1px);
+}
+
+.especialista-card-avatar .default-specialist-avatar,
+.especialista-card-avatar.default-specialist-avatar {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	box-shadow: none;
+	background: transparent;
+}
+
+.especialista-card-avatar-fallback {
+	width: 100%;
+	height: 100%;
 }
 
 .especialista-card-nombre {

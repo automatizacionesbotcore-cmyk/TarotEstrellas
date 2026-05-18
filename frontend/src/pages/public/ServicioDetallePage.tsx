@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { DefaultSpecialistAvatar } from '../../components/common/DefaultSpecialistAvatar';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuthModalStore } from '../../stores/authModalStore';
 import { MonthCalendar } from '../../components/ui/MonthCalendar';
@@ -492,8 +493,10 @@ export function ServicioDetallePage() {
                           className="especialista-card"
                           onClick={() => setSelectedEspecialistaId(e.id)}
                         >
-                          {e.avatar_url && (
+                          {e.avatar_url ? (
                             <img className="especialista-card-avatar" src={e.avatar_url} alt={e.nombre} />
+                          ) : (
+                            <DefaultSpecialistAvatar name={e.nombre} className="especialista-card-avatar" />
                           )}
                           <strong className="especialista-card-nombre">{e.nombre}</strong>
                           {e.especialidad && (

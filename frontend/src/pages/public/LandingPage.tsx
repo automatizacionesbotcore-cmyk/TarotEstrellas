@@ -18,6 +18,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuthModalStore } from '../../stores/authModalStore';
+import { DefaultSpecialistAvatar } from '../../components/common/DefaultSpecialistAvatar';
 
 const StarField = lazy(() => import('../../components/3d/StarField'));
 
@@ -402,7 +403,7 @@ export function LandingPage() {
                   <div className="especialista-card-avatar">
                     {e.avatar_url
                       ? <img src={e.avatar_url} alt={e.nombre} />
-                      : <span>{e.nombre.charAt(0).toUpperCase()}</span>}
+                      : <DefaultSpecialistAvatar name={e.nombre} className="especialista-card-avatar-fallback" />}
                   </div>
                   <p className="especialista-card-nombre">{e.nombre}</p>
                   <p className="especialista-card-especialidad">{e.especialidad}</p>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { api } from '../../lib/api';
 import { useAuthModalStore } from '../../stores/authModalStore';
 import { useAuthStore } from '../../stores/authStore';
+import { DefaultSpecialistAvatar } from '../../components/common/DefaultSpecialistAvatar';
 
 type EspecialistaPublico = {
   id: number;
@@ -125,9 +126,10 @@ export function EspecialistaDetallePage() {
               alt={especialista.nombre}
             />
           ) : (
-            <div className="especialista-hero-avatar especialista-hero-avatar-placeholder">
-              {especialista.nombre.charAt(0).toUpperCase()}
-            </div>
+            <DefaultSpecialistAvatar
+              name={especialista.nombre}
+              className="especialista-hero-avatar especialista-hero-avatar-placeholder"
+            />
           )}
 
           <div className="especialista-hero-info">
