@@ -10,7 +10,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
-    video: 'retain-on-failure',
+    video: 'off',
     screenshot: 'only-on-failure',
   },
   projects: [
@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: process.env.E2E_NO_SERVER
     ? undefined
     : {
-        command: 'npm run dev -- --port=5173',
+        command: 'pnpm dev -- --port=5173',
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,

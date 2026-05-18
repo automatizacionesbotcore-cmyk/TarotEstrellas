@@ -4,16 +4,16 @@
 
 ```bash
 cd frontend
-npm install
-npx playwright install
+pnpm install
+pnpm exec playwright install
 ```
 
 ## Correr
 
 ```bash
-npm run test:e2e
+pnpm test:e2e
 # o apuntando a un servidor ya levantado:
-E2E_NO_SERVER=1 E2E_BASE_URL=http://localhost:5173 npm run test:e2e
+E2E_NO_SERVER=1 E2E_BASE_URL=http://localhost:5173 pnpm test:e2e
 ```
 
 ## Specs
