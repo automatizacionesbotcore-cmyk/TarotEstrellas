@@ -83,7 +83,10 @@ export function PublicLayout() {
         </div>
 
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} TarotEstrellas · Todos los derechos reservados</p>
+          <p>
+            © {new Date().getFullYear()} TarotEstrellas · Todos los derechos reservados · Desarrollado por{' '}
+            <a href="https://automatizatech.cl" target="_blank" rel="noreferrer">automatizatech.cl</a>
+          </p>
         </div>
       </footer>
     </div>
