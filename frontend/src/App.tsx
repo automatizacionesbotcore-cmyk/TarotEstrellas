@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Toaster } from './components/ui/Toaster';
 import { PublicLayout } from './layouts/PublicLayout';
 import { AuthLayout } from './layouts/AuthLayout';
@@ -79,11 +79,14 @@ function GuestOnly({ children }: { children: React.ReactElement }) {
 }
 
 export function App() {
+  const location = useLocation();
+  const hideAgenteWidget = /^\/app\/citas\/[^/]+\/pagar(?:-saldo)?$/.test(location.pathname);
+
   return (
     <>
     <AuthCardModal />
     <Toaster />
-    <AgenteWidget />
+    {!hideAgenteWidget ? <AgenteWidget /> : null}
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />

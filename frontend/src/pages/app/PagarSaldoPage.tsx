@@ -90,50 +90,58 @@ function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancari
 
   return (
     <div className="transfer-panel">
-      <div className="ref-code-box">
-        <span className="pay-section-label">Código de referencia</span>
-        <strong className="ref-code">{cita.codigo_referencia}-SALDO</strong>
-      </div>
+      <details className="payment-accordion" open>
+        <summary>Código de referencia</summary>
+        <div className="ref-code-box">
+          <span className="pay-section-label">Incluirlo en la transferencia</span>
+          <strong className="ref-code">{cita.codigo_referencia}-SALDO</strong>
+        </div>
+      </details>
 
       {datosBancarios ? (
-        <div className="bank-details">
-          <p className="pay-section-label">Datos para transferir</p>
-          <dl>
-            <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
-            <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
-            <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
-            <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
-            {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
-            {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
-          </dl>
-          <p className="pay-abono-note">
-            Monto a transferir: <strong>{formatMoney(saldo, cita.moneda)}</strong>
-          </p>
-        </div>
+        <details className="payment-accordion" open={!uploaded}>
+          <summary>Datos para transferir</summary>
+          <div className="bank-details">
+            <dl>
+              <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
+              <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
+              <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
+              <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
+              {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
+              {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
+            </dl>
+            <p className="pay-abono-note">
+              Monto a transferir: <strong>{formatMoney(saldo, cita.moneda)}</strong>
+            </p>
+          </div>
+        </details>
       ) : (
         <p className="pay-section-label">Cargando datos bancarios…</p>
       )}
 
       {!uploaded ? (
-        <div className="comprobante-upload">
-          <p className="pay-section-label">Sube tu comprobante de transferencia</p>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*,application/pdf"
-            style={{ display: 'none' }}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
-            {file ? file.name : 'Seleccionar archivo'}
-          </button>
-          {file ? (
-            <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
-              {uploading ? 'Subiendo…' : 'Enviar comprobante'}
+        <details className="payment-accordion" open>
+          <summary>Adjuntar comprobante</summary>
+          <div className="comprobante-upload">
+            <p className="pay-section-label">Sube tu comprobante de transferencia</p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              style={{ display: 'none' }}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
+              {file ? file.name : 'Seleccionar archivo'}
             </button>
-          ) : null}
-          {uploadError ? <p className="form-error">{uploadError}</p> : null}
-        </div>
+            {file ? (
+              <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
+                {uploading ? 'Subiendo…' : 'Enviar comprobante'}
+              </button>
+            ) : null}
+            {uploadError ? <p className="form-error">{uploadError}</p> : null}
+          </div>
+        </details>
       ) : (
         <motion.div className="upload-success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <span>✦</span>

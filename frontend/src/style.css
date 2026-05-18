@@ -2951,6 +2951,53 @@ p               { text-wrap: pretty; }
 /* Transfer */
 .transfer-panel { display: flex; flex-direction: column; gap: 1.2rem; }
 
+.payment-accordion {
+	background: var(--card);
+	border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.payment-accordion summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.85rem 1rem;
+	color: var(--text);
+	font-weight: 700;
+}
+
+.payment-accordion summary::-webkit-details-marker { display: none; }
+
+.payment-accordion summary::after {
+	content: "+";
+	width: 1.7rem;
+	height: 1.7rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+	color: var(--accent);
+	font-size: 1.05rem;
+	line-height: 1;
+	flex: 0 0 auto;
+}
+
+.payment-accordion[open] summary::after { content: "−"; }
+
+.payment-accordion .ref-code-box,
+.payment-accordion .bank-details,
+.payment-accordion .comprobante-upload {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+	border-radius: 0;
+}
+
 .ref-code-box {
 	background: var(--card);
 	border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
@@ -3056,6 +3103,31 @@ p               { text-wrap: pretty; }
 	.ref-code {
 		font-size: 1.15rem;
 		word-break: break-word;
+	}
+	.payment-page {
+		gap: 0.85rem;
+	}
+	.payment-header {
+		display: none;
+	}
+	.transfer-panel {
+		gap: 0.85rem;
+	}
+	.countdown-box {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.countdown-time {
+		font-size: 1.8rem;
+	}
+	.payment-accordion summary {
+		padding: 0.8rem 0.9rem;
+	}
+	.comprobante-upload .btn-secondary,
+	.comprobante-upload .btn-primary {
+		width: 100%;
+		justify-content: center;
 	}
 }
 
@@ -6514,6 +6586,27 @@ cursor: pointer;
     justify-content: flex-start;
   }
   .nav-link { padding: 0.4rem 0.6rem !important; font-size: 0.9rem; }
+
+  .page-shell--payment-focus {
+    padding-top: 0.35rem;
+  }
+
+  .main-header--payment-focus {
+    position: static;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    justify-content: center;
+  }
+
+  .main-header--payment-focus nav {
+    display: none;
+  }
+
+  .main-header--payment-focus .logo-link {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
 }
 
 /* Botones acción primaria/peligro */

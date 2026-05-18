@@ -281,52 +281,59 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
 
   return (
     <div className="transfer-panel">
-      <div className="countdown-box" role="status" aria-live="polite">
-        <span className="countdown-label">Tiempo para transferir</span>
-        <strong className={seconds <= 0 ? 'countdown-time expired' : 'countdown-time'}>
-          {fmtCountdown(seconds)}
-        </strong>
-        {seconds <= 300 && seconds > 0 && !extended ? (
-          <button type="button" className="btn-secondary extend-btn" onClick={handleExtend}>
-            Extender 10 min
-          </button>
-        ) : null}
-        {seconds <= 0 ? (
-          <p className="countdown-expired">El tiempo de reserva venció. Vuelve a agendar.</p>
-        ) : null}
-      </div>
+      {!uploaded ? (
+        <div className="countdown-box" role="status" aria-live="polite">
+          <span className="countdown-label">Tiempo para transferir</span>
+          <strong className={seconds <= 0 ? 'countdown-time expired' : 'countdown-time'}>
+            {fmtCountdown(seconds)}
+          </strong>
+          {seconds <= 300 && seconds > 0 && !extended ? (
+            <button type="button" className="btn-secondary extend-btn" onClick={handleExtend}>
+              Extender 10 min
+            </button>
+          ) : null}
+          {seconds <= 0 ? (
+            <p className="countdown-expired">El tiempo de reserva venció. Vuelve a agendar.</p>
+          ) : null}
+        </div>
+      ) : null}
 
-      <div className="ref-code-box">
-        <span className="pay-section-label">Código de referencia (incluirlo en la transferencia)</span>
-        <strong className="ref-code">{cita.codigo_referencia}</strong>
-      </div>
+      <details className="payment-accordion" open>
+        <summary>Código de referencia</summary>
+        <div className="ref-code-box">
+          <span className="pay-section-label">Incluirlo en la transferencia</span>
+          <strong className="ref-code">{cita.codigo_referencia}</strong>
+        </div>
+      </details>
 
       {cuentasBancarias && cuentasBancarias.length > 0 ? (
-        <div className="bank-details">
-          <p className="pay-section-label">Datos para transferir</p>
-          {cuentasBancarias.map((cuenta, i) => (
-            <div key={i} style={{ marginBottom: i < cuentasBancarias.length - 1 ? '1rem' : 0 }}>
-              {cuentasBancarias.length > 1 && (
-                <p style={{ fontWeight: 600, marginBottom: '0.35rem', fontSize: '0.9rem' }}>
-                  Cuenta {i + 1}
-                </p>
-              )}
-              <dl>
-                <dt>Banco</dt>        <dd>{cuenta.banco}</dd>
-                <dt>Titular</dt>      <dd>{cuenta.nombre_titular}</dd>
-                <dt>N° de cuenta</dt> <dd>{cuenta.numero_cuenta}</dd>
-                <dt>Tipo de cuenta</dt><dd>{cuenta.tipo_cuenta}</dd>
-                {cuenta.rut_titular ? <><dt>RUT</dt><dd>{cuenta.rut_titular}</dd></> : null}
-              </dl>
-            </div>
-          ))}
-          <p className="pay-abono-note">
-            Monto a transferir (abono 20%): <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
-          </p>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            El saldo restante de {formatMoney(calcSaldo(cita.precio_final_centavos), cita.moneda)} se paga el día de la consulta.
-          </p>
-        </div>
+        <details className="payment-accordion" open={!uploaded}>
+          <summary>Datos para transferir</summary>
+          <div className="bank-details">
+            {cuentasBancarias.map((cuenta, i) => (
+              <div key={i} style={{ marginBottom: i < cuentasBancarias.length - 1 ? '1rem' : 0 }}>
+                {cuentasBancarias.length > 1 && (
+                  <p style={{ fontWeight: 600, marginBottom: '0.35rem', fontSize: '0.9rem' }}>
+                    Cuenta {i + 1}
+                  </p>
+                )}
+                <dl>
+                  <dt>Banco</dt>        <dd>{cuenta.banco}</dd>
+                  <dt>Titular</dt>      <dd>{cuenta.nombre_titular}</dd>
+                  <dt>N° de cuenta</dt> <dd>{cuenta.numero_cuenta}</dd>
+                  <dt>Tipo de cuenta</dt><dd>{cuenta.tipo_cuenta}</dd>
+                  {cuenta.rut_titular ? <><dt>RUT</dt><dd>{cuenta.rut_titular}</dd></> : null}
+                </dl>
+              </div>
+            ))}
+            <p className="pay-abono-note">
+              Monto a transferir (abono 20%): <strong>{formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda)}</strong>
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              El saldo restante de {formatMoney(calcSaldo(cita.precio_final_centavos), cita.moneda)} se paga el día de la consulta.
+            </p>
+          </div>
+        </details>
       ) : cuentasBancarias === null ? (
         <p className="pay-section-label">Cargando datos bancarios…</p>
       ) : (
@@ -336,29 +343,32 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
       )}
 
       {!uploaded ? (
-        <div className="comprobante-upload">
-          <p className="pay-section-label">Sube tu comprobante de transferencia</p>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*,application/pdf"
-            style={{ display: 'none' }}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => fileRef.current?.click()}
-          >
-            {file ? file.name : 'Seleccionar archivo'}
-          </button>
-          {file ? (
-            <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
-              {uploading ? 'Subiendo…' : 'Enviar comprobante'}
+        <details className="payment-accordion" open>
+          <summary>Adjuntar comprobante</summary>
+          <div className="comprobante-upload">
+            <p className="pay-section-label">Sube tu comprobante de transferencia</p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              style={{ display: 'none' }}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => fileRef.current?.click()}
+            >
+              {file ? file.name : 'Seleccionar archivo'}
             </button>
-          ) : null}
-          {uploadError ? <p className="form-error">{uploadError}</p> : null}
-        </div>
+            {file ? (
+              <button type="button" className="btn-primary" disabled={uploading} onClick={handleUpload}>
+                {uploading ? 'Subiendo…' : 'Enviar comprobante'}
+              </button>
+            ) : null}
+            {uploadError ? <p className="form-error">{uploadError}</p> : null}
+          </div>
+        </details>
       ) : (
         <motion.div
           className="upload-success"
