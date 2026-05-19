@@ -23,13 +23,39 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   banco: '',
-  tipo_cuenta: 'Corriente',
+  tipo_cuenta: 'corriente',
   numero_cuenta: '',
   nombre_titular: '',
   rut_titular: '',
 };
 
-const TIPO_CUENTA_OPTIONS = ['Corriente', 'Vista', 'Ahorro', 'RUT', 'Chequera Electrónica'];
+const TIPO_CUENTA_OPTIONS = [
+  { value: 'corriente', label: 'Corriente' },
+  { value: 'vista', label: 'Vista' },
+  { value: 'ahorro', label: 'Ahorro' },
+  { value: 'rut', label: 'RUT' },
+] as const;
+
+function normalizeTipoCuenta(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'rut') return 'rut';
+  if (normalized === 'corriente') return 'corriente';
+  if (normalized === 'vista') return 'vista';
+  if (normalized === 'ahorro') return 'ahorro';
+  return normalized;
+}
+
+function formatTipoCuenta(value: string) {
+  const option = TIPO_CUENTA_OPTIONS.find((item) => item.value === normalizeTipoCuenta(value));
+  return option?.label ?? value;
+}
+
+function getErrorMessage(e: any, fallback: string) {
+  const errors = e?.response?.data?.errors;
+  const firstError = errors && Object.values(errors)[0];
+  if (Array.isArray(firstError) && firstError[0]) return String(firstError[0]);
+  return e?.response?.data?.message ?? fallback;
+}
 
 function fetchCuentas() {
   return api.get<{ data: CuentaBancaria[] }>('/admin/cuentas-bancarias').then((r) => r.data.data);
@@ -50,16 +76,22 @@ export function AdminCuentasBancariasPage() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin', 'cuentas-bancarias'] });
 
   const createMutation = useMutation({
-    mutationFn: (data: FormState) => api.post('/admin/cuentas-bancarias', data),
+    mutationFn: (data: FormState) => api.post('/admin/cuentas-bancarias', {
+      ...data,
+      tipo_cuenta: normalizeTipoCuenta(data.tipo_cuenta),
+    }),
     onSuccess:  () => { setCreating(false); setForm(EMPTY_FORM); setFormError(''); invalidate(); },
-    onError:    (e: any) => setFormError(e?.response?.data?.message ?? 'Error al crear la cuenta.'),
+    onError:    (e: any) => setFormError(getErrorMessage(e, 'Error al crear la cuenta.')),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<FormState> }) =>
-      api.put(`/admin/cuentas-bancarias/${id}`, data),
+      api.put(`/admin/cuentas-bancarias/${id}`, {
+        ...data,
+        ...(data.tipo_cuenta ? { tipo_cuenta: normalizeTipoCuenta(data.tipo_cuenta) } : {}),
+      }),
     onSuccess:  () => { setEditing(null); setForm(EMPTY_FORM); setFormError(''); invalidate(); },
-    onError:    (e: any) => setFormError(e?.response?.data?.message ?? 'Error al actualizar.'),
+    onError:    (e: any) => setFormError(getErrorMessage(e, 'Error al actualizar.')),
   });
 
   const toggleMutation = useMutation({
@@ -79,7 +111,7 @@ export function AdminCuentasBancariasPage() {
     setFormError('');
     setForm({
       banco:          cuenta.banco,
-      tipo_cuenta:    cuenta.tipo_cuenta,
+      tipo_cuenta:    normalizeTipoCuenta(cuenta.tipo_cuenta),
       numero_cuenta:  cuenta.numero_cuenta,
       nombre_titular: cuenta.nombre_titular,
       rut_titular:    cuenta.rut_titular,
@@ -155,7 +187,7 @@ export function AdminCuentasBancariasPage() {
                 value={form.tipo_cuenta}
                 onChange={(e) => setForm((f) => ({ ...f, tipo_cuenta: e.target.value }))}
               >
-                {TIPO_CUENTA_OPTIONS.map((t) => <option key={t}>{t}</option>)}
+                {TIPO_CUENTA_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -250,7 +282,7 @@ export function AdminCuentasBancariasPage() {
                     </span>
                   </div>
                   <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.15rem 0.75rem', fontSize: '0.9rem' }}>
-                    <dt style={{ color: 'var(--text-muted)' }}>Tipo</dt>     <dd style={{ margin: 0 }}>{cuenta.tipo_cuenta}</dd>
+                    <dt style={{ color: 'var(--text-muted)' }}>Tipo</dt>     <dd style={{ margin: 0 }}>{formatTipoCuenta(cuenta.tipo_cuenta)}</dd>
                     <dt style={{ color: 'var(--text-muted)' }}>N° cuenta</dt><dd style={{ margin: 0 }}>{cuenta.numero_cuenta}</dd>
                     <dt style={{ color: 'var(--text-muted)' }}>Titular</dt>  <dd style={{ margin: 0 }}>{cuenta.nombre_titular}</dd>
                     <dt style={{ color: 'var(--text-muted)' }}>RUT</dt>      <dd style={{ margin: 0 }}>{cuenta.rut_titular}</dd>

@@ -60,7 +60,7 @@ class CuentaBancariaController extends Controller
             'nombre_titular' => ['required', 'string', 'max:100'],
             'rut_titular'    => ['required', 'string', 'max:12'],
             'activa'         => ['sometimes', 'boolean'],
-        ]);
+        ], $this->validationMessages());
 
         // Asignar el siguiente orden disponible (0, 1, 2)
         $usedOrders = CuentaBancaria::query()
@@ -109,7 +109,7 @@ class CuentaBancariaController extends Controller
             'nombre_titular' => ['sometimes', 'string', 'max:100'],
             'rut_titular'    => ['sometimes', 'string', 'max:12'],
             'activa'         => ['sometimes', 'boolean'],
-        ]);
+        ], $this->validationMessages());
 
         $cuenta->forceFill($validated)->save();
 
@@ -133,5 +133,25 @@ class CuentaBancariaController extends Controller
         $cuenta->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'banco.required' => 'El banco es obligatorio.',
+            'banco.max' => 'El banco no puede superar 80 caracteres.',
+            'tipo_cuenta.required' => 'El tipo de cuenta es obligatorio.',
+            'tipo_cuenta.in' => 'El tipo de cuenta seleccionado no es válido.',
+            'numero_cuenta.required' => 'El número de cuenta es obligatorio.',
+            'numero_cuenta.max' => 'El número de cuenta no puede superar 30 caracteres.',
+            'nombre_titular.required' => 'El nombre del titular es obligatorio.',
+            'nombre_titular.max' => 'El nombre del titular no puede superar 100 caracteres.',
+            'rut_titular.required' => 'El RUT del titular es obligatorio.',
+            'rut_titular.max' => 'El RUT del titular no puede superar 12 caracteres.',
+            'activa.boolean' => 'El estado activo debe ser verdadero o falso.',
+        ];
     }
 }

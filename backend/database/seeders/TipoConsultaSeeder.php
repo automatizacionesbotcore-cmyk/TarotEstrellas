@@ -23,7 +23,7 @@ class TipoConsultaSeeder extends Seeder
             ],
             [
                 'slug' => 'cartas-espanolas',
-                'nombre' => 'Cartas Espanolas',
+                'nombre' => 'Cartas Españolas',
                 'descripcion' => 'Consulta enfocada en decisiones practicas y panorama cercano.',
                 'duracion_minutos' => 45,
                 'precio_referencial_centavos' => 3500000,

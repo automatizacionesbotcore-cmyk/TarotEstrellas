@@ -64,6 +64,33 @@ class CuentaBancariaTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_rut_account(): void
+    {
+        $admin = $this->makeAdmin();
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/admin/cuentas-bancarias', $this->cuentaData([
+            'tipo_cuenta' => 'rut',
+            'numero_cuenta' => '27464061',
+            'nombre_titular' => 'Mireya Morales',
+            'rut_titular' => '27464061-1',
+        ]))
+            ->assertCreated()
+            ->assertJsonPath('data.tipo_cuenta', 'rut');
+    }
+
+    public function test_validation_messages_are_in_spanish(): void
+    {
+        $admin = $this->makeAdmin();
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/admin/cuentas-bancarias', $this->cuentaData([
+            'tipo_cuenta' => 'RUT',
+        ]))
+            ->assertStatus(422)
+            ->assertJsonPath('errors.tipo_cuenta.0', 'El tipo de cuenta seleccionado no es válido.');
+    }
+
     public function test_admin_cannot_exceed_3_cuentas(): void
     {
         $admin = $this->makeAdmin();
