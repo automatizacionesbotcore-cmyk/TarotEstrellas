@@ -390,7 +390,8 @@ class CitaController extends Controller
     {
         $validated = $request->validate([
             'tipo_consulta_slug'  => ['required', 'string', 'exists:tipos_consulta,slug'],
-            'inicio_local'        => ['required', 'date_format:Y-m-d H:i:s'],
+            'inicio_utc'          => ['nullable', 'date'],
+            'inicio_local'        => ['required_without:inicio_utc', 'date_format:Y-m-d H:i:s'],
             'zona_horaria_cliente' => ['required', 'timezone'],
             'canal_pago'          => ['required', 'in:transferencia,paypal'],
             'moneda'              => ['nullable', 'string', 'size:3'],
@@ -408,8 +409,9 @@ class CitaController extends Controller
             ->where('activo', true)
             ->firstOrFail();
 
-        $startUtc = CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])
-            ->setTimezone('UTC');
+        $startUtc = ! empty($validated['inicio_utc'])
+            ? CarbonImmutable::parse($validated['inicio_utc'])->setTimezone('UTC')
+            : CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])->setTimezone('UTC');
         $endUtc = $startUtc->addMinutes((int) $tipo->duracion_minutos);
 
         $collision = Cita::query()
@@ -992,7 +994,8 @@ class CitaController extends Controller
     public function reagendar(Request $request, string $uuid): JsonResponse
     {
         $validated = $request->validate([
-            'inicio_local' => ['required', 'date_format:Y-m-d H:i:s'],
+            'inicio_utc' => ['nullable', 'date'],
+            'inicio_local' => ['required_without:inicio_utc', 'date_format:Y-m-d H:i:s'],
             'zona_horaria_cliente' => ['required', 'timezone'],
             'motivo' => ['nullable', 'string', 'max:255'],
         ]);
@@ -1018,8 +1021,9 @@ class CitaController extends Controller
             ], 422);
         }
 
-        $startUtc = CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])
-            ->setTimezone('UTC');
+        $startUtc = ! empty($validated['inicio_utc'])
+            ? CarbonImmutable::parse($validated['inicio_utc'])->setTimezone('UTC')
+            : CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])->setTimezone('UTC');
         $endUtc = $startUtc->addMinutes((int) $cita->duracion_minutos);
 
         $collision = Cita::query()

@@ -83,6 +83,7 @@ async function fetchEspecialistas(): Promise<EspecialistaPublico[]> {
 
 async function reservarCita(payload: {
   tipo_consulta_slug: string;
+  inicio_utc: string;
   inicio_local: string;
   zona_horaria_cliente: string;
   canal_pago: 'stripe' | 'transferencia';
@@ -113,6 +114,22 @@ function formatPrice(value: number | null, currency: string) {
     currency,
     maximumFractionDigits: currency === 'CLP' ? 0 : 2,
   }).format(amount);
+}
+
+function formatSlotTime(isoUtc: string, timezone: string) {
+  return new Date(isoUtc).toLocaleTimeString('es-CL', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: timezone,
+  });
+}
+
+function formatSlotDateTime(isoUtc: string, timezone: string) {
+  return new Date(isoUtc).toLocaleString('es-CL', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: timezone,
+  });
 }
 
 function getRemainingSeconds(expiresAtIso: string | undefined, nowMs: number) {
@@ -347,6 +364,7 @@ export function ServicioDetallePage() {
 
     await bookingMutation.mutateAsync({
       tipo_consulta_slug: servicio.slug,
+      inicio_utc: selectedSlotData!.inicio_utc,
       inicio_local: selectedSlotData!.inicio_local,
       zona_horaria_cliente: selectedTimezone || detectedTimezone,
       canal_pago: canalPago,
@@ -425,10 +443,7 @@ export function ServicioDetallePage() {
                 <ul>
                   {quickSlots.map((slot) => (
                     <li key={slot.inicio_utc}>
-                      {new Date(slot.inicio_utc).toLocaleString('es-CL', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      })}
+                      {formatSlotDateTime(slot.inicio_utc, selectedTimezone || detectedTimezone)}
                     </li>
                   ))}
                 </ul>
@@ -567,10 +582,7 @@ export function ServicioDetallePage() {
                                 className={isSelected ? 'slot-chip selected' : 'slot-chip'}
                                 onClick={() => setSelectedSlot(slot.inicio_utc)}
                               >
-                                {new Date(slot.inicio_local).toLocaleTimeString('es-CL', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {formatSlotTime(slot.inicio_utc, selectedTimezone || detectedTimezone)}
                               </button>
                             );
                           })}
@@ -676,10 +688,7 @@ export function ServicioDetallePage() {
                   <p>
                     <strong>Fecha y hora</strong>
                     {selectedSlotData
-                      ? new Date(selectedSlotData.inicio_local).toLocaleString('es-CL', {
-                          dateStyle: 'full',
-                          timeStyle: 'short',
-                        })
+                      ? formatSlotDateTime(selectedSlotData.inicio_utc, selectedTimezone || detectedTimezone)
                       : 'Sin seleccionar'}
                   </p>
                   <p><strong>Zona horaria</strong> {selectedTimezone || detectedTimezone}</p>
@@ -746,6 +755,7 @@ export function ServicioDetallePage() {
                       {new Date(bookingMutation.data.data.reservada_hasta).toLocaleString('es-CL', {
                         dateStyle: 'short',
                         timeStyle: 'short',
+                        timeZone: selectedTimezone || detectedTimezone,
                       })}
                     </strong>{' '}
                     para completar el pago y confirmar tu cita.

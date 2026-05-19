@@ -10,6 +10,7 @@ type Cita = {
   estado:         string;
   codigo_referencia?: string;
   inicio_utc:     string;
+  zona_horaria_cliente?: string | null;
   cliente_email?: string | null;
   cliente?:       { email: string; name?: string } | null;
   tipo_consulta?: { nombre: string } | null;
@@ -39,6 +40,26 @@ const ESTADOS = [
 ];
 
 type SortField = 'inicio_utc' | 'estado' | 'codigo_referencia';
+const ADMIN_TIMEZONE = 'America/Santiago';
+
+function formatDateInZone(iso: string, timeZone = ADMIN_TIMEZONE): string {
+  return new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone,
+  }).format(new Date(iso));
+}
+
+function formatAdminClientDate(cita: Cita): string {
+  const adminDate = formatDateInZone(cita.inicio_utc, ADMIN_TIMEZONE);
+  const clientTimezone = cita.zona_horaria_cliente || ADMIN_TIMEZONE;
+
+  if (clientTimezone === ADMIN_TIMEZONE) {
+    return `${adminDate} Chile`;
+  }
+
+  return `${adminDate} Chile · ${formatDateInZone(cita.inicio_utc, clientTimezone)} cliente`;
+}
 
 export function AdminCitasPage() {
   const queryClient = useQueryClient();
@@ -161,7 +182,7 @@ export function AdminCitasPage() {
       key: 'inicio_utc',
       label: 'Inicio',
       sortable: true,
-      render: (r) => new Date(r.inicio_utc).toLocaleString('es-CL'),
+      render: (r) => formatAdminClientDate(r),
     },
     {
       key: 'cliente',

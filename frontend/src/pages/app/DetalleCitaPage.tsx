@@ -14,7 +14,8 @@ type CitaDetalle = {
   moneda: string;
   precio_total_centavos: number;
   precio_final_centavos: number;
-  timezone_cliente: string;
+  zona_horaria_cliente?: string;
+  timezone_cliente?: string;
   tema_principal: string | null;
   pregunta_especifica: string | null;
   tipo_consulta: { nombre: string; duracion_minutos: number; slug: string } | null;
@@ -65,8 +66,12 @@ const fetchResumen     = (id: string) => api.get(`/me/consultas/${id}/resumen`).
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDate(iso: string, tz: string) {
   return new Intl.DateTimeFormat('es-CL', {
-    dateStyle: 'full', timeStyle: 'short', timeZone: tz || undefined,
+    dateStyle: 'full', timeStyle: 'short', timeZone: tz || 'America/Santiago',
   }).format(new Date(iso));
+}
+
+function citaTimezone(cita: CitaDetalle) {
+  return cita.zona_horaria_cliente ?? cita.timezone_cliente ?? 'America/Santiago';
 }
 
 function fmtMoney(cents: number, currency: string) {
@@ -106,7 +111,7 @@ function TabInfo({ cita }: { cita: CitaDetalle }) {
         <dt>Estado</dt>
         <dd><span className={`service-pill estado-${cita.estado}`}>{ESTADO_LABELS[cita.estado] ?? cita.estado}</span></dd>
         <dt>Fecha</dt>
-        <dd>{fmtDate(cita.inicio_utc, cita.timezone_cliente)}</dd>
+        <dd>{fmtDate(cita.inicio_utc, citaTimezone(cita))}</dd>
         <dt>Duración</dt>
         <dd>{cita.tipo_consulta?.duracion_minutos} min</dd>
         <dt>Abono pagado</dt>
@@ -403,7 +408,7 @@ export function DetalleCitaPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <p className="dash-eyebrow">✦ Detalle de consulta</p>
         <h1 className="dash-title">{cita.tipo_consulta?.nombre ?? 'Consulta'}</h1>
-        <p className="dash-subtitle">{fmtDate(cita.inicio_utc, cita.timezone_cliente)}</p>
+        <p className="dash-subtitle">{fmtDate(cita.inicio_utc, citaTimezone(cita))}</p>
       </motion.div>
 
       {/* Tabs */}

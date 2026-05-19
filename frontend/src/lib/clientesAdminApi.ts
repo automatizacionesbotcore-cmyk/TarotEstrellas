@@ -47,6 +47,7 @@ export interface ClienteDetalle {
     uuid: string;
     codigo_referencia: string;
     inicio_utc: string | null;
+    zona_horaria_cliente?: string | null;
     duracion_minutos: number;
     estado: string;
     tipo_consulta: { nombre?: string; slug?: string } | null;

@@ -207,6 +207,7 @@ class AdminClientesController extends Controller
                     'uuid' => $c->uuid,
                     'codigo_referencia' => $c->codigo_referencia,
                     'inicio_utc' => $c->inicio_utc?->toIso8601String(),
+                    'zona_horaria_cliente' => $c->zona_horaria_cliente,
                     'duracion_minutos' => $c->duracion_minutos,
                     'estado' => $c->estado,
                     'tipo_consulta' => $c->tipoConsulta?->only(['nombre', 'slug']),

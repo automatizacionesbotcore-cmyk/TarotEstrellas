@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BloqueoAgenda;
 use App\Models\DisponibilidadBase;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -90,8 +91,8 @@ class AdminDisponibilidadController extends Controller
             'tipo' => $validated['tipo'],
             'motivo' => $validated['motivo'],
             'descripcion' => $validated['descripcion'] ?? null,
-            'fecha_inicio_utc' => $validated['fecha_inicio'].':00',
-            'fecha_fin_utc' => $validated['fecha_fin'].':00',
+            'fecha_inicio_utc' => $this->chileLocalToUtc($validated['fecha_inicio']),
+            'fecha_fin_utc' => $this->chileLocalToUtc($validated['fecha_fin']),
             'all_day' => $validated['all_day'] ?? false,
         ]);
 
@@ -123,10 +124,10 @@ class AdminDisponibilidadController extends Controller
         ], fn ($v) => $v !== null);
 
         if (isset($validated['fecha_inicio'])) {
-            $data['fecha_inicio_utc'] = $validated['fecha_inicio'].':00';
+            $data['fecha_inicio_utc'] = $this->chileLocalToUtc($validated['fecha_inicio']);
         }
         if (isset($validated['fecha_fin'])) {
-            $data['fecha_fin_utc'] = $validated['fecha_fin'].':00';
+            $data['fecha_fin_utc'] = $this->chileLocalToUtc($validated['fecha_fin']);
         }
 
         $bloqueo->update($data);
@@ -170,8 +171,8 @@ class AdminDisponibilidadController extends Controller
         $creados = 0;
         $omitidos = 0;
         foreach ($feriados as $f) {
-            $inicio = $f['fecha'].' 00:00:00';
-            $fin    = $f['fecha'].' 23:59:00';
+            $inicio = $this->chileLocalToUtc($f['fecha'].' 00:00');
+            $fin    = $this->chileLocalToUtc($f['fecha'].' 23:59');
 
             $existe = BloqueoAgenda::query()
                 ->where('especialista_id', $especialista->id)
@@ -237,5 +238,12 @@ class AdminDisponibilidadController extends Controller
         return User::query()
             ->whereHas('roles', fn ($q) => $q->where('nombre', 'admin_especialista'))
             ->firstOrFail();
+    }
+
+    private function chileLocalToUtc(string $value): string
+    {
+        return CarbonImmutable::parse($value, 'America/Santiago')
+            ->setTimezone('UTC')
+            ->format('Y-m-d H:i:s');
     }
 }

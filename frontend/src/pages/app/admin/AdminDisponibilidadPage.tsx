@@ -18,7 +18,11 @@ type Bloqueo = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+  return new Date(iso).toLocaleString('es-CL', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'America/Santiago',
+  });
 }
 
 type EspecialistaSimple = { id: number; nombre: string; slug: string | null };

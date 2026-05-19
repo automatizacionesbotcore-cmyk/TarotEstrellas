@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AppSetting;
+use App\Models\Cita;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -77,6 +78,28 @@ class BookingAndPaymentFlowTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.tema_principal', 'amor');
+    }
+
+    public function test_booking_uses_utc_slot_as_source_of_truth_and_keeps_client_timezone(): void
+    {
+        $user = $this->makeAuthenticatedClient();
+
+        Sanctum::actingAs($user);
+
+        $create = $this->postJson('/api/citas', [
+            'tipo_consulta_slug' => 'tarot',
+            'inicio_utc' => '2030-05-30T20:00:00Z',
+            'inicio_local' => '2030-05-30 16:00:00',
+            'zona_horaria_cliente' => 'America/Santiago',
+            'canal_pago' => 'transferencia',
+        ]);
+
+        $create->assertCreated();
+
+        $cita = Cita::query()->where('uuid', $create->json('data.uuid'))->firstOrFail();
+
+        $this->assertSame('2030-05-30 20:00:00', $cita->inicio_utc->copy()->utc()->format('Y-m-d H:i:s'));
+        $this->assertSame('America/Santiago', $cita->zona_horaria_cliente);
     }
 
     public function test_abono_then_saldo_transitions_cita_to_confirmada(): void

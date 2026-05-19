@@ -110,25 +110,17 @@ class DisponibilidadController extends Controller
     {
         $duration = (int) $tipo->duracion_minutos;
 
-        // Determine day-of-week in Chile time (0=Sun, 1=Mon ... 6=Sat)
-        $dateChile = CarbonImmutable::parse($date, 'America/Santiago');
-        $diaSemana = $dateChile->dayOfWeek;
-
-        // Load availability windows from DB (fallback to 10-18 if no config)
-        $windows = $this->getAvailabilityWindows($date, $diaSemana, $especialista);
-
-        if (empty($windows)) {
-            return [];
-        }
-
-        // Collect booked ranges for this day
-        $dayStartUtc = $dateChile->startOfDay()->setTimezone('UTC');
-        $dayEndUtc = $dateChile->endOfDay()->setTimezone('UTC');
+        $clientDayStartUtc = CarbonImmutable::parse($date, $tz)->startOfDay()->setTimezone('UTC');
+        $clientDayEndUtc = CarbonImmutable::parse($date, $tz)->endOfDay()->setTimezone('UTC');
+        $chileDates = collect([
+            $clientDayStartUtc->setTimezone('America/Santiago')->format('Y-m-d'),
+            $clientDayEndUtc->setTimezone('America/Santiago')->format('Y-m-d'),
+        ])->unique()->values()->all();
 
         $bookedRanges = Cita::query()
             ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
-            ->where('inicio_utc', '<', $dayEndUtc)
-            ->where('fin_utc', '>', $dayStartUtc)
+            ->where('inicio_utc', '<', $clientDayEndUtc)
+            ->where('fin_utc', '>', $clientDayStartUtc)
             ->get(['inicio_utc', 'fin_utc'])
             ->map(fn ($c) => [
                 'start' => CarbonImmutable::parse($c->inicio_utc),
@@ -141,44 +133,59 @@ class DisponibilidadController extends Controller
 
         $slots = [];
 
-        foreach ($windows as ['start' => $windowStart, 'end' => $windowEnd]) {
-            $cursor = $windowStart;
+        foreach ($chileDates as $chileDate) {
+            // Availability is configured by the specialist in Chile time.
+            $dateChile = CarbonImmutable::parse($chileDate, 'America/Santiago');
+            $diaSemana = $dateChile->dayOfWeek;
+            $windows = $this->getAvailabilityWindows($chileDate, $diaSemana, $especialista);
 
-            while ($cursor->addMinutes($duration)->lte($windowEnd)) {
-                $startUtc = $cursor;
-                $endUtc = $cursor->addMinutes($duration);
+            foreach ($windows as ['start' => $windowStart, 'end' => $windowEnd]) {
+                $cursor = $windowStart;
 
-                // Skip slots in the past or within 24h
-                if ($startUtc->lt($minStart)) {
-                    $cursor = $cursor->addMinutes($duration);
-                    continue;
-                }
-
-                // Check if overlaps with any booked range
-                $isTaken = false;
-                foreach ($bookedRanges as $range) {
-                    if ($startUtc->lt($range['end']) && $endUtc->gt($range['start'])) {
-                        $isTaken = true;
-                        break;
-                    }
-                }
-
-                if (! $isTaken) {
+                while ($cursor->addMinutes($duration)->lte($windowEnd)) {
+                    $startUtc = $cursor;
+                    $endUtc = $cursor->addMinutes($duration);
                     $localStart = $startUtc->setTimezone($tz);
-                    $localEnd = $endUtc->setTimezone($tz);
 
-                    $slots[] = [
-                        'inicio_utc' => $startUtc->toIso8601String(),
-                        'fin_utc' => $endUtc->toIso8601String(),
-                        'inicio_local' => $localStart->format('Y-m-d H:i:s'),
-                        'fin_local' => $localEnd->format('Y-m-d H:i:s'),
-                        'zona_horaria' => $tz,
-                    ];
+                    // Skip slots outside the client-selected calendar day.
+                    if ($localStart->format('Y-m-d') !== $date) {
+                        $cursor = $cursor->addMinutes($duration);
+                        continue;
+                    }
+
+                    // Skip slots in the past or within 24h
+                    if ($startUtc->lt($minStart)) {
+                        $cursor = $cursor->addMinutes($duration);
+                        continue;
+                    }
+
+                    // Check if overlaps with any booked range
+                    $isTaken = false;
+                    foreach ($bookedRanges as $range) {
+                        if ($startUtc->lt($range['end']) && $endUtc->gt($range['start'])) {
+                            $isTaken = true;
+                            break;
+                        }
+                    }
+
+                    if (! $isTaken) {
+                        $localEnd = $endUtc->setTimezone($tz);
+
+                        $slots[] = [
+                            'inicio_utc' => $startUtc->toIso8601String(),
+                            'fin_utc' => $endUtc->toIso8601String(),
+                            'inicio_local' => $localStart->format('Y-m-d H:i:s'),
+                            'fin_local' => $localEnd->format('Y-m-d H:i:s'),
+                            'zona_horaria' => $tz,
+                        ];
+                    }
+
+                    $cursor = $cursor->addMinutes($duration);
                 }
-
-                $cursor = $cursor->addMinutes($duration);
             }
         }
+
+        usort($slots, fn (array $a, array $b) => strcmp($a['inicio_utc'], $b['inicio_utc']));
 
         return $slots;
     }

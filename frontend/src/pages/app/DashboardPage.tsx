@@ -10,7 +10,8 @@ type CitaListItem = {
   estado: string;
   inicio_utc: string;
   tipo_consulta: { nombre: string; duracion_minutos: number } | null;
-  timezone_cliente: string;
+  zona_horaria_cliente?: string;
+  timezone_cliente?: string;
 };
 
 type CitasResponse = {
@@ -33,7 +34,7 @@ function formatDate(value: string, timezone: string) {
   return new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: timezone || undefined,
+    timeZone: timezone || 'America/Santiago',
   }).format(new Date(value));
 }
 
@@ -125,7 +126,7 @@ export function DashboardPage() {
                   </span>
                   <p className="card-detail">
                     {cita.inicio_utc
-                      ? formatDate(cita.inicio_utc, cita.timezone_cliente)
+                      ? formatDate(cita.inicio_utc, cita.zona_horaria_cliente ?? cita.timezone_cliente ?? 'America/Santiago')
                       : 'Sin fecha'}
                   </p>
                   {cita.tipo_consulta?.duracion_minutos ? (

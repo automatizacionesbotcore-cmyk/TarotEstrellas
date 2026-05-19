@@ -29,6 +29,7 @@ function renderMarkdown(text: string): string {
 }
 
 type TabKey = 'resumen' | 'cronologia' | 'natal' | 'chat' | 'pagos' | 'notas' | 'briefing';
+const ADMIN_TIMEZONE = 'America/Santiago';
 
 const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'resumen', label: 'Resumen' },
@@ -39,6 +40,33 @@ const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'notas', label: 'Notas privadas' },
   { key: 'briefing', label: 'Pre-consulta' },
 ];
+
+function formatAdminDate(iso: string | null | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (!iso) return '—';
+  return new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'short',
+    timeZone: ADMIN_TIMEZONE,
+    ...options,
+  }).format(new Date(iso));
+}
+
+function formatClientAwareDate(cita: { inicio_utc: string | null; zona_horaria_cliente?: string | null }): string {
+  if (!cita.inicio_utc) return '—';
+  const adminDate = formatAdminDate(cita.inicio_utc, { timeStyle: 'short' });
+  const clientTimezone = cita.zona_horaria_cliente || ADMIN_TIMEZONE;
+
+  if (clientTimezone === ADMIN_TIMEZONE) {
+    return `${adminDate} Chile`;
+  }
+
+  const clientDate = new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: clientTimezone,
+  }).format(new Date(cita.inicio_utc));
+
+  return `${adminDate} Chile · ${clientDate} cliente`;
+}
 
 export function AdminClienteDetallePage() {
   const { uuid } = useParams<{ uuid: string }>();
@@ -120,7 +148,7 @@ export function AdminClienteDetallePage() {
             {data.profile?.nombre || data.name}{data.profile?.apellido ? ` ${data.profile.apellido}` : ''}
           </h1>
           <p className="admin-page-subtitle">
-            {data.email} · Cliente desde {data.created_at ? new Date(data.created_at).toLocaleDateString() : '—'}
+            {data.email} · Cliente desde {formatAdminDate(data.created_at)}
           </p>
         </div>
         {isSuperAdmin && (
@@ -182,8 +210,8 @@ function TabResumen({ data }: { data: ClienteDetalle }) {
       <Card label="Canceladas" value={s.total_canceladas} />
       <Card label="No-show" value={s.total_no_show} highlight={s.total_no_show > 0 ? 'warn' : undefined} />
       <Card label="Tipo favorito" value={s.tipo_favorito || '—'} />
-      <Card label="Primera consulta" value={s.primera_consulta ? new Date(s.primera_consulta).toLocaleDateString() : '—'} />
-      <Card label="Última consulta" value={s.ultima_consulta ? new Date(s.ultima_consulta).toLocaleDateString() : '—'} />
+      <Card label="Primera consulta" value={formatAdminDate(s.primera_consulta)} />
+      <Card label="Última consulta" value={formatAdminDate(s.ultima_consulta)} />
       <Card
         label="Ingresos"
         value={Object.entries(s.ingresos_centavos || {}).map(([m, c]) => `${formatMoney(c, m)} ${m}`).join(' · ') || '—'}
@@ -202,7 +230,7 @@ function TabCronologia({ data }: { data: ClienteDetalle }) {
             <div>
               <strong>{c.tipo_consulta?.nombre || '—'}</strong> · {c.duracion_minutos} min
               <div className="admin-cell-muted">
-                {c.inicio_utc ? new Date(c.inicio_utc).toLocaleString() : '—'} · {c.codigo_referencia}
+                {formatClientAwareDate(c)} · {c.codigo_referencia}
               </div>
             </div>
             <div className="admin-timeline-meta">
@@ -224,7 +252,7 @@ function TabCronologia({ data }: { data: ClienteDetalle }) {
             {data.resumenes.map((r) => (
               <article key={r.id} className="admin-timeline-card">
                 <header className="admin-cell-muted">
-                  {new Date(r.inicio_utc).toLocaleDateString()} · {r.tema_principal || 'sin tema'}
+                  {formatAdminDate(r.inicio_utc)} · {r.tema_principal || 'sin tema'}
                 </header>
                 <div style={{ margin: 0 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(r.contenido) }} />
               </article>
@@ -251,7 +279,7 @@ function TabNatal({ data }: { data: ClienteDetalle }) {
 function TabPagos({ data }: { data: ClienteDetalle }) {
   const columns: Column<ClienteDetalle['citas'][number]>[] = [
     { key: 'codigo_referencia', label: 'Cita', render: (c) => c.codigo_referencia },
-    { key: 'inicio_utc', label: 'Fecha', render: (c) => c.inicio_utc ? new Date(c.inicio_utc).toLocaleDateString() : '—' },
+    { key: 'inicio_utc', label: 'Fecha', render: (c) => formatClientAwareDate(c) },
     { key: 'estado', label: 'Estado' },
     {
       key: 'monto',
@@ -349,7 +377,7 @@ function TabBriefing({ uuid, citas }: { uuid: string; citas: ClienteDetalle['cit
           <option value="">Sin cita específica (briefing general)</option>
           {proximas.map((c) => (
             <option key={c.uuid} value={c.uuid}>
-              {new Date(c.inicio_utc!).toLocaleString()} - {c.tipo_consulta?.nombre}
+              {formatClientAwareDate(c)} - {c.tipo_consulta?.nombre}
             </option>
           ))}
         </select>
@@ -363,7 +391,7 @@ function TabBriefing({ uuid, citas }: { uuid: string; citas: ClienteDetalle['cit
       {briefing && (
         <article className="admin-timeline-card">
           <header className="admin-cell-muted">
-            Modelo {briefing.modelo} · {briefing.sesiones_consideradas} sesiones consideradas · generado {new Date(briefing.generado_en).toLocaleString()}
+            Modelo {briefing.modelo} · {briefing.sesiones_consideradas} sesiones consideradas · generado {formatAdminDate(briefing.generado_en, { timeStyle: 'short' })}
           </header>
           <div dangerouslySetInnerHTML={{ __html: renderMarkdown(briefing.contenido) }} />
         </article>

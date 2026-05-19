@@ -15,7 +15,8 @@ type CitaListItem = {
   moneda: string;
   precio_total_centavos: number;
   precio_final_centavos: number;
-  timezone_cliente: string;
+  zona_horaria_cliente?: string;
+  timezone_cliente?: string;
   tema_principal: string | null;
   tipo_consulta: {
     id: number;
@@ -62,7 +63,7 @@ function formatDate(value: string, timezone: string) {
   return new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone:  timezone || undefined,
+    timeZone:  timezone || 'America/Santiago',
   }).format(new Date(value));
 }
 
@@ -150,7 +151,7 @@ export function MisConsultasPage() {
                 </span>
 
                 <p className="card-detail">
-                  {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.timezone_cliente) : 'Sin fecha'}
+                  {cita.inicio_utc ? formatDate(cita.inicio_utc, cita.zona_horaria_cliente ?? cita.timezone_cliente ?? 'America/Santiago') : 'Sin fecha'}
                 </p>
 
                 {cita.tipo_consulta?.duracion_minutos ? (
