@@ -6,6 +6,7 @@ use App\Models\PerfilEspecialista;
 use App\Models\Role;
 use App\Models\TipoConsulta;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -18,6 +19,13 @@ class DisponibilidadControllerTest extends TestCase
     {
         parent::setUp();
         $this->seed(\Database\Seeders\DatabaseSeeder::class);
+    }
+
+    protected function tearDown(): void
+    {
+        CarbonImmutable::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_disponibilidad_publica_usa_horario_default_si_especialista_no_tiene_configuracion(): void
@@ -36,6 +44,24 @@ class DisponibilidadControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('meta.especialista_id', $especialista->id);
 
+        $this->assertGreaterThan(0, $response->json('meta.count'));
+    }
+
+    public function test_disponibilidad_publica_permite_agendar_para_manana_aunque_falten_menos_de_24_horas(): void
+    {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-05-19 20:30:00', 'America/Santiago'));
+
+        $especialista = $this->makeEspecialista();
+        $tipo = TipoConsulta::query()->where('activo', true)->firstOrFail();
+
+        $response = $this->getJson('/api/disponibilidad?'.http_build_query([
+            'tipo_consulta_slug' => $tipo->slug,
+            'date' => '2026-05-20',
+            'tz' => 'America/Santiago',
+            'especialista_id' => $especialista->id,
+        ]));
+
+        $response->assertOk();
         $this->assertGreaterThan(0, $response->json('meta.count'));
     }
 

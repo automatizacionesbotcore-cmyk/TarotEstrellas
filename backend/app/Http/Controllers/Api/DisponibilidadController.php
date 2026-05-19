@@ -128,8 +128,8 @@ class DisponibilidadController extends Controller
             ])
             ->toArray();
 
-        // Minimum anticipation: 24h from now
-        $minStart = CarbonImmutable::now('UTC')->addHours(24);
+        // Minimum anticipation: keep same-day bookings closed, but allow tomorrow's agenda.
+        $minStart = CarbonImmutable::now($tz)->addDay()->startOfDay()->setTimezone('UTC');
 
         $slots = [];
 
@@ -153,7 +153,7 @@ class DisponibilidadController extends Controller
                         continue;
                     }
 
-                    // Skip slots in the past or within 24h
+                    // Skip slots before the earliest bookable client day.
                     if ($startUtc->lt($minStart)) {
                         $cursor = $cursor->addMinutes($duration);
                         continue;
