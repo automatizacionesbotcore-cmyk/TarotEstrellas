@@ -12,8 +12,8 @@
     'badge' => 'Pago confirmado',
     'heading' => 'Tu transferencia fue validada',
     'preheader' => 'Confirmamos la recepción de tu transferencia bancaria.',
-    'accent' => '#3F7A52',
-    'accentDark' => '#29583A',
+    'accent' => '#B85C78',
+    'accentDark' => '#963058',
 ])
 
 @section('content')
@@ -26,7 +26,7 @@
 
     @if($cita)
         @include('emails.partials.detail-table', [
-            'accent' => '#3F7A52',
+            'accent' => '#B85C78',
             'rows' => [
                 'Referencia' => e($cita->codigo_referencia ?? $cita->uuid),
                 'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta de Tarot'),
@@ -43,6 +43,6 @@
     @include('emails.partials.button', [
         'url' => $citaUrl,
         'label' => 'Ver mi cita',
-        'color' => '#3F7A52',
+        'color' => '#B85C78',
     ])
 @endsection

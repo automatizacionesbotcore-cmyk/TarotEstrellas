@@ -11,8 +11,8 @@
     'badge' => 'Acción requerida',
     'heading' => 'No pudimos validar tu comprobante',
     'preheader' => 'Necesitamos que adjuntes un nuevo comprobante válido para mantener tu cita.',
-    'accent' => '#B2483D',
-    'accentDark' => '#7A2F28',
+    'accent' => '#B85C78',
+    'accentDark' => '#963058',
 ])
 
 @section('content')
@@ -23,14 +23,14 @@
         un nuevo comprobante válido desde tu cuenta.
     </p>
 
-    <div style="background:#FFF6F4;border:1px solid #E8C5BF;border-left:4px solid #B2483D;border-radius:8px;margin:22px 0;padding:16px 18px;">
-        <p style="margin:0 0 6px;color:#7A2F28;font-size:14px;font-weight:700;">Motivo del rechazo</p>
+    <div style="background:#FBEFF3;border:1px solid #E6C2CD;border-left:4px solid #B85C78;border-radius:8px;margin:22px 0;padding:16px 18px;">
+        <p style="margin:0 0 6px;color:#963058;font-size:14px;font-weight:700;">Motivo del rechazo</p>
         <p style="margin:0;color:#3C3348;font-size:15px;line-height:1.55;">{{ $razon }}</p>
     </div>
 
     @if($cita)
         @include('emails.partials.detail-table', [
-            'accent' => '#B2483D',
+            'accent' => '#B85C78',
             'rows' => [
                 'Referencia' => e($cita->codigo_referencia ?? $cita->uuid),
                 'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta de Tarot'),
@@ -45,6 +45,6 @@
     @include('emails.partials.button', [
         'url' => $pagarUrl,
         'label' => 'Subir nuevo comprobante',
-        'color' => '#B2483D',
+        'color' => '#B85C78',
     ])
 @endsection

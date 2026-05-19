@@ -30,7 +30,7 @@
     ])
 
     @if(! $cita->cliente_confirmo_at)
-        <div style="background:#FFF9E8;border:1px solid #E8DDB7;border-radius:8px;padding:18px;margin:22px 0;text-align:center;">
+        <div style="background:#FBEFF3;border:1px solid #E6C2CD;border-radius:8px;padding:18px;margin:22px 0;text-align:center;">
             <p style="margin:0 0 12px;color:#3E2A61;font-size:15px;font-weight:700;">Confirma tu asistencia</p>
             <p style="margin:0 0 16px;color:#5C5168;font-size:14px;line-height:1.5;">
                 Tu confirmación ayuda a preparar mejor la sesión.
@@ -41,7 +41,7 @@
             ])
         </div>
     @else
-        <p style="background:#EAF6EE;color:#2F6E45;border:1px solid #CBE7D4;border-radius:8px;padding:12px 16px;font-size:14px;margin:0 0 22px;">
+        <p style="background:#FBEFF3;color:#963058;border:1px solid #E6C2CD;border-radius:8px;padding:12px 16px;font-size:14px;margin:0 0 22px;">
             Asistencia confirmada el {{ $cita->cliente_confirmo_at->copy()?->setTimezone('America/Santiago')?->format('d/m/Y H:i') }}.
         </p>
     @endif

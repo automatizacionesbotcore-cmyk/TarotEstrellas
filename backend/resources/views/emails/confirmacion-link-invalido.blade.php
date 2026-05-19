@@ -4,8 +4,8 @@
     'badge' => 'Enlace no disponible',
     'heading' => 'El enlace ya no es válido',
     'preheader' => 'El enlace de confirmación es inválido o expiró.',
-    'accent' => '#B2483D',
-    'accentDark' => '#7A2F28',
+    'accent' => '#B85C78',
+    'accentDark' => '#963058',
 ])
 
 @section('content')
@@ -17,6 +17,6 @@
     @include('emails.partials.button', [
         'url' => rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/') . '/app/mis-consultas',
         'label' => 'Ir a mi cuenta',
-        'color' => '#B2483D',
+        'color' => '#B85C78',
     ])
 @endsection

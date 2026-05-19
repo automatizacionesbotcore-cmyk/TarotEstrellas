@@ -10,8 +10,8 @@
     'badge' => 'Cita cancelada',
     'heading' => 'Tu cita fue cancelada',
     'preheader' => 'Te informamos que tu cita en TarotEstrellas fue cancelada.',
-    'accent' => '#8A4A3A',
-    'accentDark' => '#5A2D24',
+    'accent' => '#B85C78',
+    'accentDark' => '#963058',
 ])
 
 @section('content')
@@ -20,7 +20,7 @@
     <p style="margin:0 0 16px;">Te informamos que la cita indicada a continuación fue cancelada.</p>
 
     @include('emails.partials.detail-table', [
-        'accent' => '#8A4A3A',
+        'accent' => '#B85C78',
         'rows' => [
             'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta'),
             'Fecha' => e(($fecha ?? 'Por confirmar') . ' (hora Chile)'),
@@ -42,6 +42,6 @@
     @include('emails.partials.button', [
         'url' => $detalleUrl,
         'label' => 'Revisar detalle',
-        'color' => '#8A4A3A',
+        'color' => '#B85C78',
     ])
 @endsection

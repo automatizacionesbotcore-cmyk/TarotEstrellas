@@ -2,8 +2,8 @@
     $frontendUrl = rtrim(config('app.frontend_url', 'https://tarotestrellas.com'), '/');
     $exceeded = ($row['estado'] ?? '') === 'exceeded';
     $adminUrl = $frontendUrl . '/app/admin/api-usage';
-    $accent = $exceeded ? '#B2483D' : '#A66A2C';
-    $accentDark = $exceeded ? '#7A2F28' : '#6C441F';
+    $accent = '#B85C78';
+    $accentDark = '#963058';
 @endphp
 @extends('emails.layouts.branded', [
     'title' => 'Alerta consumo API',

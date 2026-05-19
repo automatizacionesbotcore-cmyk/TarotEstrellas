@@ -9,8 +9,8 @@
     'badge' => 'Revisión pendiente',
     'heading' => 'Hay un nuevo comprobante por revisar',
     'preheader' => 'Un cliente subió un comprobante de transferencia y requiere validación.',
-    'accent' => '#3F7A52',
-    'accentDark' => '#29583A',
+    'accent' => '#B85C78',
+    'accentDark' => '#963058',
 ])
 
 @section('content')
@@ -20,7 +20,7 @@
     </p>
 
     @include('emails.partials.detail-table', [
-        'accent' => '#3F7A52',
+        'accent' => '#B85C78',
         'rows' => [
             'Cliente' => e($cliente->name . ' (' . $cliente->email . ')'),
             'Referencia cita' => e($cita?->codigo_referencia ?? 'Sin referencia'),
@@ -33,7 +33,7 @@
     @include('emails.partials.button', [
         'url' => $adminUrl,
         'label' => 'Revisar comprobante',
-        'color' => '#3F7A52',
+        'color' => '#B85C78',
     ])
 
     <p style="margin:0;color:#756A80;font-size:14px;">
