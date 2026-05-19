@@ -9,6 +9,8 @@ use App\Models\ValidacionAgente;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ComprobanteTransferenciaController extends Controller
 {
@@ -42,7 +44,12 @@ class ComprobanteTransferenciaController extends Controller
 
         $query = ComprobanteTransferencia::query()
             ->with([
-                'cita:id,uuid,cliente_id,estado,codigo_referencia',
+                'cita:id,uuid,cliente_id,especialista_id,tipo_consulta_id,estado,codigo_referencia,inicio_utc,zona_horaria_cliente,tema_principal,precio_final_centavos,moneda',
+                'cita.cliente:id,email',
+                'cita.cliente.profile:user_id,nombre,apellido,telefono,telefono_pais,pais_residencia',
+                'cita.especialista:id,email',
+                'cita.especialista.profile:user_id,nombre,apellido',
+                'cita.tipoConsulta:id,nombre,slug,duracion_minutos',
                 'pago:id,uuid,cita_id,tipo,canal,monto_centavos,estado',
                 'validador:id,email',
             ])
@@ -82,7 +89,10 @@ class ComprobanteTransferenciaController extends Controller
 
         $perPage = (int) ($validated['per_page'] ?? 15);
 
-        return response()->json($query->paginate($perPage));
+        $paginator = $query->paginate($perPage);
+        $paginator->getCollection()->transform(fn (ComprobanteTransferencia $comprobante) => $this->serializeComprobante($comprobante));
+
+        return response()->json($paginator);
     }
 
     public function metrics(Request $request): JsonResponse
@@ -149,7 +159,12 @@ class ComprobanteTransferenciaController extends Controller
 
         $comprobante = ComprobanteTransferencia::query()
             ->with([
-                'cita:id,uuid,cliente_id,estado,codigo_referencia',
+                'cita:id,uuid,cliente_id,especialista_id,tipo_consulta_id,estado,codigo_referencia,inicio_utc,zona_horaria_cliente,tema_principal,precio_final_centavos,moneda',
+                'cita.cliente:id,email',
+                'cita.cliente.profile:user_id,nombre,apellido,telefono,telefono_pais,pais_residencia',
+                'cita.especialista:id,email',
+                'cita.especialista.profile:user_id,nombre,apellido',
+                'cita.tipoConsulta:id,nombre,slug,duracion_minutos',
                 'pago:id,uuid,cita_id,tipo,canal,monto_centavos,estado',
                 'validador:id,email',
                 'validacionesAgente:id,comprobante_id,decision,razon,created_at',
@@ -166,7 +181,41 @@ class ComprobanteTransferenciaController extends Controller
         }
 
         return response()->json([
-            'data' => $comprobante,
+            'data' => $this->serializeComprobante($comprobante),
+        ]);
+    }
+
+    public function archivo(Request $request, string $uuid): StreamedResponse|JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $comprobante = ComprobanteTransferencia::query()
+            ->with(['cita:id,cliente_id'])
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $clienteIdCita = $comprobante->cita ? (int) $comprobante->cita->cliente_id : null;
+        if (! $user->isAdmin() && $clienteIdCita !== (int) $user->id) {
+            return response()->json([
+                'message' => 'No autorizado para ver este comprobante.',
+            ], 403);
+        }
+
+        $path = (string) $comprobante->archivo_url;
+        if ($path === '' || ! Storage::disk('local')->exists($path)) {
+            return response()->json([
+                'message' => 'El archivo del comprobante no existe o no esta disponible.',
+            ], 404);
+        }
+
+        $mime = $comprobante->archivo_tipo ?: (Storage::disk('local')->mimeType($path) ?: 'application/octet-stream');
+        $name = basename($path);
+
+        return Storage::disk('local')->response($path, $name, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="'.$name.'"',
+            'Cache-Control' => 'private, max-age=300',
         ]);
     }
 
@@ -400,5 +449,49 @@ class ComprobanteTransferenciaController extends Controller
             'message' => 'Comprobante rechazado manualmente.',
             'data' => $comprobante->fresh(['validador:id,email']),
         ]);
+    }
+
+    private function serializeComprobante(ComprobanteTransferencia $comprobante): array
+    {
+        $cita = $comprobante->cita;
+        $cliente = $cita?->cliente;
+        $clienteProfile = $cliente?->profile;
+        $especialista = $cita?->especialista;
+        $especialistaProfile = $especialista?->profile;
+
+        $clienteNombre = trim(implode(' ', array_filter([
+            $clienteProfile?->nombre,
+            $clienteProfile?->apellido,
+        ])));
+
+        $especialistaNombre = trim(implode(' ', array_filter([
+            $especialistaProfile?->nombre,
+            $especialistaProfile?->apellido,
+        ])));
+
+        return [
+            'id' => $comprobante->id,
+            'uuid' => $comprobante->uuid,
+            'estado_validacion' => $comprobante->estado_validacion,
+            'monto_centavos' => $comprobante->pago?->monto_centavos ?? $cita?->precio_final_centavos,
+            'moneda' => $cita?->moneda ?? 'CLP',
+            'archivo_url' => $comprobante->archivo_url,
+            'archivo_tipo' => $comprobante->archivo_tipo,
+            'archivo_nombre' => $comprobante->archivo_url ? basename((string) $comprobante->archivo_url) : null,
+            'archivo_preview_url' => '/pagos/comprobantes/'.$comprobante->uuid.'/archivo',
+            'creado_en' => $comprobante->created_at?->toISOString(),
+            'validado_en' => $comprobante->validado_en?->toISOString(),
+            'cliente_email' => $cliente?->email,
+            'cliente_nombre' => $clienteNombre !== '' ? $clienteNombre : null,
+            'cliente_telefono' => $clienteProfile?->telefono,
+            'cliente_pais' => $clienteProfile?->pais_residencia,
+            'cita_uuid' => $cita?->uuid,
+            'cita_fecha' => $cita?->inicio_utc?->toISOString(),
+            'cita_estado' => $cita?->estado,
+            'codigo_referencia' => $cita?->codigo_referencia,
+            'servicio_nombre' => $cita?->tipoConsulta?->nombre,
+            'especialista_nombre' => $especialistaNombre !== '' ? $especialistaNombre : ($especialista?->email),
+            'razon_rechazo' => $comprobante->razon_rechazo,
+        ];
     }
 }

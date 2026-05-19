@@ -154,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pagos', [PagoController::class, 'index']);
     Route::get('pagos/comprobantes', [ComprobanteTransferenciaController::class, 'index']);
     Route::get('pagos/comprobantes/{uuid}', [ComprobanteTransferenciaController::class, 'show']);
+    Route::get('pagos/comprobantes/{uuid}/archivo', [ComprobanteTransferenciaController::class, 'archivo']);
     Route::patch('pagos/comprobantes/{uuid}/validacion-manual', [ComprobanteTransferenciaController::class, 'validarManual']);
     Route::get('admin/comprobantes/metricas', [ComprobanteTransferenciaController::class, 'metrics']);
     Route::post('pagos/abono', [PagoController::class, 'pagarAbono']);

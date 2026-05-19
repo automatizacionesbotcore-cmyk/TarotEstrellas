@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
 import { AdminTable, type Column } from '../../../components/admin/AdminTable';
@@ -10,9 +10,20 @@ type Comprobante = {
   monto_centavos?: number;
   moneda?:         string;
   archivo_url?:    string | null;
+  archivo_tipo?:   string | null;
+  archivo_nombre?: string | null;
+  archivo_preview_url?: string | null;
   creado_en?:      string;
   cliente_email?:  string | null;
+  cliente_nombre?: string | null;
+  cliente_telefono?: string | null;
+  cliente_pais?:   string | null;
   cita_uuid?:      string | null;
+  cita_fecha?:     string | null;
+  cita_estado?:    string | null;
+  codigo_referencia?: string | null;
+  servicio_nombre?: string | null;
+  especialista_nombre?: string | null;
   razon_rechazo?:  string | null;
 };
 
@@ -48,6 +59,13 @@ export function AdminComprobantesPage() {
   const [pendingAprobar, setPendingAprobar] = useState<number | null>(null);
   const [pendingRechazar, setPendingRechazar] = useState<{ id: number; razon: string } | null>(null);
   const [filtroEstado, setFiltroEstado] = useState<string>('');
+  const [preview, setPreview] = useState<{ row: Comprobante; url: string; mime: string } | null>(null);
+  const [previewLoadingId, setPreviewLoadingId] = useState<number | null>(null);
+  const [previewError, setPreviewError] = useState('');
+
+  useEffect(() => () => {
+    if (preview?.url) URL.revokeObjectURL(preview.url);
+  }, [preview?.url]);
 
   const listQuery = useQuery({
     queryKey: ['admin', 'comprobantes', 'list'],
@@ -72,16 +90,72 @@ export function AdminComprobantesPage() {
   const isPending = (estado: string) =>
     ['pendiente', 'revision_requerida'].includes(estado);
 
+  const clienteDisplay = (r: Comprobante) =>
+    r.cliente_nombre || r.cliente_email || '—';
+
+  const formatDate = (value?: string | null, withTime = false) => {
+    if (!value) return '—';
+    return new Date(value).toLocaleString('es-CL', {
+      dateStyle: 'short',
+      timeStyle: withTime ? 'short' : undefined,
+    });
+  };
+
+  const openPreview = async (row: Comprobante) => {
+    if (!row.archivo_preview_url) return;
+    setPreviewLoadingId(row.id);
+    setPreviewError('');
+    try {
+      const response = await api.get(row.archivo_preview_url, { responseType: 'blob' });
+      const mime = response.headers['content-type'] || row.archivo_tipo || response.data.type || 'application/octet-stream';
+      const objectUrl = URL.createObjectURL(response.data);
+      setPreview((current) => {
+        if (current?.url) URL.revokeObjectURL(current.url);
+        return { row, url: objectUrl, mime };
+      });
+    } catch {
+      setPreviewError('No se pudo cargar la vista previa del comprobante.');
+    } finally {
+      setPreviewLoadingId(null);
+    }
+  };
+
+  const closePreview = () => {
+    setPreview((current) => {
+      if (current?.url) URL.revokeObjectURL(current.url);
+      return null;
+    });
+  };
+
   const columns: Column<Comprobante>[] = [
     { key: 'uuid',    label: 'UUID',    render: (r) => r.uuid?.slice(0, 8) + '…' },
     { key: 'estado',  label: 'Estado',  render: (r) => estadoBadge(r.estado_validacion) },
-    { key: 'cliente', label: 'Cliente', render: (r) => r.cliente_email ?? '—' },
-    { key: 'creado',  label: 'Fecha',   render: (r) => r.creado_en ? new Date(r.creado_en).toLocaleDateString('es-CL') : '—' },
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (r) => (
+        <div className="comprobante-client-cell">
+          <strong>{clienteDisplay(r)}</strong>
+          {r.cliente_email && r.cliente_nombre ? <span>{r.cliente_email}</span> : null}
+          {r.cliente_telefono ? <span>{r.cliente_telefono}</span> : null}
+        </div>
+      ),
+    },
+    { key: 'creado',  label: 'Fecha',   render: (r) => formatDate(r.cita_fecha ?? r.creado_en, true) },
     {
       key: 'archivo',
       label: 'Comprobante',
-      render: (r) => r.archivo_url
-        ? <a href={r.archivo_url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>Ver archivo</a>
+      render: (r) => r.archivo_preview_url
+        ? (
+          <button
+            type="button"
+            className="link-button comprobante-preview-link"
+            disabled={previewLoadingId === r.id}
+            onClick={(e) => { e.stopPropagation(); openPreview(r); }}
+          >
+            {previewLoadingId === r.id ? 'Cargando…' : 'Vista previa'}
+          </button>
+        )
         : '—',
     },
     {
@@ -138,7 +212,71 @@ export function AdminComprobantesPage() {
         rows={rows}
         loading={listQuery.isLoading}
         rowKey={(r) => r.id}
+        getSearchText={(r) => [
+          r.uuid,
+          r.estado_validacion,
+          r.cliente_nombre,
+          r.cliente_email,
+          r.cliente_telefono,
+          r.servicio_nombre,
+          r.especialista_nombre,
+          r.codigo_referencia,
+        ].filter(Boolean).join(' ')}
       />
+
+      {previewError ? <p className="form-error">{previewError}</p> : null}
+
+      {preview !== null && (
+        <div className="admin-modal-backdrop" onClick={closePreview}>
+          <div className="admin-modal comprobante-preview-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="admin-modal-header">
+              <div>
+                <p className="dash-eyebrow">Comprobante</p>
+                <h2>{clienteDisplay(preview.row)}</h2>
+              </div>
+              <button type="button" className="admin-modal-close" onClick={closePreview} aria-label="Cerrar vista previa">
+                ×
+              </button>
+            </header>
+
+            <div className="comprobante-preview-layout">
+              <section className="comprobante-preview-frame">
+                {preview.mime.startsWith('image/') ? (
+                  <img src={preview.url} alt={`Comprobante de ${clienteDisplay(preview.row)}`} />
+                ) : preview.mime === 'application/pdf' ? (
+                  <iframe src={preview.url} title="Vista previa del comprobante" />
+                ) : (
+                  <div className="dash-empty">
+                    <p>Este tipo de archivo no tiene vista previa integrada.</p>
+                    <a className="btn-secondary" href={preview.url} download={preview.row.archivo_nombre ?? 'comprobante'}>
+                      Descargar archivo
+                    </a>
+                  </div>
+                )}
+              </section>
+
+              <aside className="comprobante-preview-details">
+                <h3>Detalles del cliente</h3>
+                <dl>
+                  <dt>Nombre</dt><dd>{preview.row.cliente_nombre ?? '—'}</dd>
+                  <dt>Correo</dt><dd>{preview.row.cliente_email ?? '—'}</dd>
+                  <dt>Teléfono</dt><dd>{preview.row.cliente_telefono ?? '—'}</dd>
+                  <dt>País</dt><dd>{preview.row.cliente_pais ?? '—'}</dd>
+                </dl>
+
+                <h3>Detalles de la cita</h3>
+                <dl>
+                  <dt>Servicio</dt><dd>{preview.row.servicio_nombre ?? '—'}</dd>
+                  <dt>Especialista</dt><dd>{preview.row.especialista_nombre ?? '—'}</dd>
+                  <dt>Fecha</dt><dd>{formatDate(preview.row.cita_fecha, true)}</dd>
+                  <dt>Referencia</dt><dd>{preview.row.codigo_referencia ?? '—'}</dd>
+                  <dt>Estado</dt><dd>{estadoBadge(preview.row.estado_validacion)}</dd>
+                </dl>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal: confirmar aprobación */}
       {pendingAprobar !== null && (
