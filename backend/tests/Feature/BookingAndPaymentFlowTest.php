@@ -6,6 +6,7 @@ use App\Models\AppSetting;
 use App\Models\Cita;
 use App\Models\Role;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
@@ -20,6 +21,14 @@ class BookingAndPaymentFlowTest extends TestCase
         parent::setUp();
 
         $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-04-20 08:00:00', 'America/Santiago'));
+    }
+
+    protected function tearDown(): void
+    {
+        CarbonImmutable::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_public_catalog_and_detail_endpoints_return_seeded_data(): void
@@ -80,6 +89,47 @@ class BookingAndPaymentFlowTest extends TestCase
             ->assertJsonPath('data.0.tema_principal', 'amor');
     }
 
+    public function test_client_cannot_create_cita_with_less_than_one_hour_notice(): void
+    {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-04-20 09:01:00', 'America/Santiago'));
+
+        $user = $this->makeAuthenticatedClient();
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/citas', [
+            'tipo_consulta_slug' => 'tarot',
+            'inicio_local' => '2026-04-20 10:00:00',
+            'zona_horaria_cliente' => 'America/Santiago',
+            'canal_pago' => 'transferencia',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['inicio_local']);
+    }
+
+    public function test_client_cannot_create_cita_inside_service_buffer(): void
+    {
+        $user = $this->makeAuthenticatedClient();
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/citas', [
+            'tipo_consulta_slug' => 'tarot',
+            'inicio_local' => '2026-04-27 10:00:00',
+            'zona_horaria_cliente' => 'America/Santiago',
+            'canal_pago' => 'transferencia',
+        ])->assertCreated();
+
+        $this->postJson('/api/citas', [
+            'tipo_consulta_slug' => 'tarot',
+            'inicio_local' => '2026-04-27 11:00:00',
+            'zona_horaria_cliente' => 'America/Santiago',
+            'canal_pago' => 'transferencia',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['inicio_local']);
+    }
+
     public function test_booking_uses_utc_slot_as_source_of_truth_and_keeps_client_timezone(): void
     {
         $user = $this->makeAuthenticatedClient();
@@ -96,9 +146,12 @@ class BookingAndPaymentFlowTest extends TestCase
 
         $create->assertCreated();
 
+        $inicioUtcRaw = DB::table('citas')
+            ->where('uuid', $create->json('data.uuid'))
+            ->value('inicio_utc');
         $cita = Cita::query()->where('uuid', $create->json('data.uuid'))->firstOrFail();
 
-        $this->assertSame('2030-05-30 20:00:00', $cita->inicio_utc->copy()->utc()->format('Y-m-d H:i:s'));
+        $this->assertSame('2030-05-30 20:00:00', $inicioUtcRaw);
         $this->assertSame('America/Santiago', $cita->zona_horaria_cliente);
     }
 

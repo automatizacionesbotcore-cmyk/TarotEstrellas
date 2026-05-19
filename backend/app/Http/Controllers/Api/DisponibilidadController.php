@@ -14,6 +14,9 @@ use Illuminate\Http\Request;
 
 class DisponibilidadController extends Controller
 {
+    private const MIN_BOOKING_LEAD_MINUTES = 60;
+    private const SERVICE_BUFFER_MINUTES = 15;
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -119,17 +122,17 @@ class DisponibilidadController extends Controller
 
         $bookedRanges = Cita::query()
             ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
-            ->where('inicio_utc', '<', $clientDayEndUtc)
-            ->where('fin_utc', '>', $clientDayStartUtc)
+            ->where('inicio_utc', '<', $clientDayEndUtc->toDateTimeString())
+            ->where('fin_utc', '>', $clientDayStartUtc->toDateTimeString())
             ->get(['inicio_utc', 'fin_utc'])
             ->map(fn ($c) => [
-                'start' => CarbonImmutable::parse($c->inicio_utc),
-                'end' => CarbonImmutable::parse($c->fin_utc),
+                'start' => CarbonImmutable::parse($c->getRawOriginal('inicio_utc'), 'UTC'),
+                'end' => CarbonImmutable::parse($c->getRawOriginal('fin_utc'), 'UTC'),
             ])
             ->toArray();
 
-        // Minimum anticipation: keep same-day bookings closed, but allow tomorrow's agenda.
-        $minStart = CarbonImmutable::now($tz)->addDay()->startOfDay()->setTimezone('UTC');
+        // Keep same-day booking available, but never for slots that are too close.
+        $minStart = CarbonImmutable::now($tz)->addMinutes(self::MIN_BOOKING_LEAD_MINUTES)->setTimezone('UTC');
 
         $slots = [];
 
@@ -162,7 +165,10 @@ class DisponibilidadController extends Controller
                     // Check if overlaps with any booked range
                     $isTaken = false;
                     foreach ($bookedRanges as $range) {
-                        if ($startUtc->lt($range['end']) && $endUtc->gt($range['start'])) {
+                        $blockedStart = $range['start']->subMinutes(self::SERVICE_BUFFER_MINUTES);
+                        $blockedEnd = $range['end']->addMinutes(self::SERVICE_BUFFER_MINUTES);
+
+                        if ($startUtc->lt($blockedEnd) && $endUtc->gt($blockedStart)) {
                             $isTaken = true;
                             break;
                         }
@@ -180,7 +186,7 @@ class DisponibilidadController extends Controller
                         ];
                     }
 
-                    $cursor = $cursor->addMinutes($duration);
+                    $cursor = $cursor->addMinutes($duration + self::SERVICE_BUFFER_MINUTES);
                 }
             }
         }

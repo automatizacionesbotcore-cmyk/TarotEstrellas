@@ -30,6 +30,8 @@ use Illuminate\Validation\ValidationException;
 
 class CitaController extends Controller
 {
+    private const MIN_BOOKING_LEAD_MINUTES = 60;
+    private const SERVICE_BUFFER_MINUTES = 15;
     private const MINUTOS_VENTANA_TRANSFERENCIA_KEY = 'MINUTOS_VENTANA_TRANSFERENCIA';
     private const MINUTOS_EXTENSION_TRANSFERENCIA_KEY = 'MINUTOS_EXTENSION_TRANSFERENCIA';
     private const EXTENSIONES_PERMITIDAS_KEY = 'EXTENSIONES_PERMITIDAS';
@@ -414,10 +416,16 @@ class CitaController extends Controller
             : CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])->setTimezone('UTC');
         $endUtc = $startUtc->addMinutes((int) $tipo->duracion_minutos);
 
+        if ($startUtc->lt(CarbonImmutable::now('UTC')->addMinutes(self::MIN_BOOKING_LEAD_MINUTES))) {
+            throw ValidationException::withMessages([
+                'inicio_local' => 'Debes reservar con al menos 1 hora de anticipación.',
+            ]);
+        }
+
         $collision = Cita::query()
             ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
-            ->where('inicio_utc', '<', $endUtc)
-            ->where('fin_utc', '>', $startUtc)
+            ->where('inicio_utc', '<', $endUtc->addMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
+            ->where('fin_utc', '>', $startUtc->subMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
             ->exists();
 
         if ($collision) {
@@ -441,8 +449,8 @@ class CitaController extends Controller
             'cliente_id' => $user->id,
             'especialista_id' => $validated['especialista_id'] ?? null,
             'tipo_consulta_id' => $tipo->id,
-            'inicio_utc' => $startUtc,
-            'fin_utc' => $endUtc,
+            'inicio_utc' => $startUtc->toDateTimeString(),
+            'fin_utc' => $endUtc->toDateTimeString(),
             'duracion_minutos' => (int) $tipo->duracion_minutos,
             'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
             'estado' => 'pendiente_abono',
@@ -1026,11 +1034,17 @@ class CitaController extends Controller
             : CarbonImmutable::parse($validated['inicio_local'], $validated['zona_horaria_cliente'])->setTimezone('UTC');
         $endUtc = $startUtc->addMinutes((int) $cita->duracion_minutos);
 
+        if ($startUtc->lt(CarbonImmutable::now('UTC')->addMinutes(self::MIN_BOOKING_LEAD_MINUTES))) {
+            return response()->json([
+                'message' => 'Debes reagendar con al menos 1 hora de anticipación.',
+            ], 422);
+        }
+
         $collision = Cita::query()
             ->where('id', '!=', $cita->id)
             ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
-            ->where('inicio_utc', '<', $endUtc)
-            ->where('fin_utc', '>', $startUtc)
+            ->where('inicio_utc', '<', $endUtc->addMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
+            ->where('fin_utc', '>', $startUtc->subMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
             ->exists();
 
         if ($collision) {
@@ -1050,8 +1064,8 @@ class CitaController extends Controller
                 'cliente_id' => $cita->cliente_id,
                 'especialista_id' => $cita->especialista_id,
                 'tipo_consulta_id' => $cita->tipo_consulta_id,
-                'inicio_utc' => $startUtc,
-                'fin_utc' => $endUtc,
+                'inicio_utc' => $startUtc->toDateTimeString(),
+                'fin_utc' => $endUtc->toDateTimeString(),
                 'duracion_minutos' => $cita->duracion_minutos,
                 'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
                 'estado' => $cita->estado,
