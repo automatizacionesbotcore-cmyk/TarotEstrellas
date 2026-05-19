@@ -1809,18 +1809,26 @@ a {
 }
 
 .logo-wrap {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.45rem;
+        display: inline-flex;
+        align-items: center;
 }
 
-.logo-star {
-	flex-shrink: 0;
-	will-change: filter;
+.brand-logo {
+        display: block;
+        width: auto;
+        max-width: min(260px, 58vw);
+        object-fit: contain;
+        border-radius: 4px;
+        will-change: filter;
 }
 
-.logo-star--dark  { animation: logo-glow-dark  3s ease-in-out infinite; }
-.logo-star--light { animation: logo-glow-light 3s ease-in-out infinite; }
+.logo-wrap--mark .brand-logo {
+        max-width: none;
+        aspect-ratio: 1;
+}
+
+.brand-logo--dark  { animation: logo-glow-dark  3s ease-in-out infinite; }
+.brand-logo--light { animation: logo-glow-light 3s ease-in-out infinite; }
 
 @keyframes logo-glow-dark {
 	0%, 100% { filter: drop-shadow(0 0 2px rgba(201, 168, 76, 0.35)); }
@@ -1832,25 +1840,10 @@ a {
 	50%       { filter: drop-shadow(0 0 8px rgba(184, 92, 120, 0.8)); }
 }
 
-.logo-text {
-	font-family: 'Italiana', serif;
-	font-size: 1.5rem;
-	letter-spacing: 0.02em;
-	line-height: 1;
-}
-
-.logo-text--dark {
-	background: linear-gradient(135deg, #c9a84c, #e8d48b, #c9a84c);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-}
-
-.logo-text--light {
-	background: linear-gradient(135deg, #b85c78, #7a57a0);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
+@media (max-width: 520px) {
+        .brand-logo {
+                max-width: min(220px, 70vw);
+        }
 }
 
 /* ── QUALITY OF LIFE ────────────────────────────────────────────────────── */

@@ -1,9 +1,12 @@
 @php
     $brandName = config('app.name', 'TarotEstrellas');
     $frontendUrl = rtrim((string) config('app.frontend_url', 'https://tarotestrellas.com'), '/');
-    $logoUrl = $frontendUrl . '/favicon.svg';
     $accent = $accent ?? '#5A3D8B';
     $accentDark = $accentDark ?? '#3E2A61';
+    $isLightBrand = strcasecmp((string) $accent, '#B85C78') === 0 || strcasecmp((string) $accentDark, '#963058') === 0;
+    $logoUrl = $frontendUrl . ($isLightBrand ? '/brand/logo-light.png' : '/brand/logo-dark.png');
+    $headerBg = $isLightBrand ? '#FFF8FA' : $accentDark;
+    $eyebrowColor = $isLightBrand ? '#8F4960' : '#E8DFF6';
     $preheader = $preheader ?? '';
 @endphp
 <!doctype html>
@@ -24,11 +27,10 @@
         <td align="center">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#FFFFFF;border:1px solid #E8DFD6;border-radius:8px;overflow:hidden;">
                 <tr>
-                    <td style="background:{{ $accentDark }};padding:28px 32px;text-align:center;">
-                        <img src="{{ $logoUrl }}" width="44" height="44" alt="{{ $brandName }}" style="display:block;margin:0 auto 10px;border:0;">
-                        <div style="font-size:24px;line-height:1.2;font-weight:700;color:#FFFFFF;letter-spacing:0;">{{ $brandName }}</div>
+                    <td style="background:{{ $headerBg }};padding:22px 32px;text-align:center;">
+                        <img src="{{ $logoUrl }}" width="360" alt="{{ $brandName }}" style="display:block;width:100%;max-width:360px;height:auto;margin:0 auto;border:0;border-radius:4px;">
                         @if(!empty($eyebrow))
-                            <div style="font-size:13px;line-height:1.5;color:#E8DFF6;margin-top:4px;">{{ $eyebrow }}</div>
+                            <div style="font-size:13px;line-height:1.5;color:{{ $eyebrowColor }};margin-top:10px;">{{ $eyebrow }}</div>
                         @endif
                     </td>
                 </tr>
