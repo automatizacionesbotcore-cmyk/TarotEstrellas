@@ -130,6 +130,25 @@ class BookingAndPaymentFlowTest extends TestCase
             ->assertJsonValidationErrors(['inicio_local']);
     }
 
+    public function test_specialist_cannot_create_cita_as_client(): void
+    {
+        $user = $this->makeAuthenticatedClient();
+        $user->roles()->syncWithoutDetaching([
+            Role::query()->where('nombre', 'admin_especialista')->value('id') => ['asignado_en' => now()],
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/citas', [
+            'tipo_consulta_slug' => 'tarot',
+            'inicio_local' => '2026-04-27 10:00:00',
+            'zona_horaria_cliente' => 'America/Santiago',
+            'canal_pago' => 'transferencia',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['tipo_consulta_slug']);
+    }
+
     public function test_booking_uses_utc_slot_as_source_of_truth_and_keeps_client_timezone(): void
     {
         $user = $this->makeAuthenticatedClient();

@@ -406,6 +406,12 @@ class CitaController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        if ($user->hasRole('admin_especialista') && ! $user->hasRole('super_admin')) {
+            throw ValidationException::withMessages([
+                'tipo_consulta_slug' => 'Los especialistas gestionan su agenda desde el panel y no pueden reservar servicios como clientes.',
+            ]);
+        }
+
         $tipo = TipoConsulta::query()
             ->where('slug', $validated['tipo_consulta_slug'])
             ->where('activo', true)

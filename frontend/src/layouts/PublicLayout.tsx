@@ -15,6 +15,8 @@ export function PublicLayout() {
   const location        = useLocation();
   const openLogin       = useAuthModalStore((s) => s.openLogin);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user            = useAuthStore((s) => s.user);
+  const isEspecialista  = Array.isArray(user?.roles) && user.roles.includes('admin_especialista');
 
   return (
     <div className="page-shell">
@@ -23,7 +25,9 @@ export function PublicLayout() {
           <Logo />
         </Link>
         <nav aria-label="Navegación principal">
-          <NavLink to="/servicios" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Servicios</NavLink>
+          {!isEspecialista && (
+            <NavLink to="/servicios" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Servicios</NavLink>
+          )}
           {isAuthenticated ? (
             <Link to="/app" className="btn-secondary" style={{ padding: '0.45rem 1rem' }}>
               Mi panel

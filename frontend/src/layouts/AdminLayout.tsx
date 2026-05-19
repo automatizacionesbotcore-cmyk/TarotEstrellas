@@ -37,6 +37,7 @@ export function AdminLayout() {
   const navItems = BASE_ITEMS.filter((i) => {
     if (i.superAdminOnly && !isSuperAdmin) return false;
     if (i.especialistaOnly && !isEspecialista && !isSuperAdmin) return false;
+    if (i.to === '/app/admin/servicios' && isEspecialista && !isSuperAdmin) return false;
     return true;
   });
 

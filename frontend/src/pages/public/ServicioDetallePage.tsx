@@ -167,6 +167,8 @@ export function ServicioDetallePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const isEspecialista = Array.isArray(user?.roles) && user.roles.includes('admin_especialista');
   const openRegister = useAuthModalStore((s) => s.openRegister);
   const bookingRef = useRef<HTMLElement>(null);
   const detectedTimezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', []);
@@ -452,7 +454,7 @@ export function ServicioDetallePage() {
           </div>
 
           <div className="cta-row">
-            {isAuthenticated ? (
+            {!isEspecialista && (isAuthenticated ? (
               <button
                 type="button"
                 className="btn-primary btn-shimmer"
@@ -464,12 +466,13 @@ export function ServicioDetallePage() {
               <button type="button" className="btn-primary btn-shimmer" onClick={openRegister}>
                 Crear cuenta y agendar
               </button>
-            )}
+            ))}
             <Link className="btn-secondary" to="/servicios">
               Volver al catálogo
             </Link>
           </div>
 
+          {!isEspecialista && (
           <section className="booking-panel booking-panel--premium" aria-label="Panel de agendamiento" ref={bookingRef}>
             <div className="booking-panel-header">
               <div>
@@ -787,6 +790,7 @@ export function ServicioDetallePage() {
             ) : null}
             </AnimatePresence>
           </section>
+          )}
         </motion.section>
         </>
       ) : null}
