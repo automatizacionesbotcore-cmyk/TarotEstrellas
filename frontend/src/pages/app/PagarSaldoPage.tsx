@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { toast } from '../../stores/toastStore';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Cita = {
@@ -64,6 +65,41 @@ function getSaldoCentavos(cita: Cita): number {
   return cita.saldo_centavos ?? (cita.precio_total_centavos - cita.precio_final_centavos);
 }
 
+async function copyToClipboard(text: string, label: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', 'true');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    toast.success(`${label} copiado.`);
+  } catch {
+    toast.error('No se pudo copiar. Intenta seleccionar el texto manualmente.');
+  }
+}
+
+function buildSaldoTransferText(cita: Cita, datos: DatosBancarios, saldo: number) {
+  return [
+    'Datos para transferencia TarotEstrellas',
+    `Código de referencia: ${cita.codigo_referencia}-SALDO`,
+    `Monto a transferir: ${formatMoney(saldo, cita.moneda)}`,
+    `Banco: ${datos.banco}`,
+    `Titular: ${datos.titular}`,
+    `N° de cuenta: ${datos.cuenta}`,
+    `Tipo de cuenta: ${datos.tipo_cuenta}`,
+    datos.rut ? `RUT: ${datos.rut}` : null,
+    datos.email ? `Email: ${datos.email}` : null,
+  ].filter(Boolean).join('\n');
+}
+
 // ── Transfer saldo panel ──────────────────────────────────────────────────────
 function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancarios: DatosBancarios | null }) {
   const [file, setFile]           = useState<File | null>(null);
@@ -95,6 +131,13 @@ function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancari
         <div className="ref-code-box">
           <span className="pay-section-label">Incluirlo en la transferencia</span>
           <strong className="ref-code">{cita.codigo_referencia}-SALDO</strong>
+          <button
+            type="button"
+            className="copy-data-btn"
+            onClick={() => copyToClipboard(`${cita.codigo_referencia}-SALDO`, 'Código de referencia')}
+          >
+            Copiar código
+          </button>
         </div>
       </details>
 
@@ -102,13 +145,60 @@ function SaldoTransferPanel({ cita, datosBancarios }: { cita: Cita; datosBancari
         <details className="payment-accordion" open={!uploaded}>
           <summary>Datos para transferir</summary>
           <div className="bank-details">
+            <div className="copy-data-toolbar">
+              <button
+                type="button"
+                className="copy-data-btn copy-data-btn--primary"
+                onClick={() => copyToClipboard(buildSaldoTransferText(cita, datosBancarios, saldo), 'Datos de transferencia')}
+              >
+                Copiar todos los datos
+              </button>
+            </div>
             <dl>
               <dt>Banco</dt><dd>{datosBancarios.banco}</dd>
               <dt>Titular</dt><dd>{datosBancarios.titular}</dd>
-              <dt>N° de cuenta</dt><dd>{datosBancarios.cuenta}</dd>
+              <dt>N° de cuenta</dt>
+              <dd className="copyable-bank-value">
+                <span>{datosBancarios.cuenta}</span>
+                <button
+                  type="button"
+                  className="copy-inline-btn"
+                  onClick={() => copyToClipboard(datosBancarios.cuenta, 'Número de cuenta')}
+                >
+                  Copiar
+                </button>
+              </dd>
               <dt>Tipo de cuenta</dt><dd>{datosBancarios.tipo_cuenta}</dd>
-              {datosBancarios.rut   ? <><dt>RUT</dt><dd>{datosBancarios.rut}</dd></>    : null}
-              {datosBancarios.email ? <><dt>Email</dt><dd>{datosBancarios.email}</dd></> : null}
+              {datosBancarios.rut ? (
+                <>
+                  <dt>RUT</dt>
+                  <dd className="copyable-bank-value">
+                    <span>{datosBancarios.rut}</span>
+                    <button
+                      type="button"
+                      className="copy-inline-btn"
+                      onClick={() => copyToClipboard(datosBancarios.rut ?? '', 'RUT')}
+                    >
+                      Copiar
+                    </button>
+                  </dd>
+                </>
+              ) : null}
+              {datosBancarios.email ? (
+                <>
+                  <dt>Email</dt>
+                  <dd className="copyable-bank-value">
+                    <span>{datosBancarios.email}</span>
+                    <button
+                      type="button"
+                      className="copy-inline-btn"
+                      onClick={() => copyToClipboard(datosBancarios.email ?? '', 'Email')}
+                    >
+                      Copiar
+                    </button>
+                  </dd>
+                </>
+              ) : null}
             </dl>
             <p className="pay-abono-note">
               Monto a transferir: <strong>{formatMoney(saldo, cita.moneda)}</strong>

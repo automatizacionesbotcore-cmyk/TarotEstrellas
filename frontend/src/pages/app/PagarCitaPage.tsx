@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { generateIcs } from '../../lib/ics';
+import { toast } from '../../stores/toastStore';
 
 const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
 
@@ -110,6 +111,46 @@ function fmtCountdown(s: number) {
   const m   = Math.floor(s / 60).toString().padStart(2, '0');
   const sec = (s % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
+}
+
+async function copyToClipboard(text: string, label: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', 'true');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    toast.success(`${label} copiado.`);
+  } catch {
+    toast.error('No se pudo copiar. Intenta seleccionar el texto manualmente.');
+  }
+}
+
+function buildTransferText(cita: Cita, cuentas: CuentaBancaria[]) {
+  const monto = formatMoney(calcAbono(cita.precio_final_centavos), cita.moneda);
+  const cuentasText = cuentas.map((cuenta, i) => [
+    cuentas.length > 1 ? `Cuenta ${i + 1}` : 'Cuenta bancaria',
+    `Banco: ${cuenta.banco}`,
+    `Titular: ${cuenta.nombre_titular}`,
+    `N° de cuenta: ${cuenta.numero_cuenta}`,
+    `Tipo de cuenta: ${cuenta.tipo_cuenta}`,
+    cuenta.rut_titular ? `RUT: ${cuenta.rut_titular}` : null,
+  ].filter(Boolean).join('\n')).join('\n\n');
+
+  return [
+    'Datos para transferencia TarotEstrellas',
+    `Código de referencia: ${cita.codigo_referencia}`,
+    `Monto a transferir (abono 20%): ${monto}`,
+    cuentasText,
+  ].join('\n');
 }
 
 // ── Cupón section ────────────────────────────────────────────────────────────
@@ -303,6 +344,13 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
         <div className="ref-code-box">
           <span className="pay-section-label">Incluirlo en la transferencia</span>
           <strong className="ref-code">{cita.codigo_referencia}</strong>
+          <button
+            type="button"
+            className="copy-data-btn"
+            onClick={() => copyToClipboard(cita.codigo_referencia, 'Código de referencia')}
+          >
+            Copiar código
+          </button>
         </div>
       </details>
 
@@ -310,6 +358,15 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
         <details className="payment-accordion" open={!uploaded}>
           <summary>Datos para transferir</summary>
           <div className="bank-details">
+            <div className="copy-data-toolbar">
+              <button
+                type="button"
+                className="copy-data-btn copy-data-btn--primary"
+                onClick={() => copyToClipboard(buildTransferText(cita, cuentasBancarias), 'Datos de transferencia')}
+              >
+                Copiar todos los datos
+              </button>
+            </div>
             {cuentasBancarias.map((cuenta, i) => (
               <div key={i} style={{ marginBottom: i < cuentasBancarias.length - 1 ? '1rem' : 0 }}>
                 {cuentasBancarias.length > 1 && (
@@ -320,9 +377,33 @@ function TransferPanel({ cita, cuentasBancarias }: { cita: Cita; cuentasBancaria
                 <dl>
                   <dt>Banco</dt>        <dd>{cuenta.banco}</dd>
                   <dt>Titular</dt>      <dd>{cuenta.nombre_titular}</dd>
-                  <dt>N° de cuenta</dt> <dd>{cuenta.numero_cuenta}</dd>
+                  <dt>N° de cuenta</dt>
+                  <dd className="copyable-bank-value">
+                    <span>{cuenta.numero_cuenta}</span>
+                    <button
+                      type="button"
+                      className="copy-inline-btn"
+                      onClick={() => copyToClipboard(cuenta.numero_cuenta, 'Número de cuenta')}
+                    >
+                      Copiar
+                    </button>
+                  </dd>
                   <dt>Tipo de cuenta</dt><dd>{cuenta.tipo_cuenta}</dd>
-                  {cuenta.rut_titular ? <><dt>RUT</dt><dd>{cuenta.rut_titular}</dd></> : null}
+                  {cuenta.rut_titular ? (
+                    <>
+                      <dt>RUT</dt>
+                      <dd className="copyable-bank-value">
+                        <span>{cuenta.rut_titular}</span>
+                        <button
+                          type="button"
+                          className="copy-inline-btn"
+                          onClick={() => copyToClipboard(cuenta.rut_titular, 'RUT')}
+                        >
+                          Copiar
+                        </button>
+                      </dd>
+                    </>
+                  ) : null}
                 </dl>
               </div>
             ))}

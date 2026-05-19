@@ -3031,6 +3031,57 @@ p               { text-wrap: pretty; }
 .bank-details dt { color: var(--text-muted); font-size: 0.85rem; }
 .bank-details dd { color: var(--text); font-size: 0.85rem; margin: 0; }
 
+.copy-data-toolbar {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 0.75rem;
+}
+
+.copy-data-btn,
+.copy-inline-btn {
+	border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	color: var(--accent);
+	border-radius: 999px;
+	cursor: pointer;
+	font-weight: 700;
+	transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.copy-data-btn {
+	margin-top: 0.85rem;
+	padding: 0.5rem 0.85rem;
+	font-size: 0.8rem;
+}
+
+.copy-data-btn--primary {
+	margin-top: 0;
+}
+
+.copy-inline-btn {
+	padding: 0.25rem 0.55rem;
+	font-size: 0.72rem;
+}
+
+.copy-data-btn:hover,
+.copy-inline-btn:hover {
+	background: color-mix(in srgb, var(--accent) 16%, transparent);
+	border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+	transform: translateY(-1px);
+}
+
+.copyable-bank-value {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	min-width: 0;
+}
+
+.copyable-bank-value span {
+	overflow-wrap: anywhere;
+}
+
 .comprobante-upload {
 	display: flex;
 	flex-direction: column;
@@ -3128,6 +3179,18 @@ p               { text-wrap: pretty; }
 	.comprobante-upload .btn-primary {
 		width: 100%;
 		justify-content: center;
+	}
+	.copy-data-toolbar {
+		justify-content: stretch;
+	}
+	.copy-data-btn {
+		width: 100%;
+		text-align: center;
+	}
+	.copyable-bank-value {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		width: 100%;
 	}
 }
 
