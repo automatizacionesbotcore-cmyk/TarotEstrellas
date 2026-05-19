@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+@php
+    $logoPath = public_path('brand/logo-dark.png');
+    $logoDataUri = is_file($logoPath)
+        ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+        : null;
+@endphp
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -8,6 +14,28 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #111827;
+            margin: 0;
+        }
+        .brand-header {
+            background: #1e0a3c;
+            border-bottom: 4px solid #c9a227;
+            padding: 16px 24px 14px;
+            margin: 0 0 22px;
+        }
+        .brand-logo {
+            width: 250px;
+            max-height: 74px;
+            object-fit: contain;
+            border: 0;
+        }
+        .brand-fallback {
+            color: #f0d060;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 0.04em;
+        }
+        .content {
+            padding: 0 24px 24px;
         }
         h1 {
             font-size: 20px;
@@ -53,50 +81,59 @@
     </style>
 </head>
 <body>
-    <h1>Historial de consultas</h1>
-    <div class="muted">
-        Cliente: {{ $user->name }} ({{ $user->email }})<br>
-        Exportado en: {{ $exportadoEn->toDateTimeString() }}<br>
-        Total de consultas: {{ $citas->count() }}
+    <div class="brand-header">
+        @if($logoDataUri)
+            <img class="brand-logo" src="{{ $logoDataUri }}" alt="TarotEstrellas">
+        @else
+            <div class="brand-fallback">TarotEstrellas</div>
+        @endif
     </div>
+    <div class="content">
+        <h1>Historial de consultas</h1>
+        <div class="muted">
+            Cliente: {{ $user->name }} ({{ $user->email }})<br>
+            Exportado en: {{ $exportadoEn->toDateTimeString() }}<br>
+            Total de consultas: {{ $citas->count() }}
+        </div>
 
-    @if($citas->isEmpty())
-        <div class="empty">No existen consultas para exportar.</div>
-    @else
-        <table>
-            <thead>
-                <tr>
-                    <th>Codigo</th>
-                    <th>Tipo</th>
-                    <th>Estado</th>
-                    <th>Inicio UTC</th>
-                    <th>Moneda</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($citas as $cita)
+        @if($citas->isEmpty())
+            <div class="empty">No existen consultas para exportar.</div>
+        @else
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $cita->codigo_referencia }}</td>
-                        <td>{{ optional($cita->tipoConsulta)->nombre }}</td>
-                        <td>{{ $cita->estado }}</td>
-                        <td>{{ optional($cita->inicio_utc)->toDateTimeString() }}</td>
-                        <td>{{ $cita->moneda }}</td>
-                        <td>{{ $cita->precio_final_centavos }}</td>
+                        <th>Codigo</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Inicio UTC</th>
+                        <th>Moneda</th>
+                        <th>Total</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach($citas as $cita)
+                        <tr>
+                            <td>{{ $cita->codigo_referencia }}</td>
+                            <td>{{ optional($cita->tipoConsulta)->nombre }}</td>
+                            <td>{{ $cita->estado }}</td>
+                            <td>{{ optional($cita->inicio_utc)->toDateTimeString() }}</td>
+                            <td>{{ $cita->moneda }}</td>
+                            <td>{{ $cita->precio_final_centavos }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
 
-        @foreach($citas as $cita)
-            <h2>{{ $cita->codigo_referencia }} - {{ optional($cita->tipoConsulta)->nombre }}</h2>
-            <div class="block">
-                <strong>Pagos:</strong> {{ $cita->pagos->count() }}<br>
-                <strong>Grabaciones:</strong> {{ $cita->grabaciones->count() }}<br>
-                <strong>Transcripciones:</strong> {{ $cita->grabaciones->filter(fn($g) => $g->transcripcion !== null)->count() }}<br>
-                <strong>Resumenes:</strong> {{ $cita->grabaciones->filter(fn($g) => $g->transcripcion && $g->transcripcion->resumen !== null)->count() }}
-            </div>
-        @endforeach
-    @endif
+            @foreach($citas as $cita)
+                <h2>{{ $cita->codigo_referencia }} - {{ optional($cita->tipoConsulta)->nombre }}</h2>
+                <div class="block">
+                    <strong>Pagos:</strong> {{ $cita->pagos->count() }}<br>
+                    <strong>Grabaciones:</strong> {{ $cita->grabaciones->count() }}<br>
+                    <strong>Transcripciones:</strong> {{ $cita->grabaciones->filter(fn($g) => $g->transcripcion !== null)->count() }}<br>
+                    <strong>Resumenes:</strong> {{ $cita->grabaciones->filter(fn($g) => $g->transcripcion && $g->transcripcion->resumen !== null)->count() }}
+                </div>
+            @endforeach
+        @endif
+    </div>
 </body>
 </html>
