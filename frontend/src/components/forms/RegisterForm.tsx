@@ -62,7 +62,26 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting || !allConsentAccepted || !isPasswordStrong || !passwordsMatch) {
+    if (submitting) {
+      return;
+    }
+
+    if (!form.acepta_terminos || !form.acepta_privacidad) {
+      const missing = [
+        !form.acepta_terminos ? 'términos y condiciones' : null,
+        !form.acepta_privacidad ? 'política de privacidad' : null,
+      ].filter(Boolean);
+
+      setErrorMessage(`Debes leer y aceptar ${missing.join(' y ')} antes de crear tu cuenta.`);
+      return;
+    }
+
+    if (!form.acepta_mayor_18) {
+      setErrorMessage('Debes confirmar que eres mayor de 18 años para crear tu cuenta.');
+      return;
+    }
+
+    if (!isPasswordStrong || !passwordsMatch) {
       setErrorMessage('Revisa la seguridad de la contraseña y confirma que ambas coincidan.');
       return;
     }
@@ -111,8 +130,7 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
   const hasPasswordValue   = form.password.length > 0;
   const hasConfirmValue    = form.password_confirmation.length > 0;
   const passwordsMatch     = hasPasswordValue && hasConfirmValue && form.password === form.password_confirmation;
-  const allConsentAccepted = form.acepta_terminos && form.acepta_privacidad && form.acepta_mayor_18;
-  const canSubmit          = allConsentAccepted && isPasswordStrong && passwordsMatch && !submitting;
+  const canSubmit          = !submitting;
 
   return (
     <>
@@ -256,4 +274,3 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
     </>
   );
 }
-

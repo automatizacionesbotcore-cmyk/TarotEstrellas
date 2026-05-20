@@ -73,14 +73,14 @@ export function LegalConsentBlock({
   return (
     <>
       <div className="checkbox-row checkbox-row-legal">
-        <input type="checkbox" checked={terminosAceptados} readOnly required />
+        <input type="checkbox" checked={terminosAceptados} readOnly required onClick={() => openLegal('terminos')} />
         <button className="legal-trigger" type="button" onClick={() => openLegal('terminos')}>
           {terminosAceptados ? 'Términos aceptados' : 'Leer y aceptar términos y condiciones'}
         </button>
       </div>
 
       <div className="checkbox-row checkbox-row-legal">
-        <input type="checkbox" checked={privacidadAceptada} readOnly required />
+        <input type="checkbox" checked={privacidadAceptada} readOnly required onClick={() => openLegal('privacidad')} />
         <button className="legal-trigger" type="button" onClick={() => openLegal('privacidad')}>
           {privacidadAceptada ? 'Política aceptada' : 'Leer y aceptar política de privacidad'}
         </button>
