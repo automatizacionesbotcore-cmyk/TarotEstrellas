@@ -39,6 +39,7 @@ class RecordatorioCitaMail extends Mailable
                 'cita' => $this->cita,
                 'cuando' => $cuando,
                 'confirmUrl' => $confirmUrl,
+                'saldoUrl' => rtrim((string) config('app.frontend_url', 'https://tarotestrellas.com'), '/') . '/app/citas/' . $this->cita->uuid . '/pagar-saldo',
                 'minutosAntes' => $this->minutosAntes,
             ]);
     }

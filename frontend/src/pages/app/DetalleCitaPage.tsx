@@ -87,6 +87,10 @@ function fmtTimestamp(seconds: number) {
   return `${m}:${s}`;
 }
 
+function toBackendLocalDateTime(value: string): string {
+  return value ? `${value.replace('T', ' ')}:00` : '';
+}
+
 // ── Processing indicator ──────────────────────────────────────────────────────
 function Processing({ label }: { label: string }) {
   return (
@@ -105,6 +109,26 @@ function Processing({ label }: { label: string }) {
 
 // ── Tab: Info ─────────────────────────────────────────────────────────────────
 function TabInfo({ cita }: { cita: CitaDetalle }) {
+  const queryClient = useQueryClient();
+  const [mostrarReagendar, setMostrarReagendar] = useState(new URLSearchParams(window.location.search).get('reagendar') === '1');
+  const [nuevoInicio, setNuevoInicio] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const puedeReagendar = ['pendiente_abono', 'reservada', 'confirmada'].includes(cita.estado);
+  const reagendar = useMutation({
+    mutationFn: () => api.post(`/citas/${cita.uuid}/reagendar`, {
+      inicio_local: toBackendLocalDateTime(nuevoInicio),
+      zona_horaria_cliente: citaTimezone(cita),
+      motivo: mensaje || undefined,
+    }),
+    onSuccess: () => {
+      setMostrarReagendar(false);
+      setNuevoInicio('');
+      setMensaje('');
+      queryClient.invalidateQueries({ queryKey: ['cita', cita.uuid] });
+      queryClient.invalidateQueries({ queryKey: ['mis-consultas'] });
+    },
+  });
+
   return (
     <div className="detalle-info">
       <dl className="detalle-dl">
@@ -121,6 +145,34 @@ function TabInfo({ cita }: { cita: CitaDetalle }) {
         {cita.tema_principal && <><dt>Tema</dt><dd>{cita.tema_principal}</dd></>}
         {cita.pregunta_especifica && <><dt>Pregunta</dt><dd>{cita.pregunta_especifica}</dd></>}
       </dl>
+      {puedeReagendar ? (
+        <div className="detalle-action-panel">
+          {!mostrarReagendar ? (
+            <button className="btn-secondary" type="button" onClick={() => setMostrarReagendar(true)}>
+              Elegir otra fecha
+            </button>
+          ) : (
+            <div className="auth-grid">
+              <label className="auth-span-2">
+                Nueva fecha y hora
+                <input className="input-field" type="datetime-local" value={nuevoInicio} onChange={(e) => setNuevoInicio(e.target.value)} />
+              </label>
+              <label className="auth-span-2">
+                Motivo o comentario
+                <textarea className="input-field" rows={3} value={mensaje} onChange={(e) => setMensaje(e.target.value)} />
+              </label>
+              {reagendar.isError ? <p className="form-error auth-span-2">No se pudo reagendar. Revisa que el horario esté disponible.</p> : null}
+              {reagendar.isSuccess ? <p className="form-success auth-span-2">Cita reagendada correctamente.</p> : null}
+              <div className="wizard-actions auth-span-2">
+                <button className="btn-secondary" type="button" onClick={() => setMostrarReagendar(false)}>Cancelar</button>
+                <button className="btn-primary" type="button" disabled={!nuevoInicio || reagendar.isPending} onClick={() => reagendar.mutate()}>
+                  {reagendar.isPending ? 'Reagendando...' : 'Confirmar nueva fecha'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

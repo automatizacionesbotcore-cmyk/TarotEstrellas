@@ -46,6 +46,20 @@
         </p>
     @endif
 
+    @if($cita->estado === 'reservada')
+        <div style="background:#FBEFF3;border:1px solid #E6C2CD;border-radius:8px;padding:18px;margin:22px 0;text-align:center;">
+            <p style="margin:0 0 12px;color:#963058;font-size:15px;font-weight:700;">Pago de saldo pendiente</p>
+            <p style="margin:0 0 16px;color:#5C5168;font-size:14px;line-height:1.5;">
+                Para mantener tu reserva activa debes pagar la diferencia al menos 24 horas antes de la consulta.
+                Si el saldo no queda pagado dentro de ese plazo, la cita se anulará automáticamente.
+            </p>
+            @include('emails.partials.button', [
+                'url' => $saldoUrl,
+                'label' => 'Pagar diferencia',
+            ])
+        </div>
+    @endif
+
     @include('emails.partials.button', [
         'url' => $detalleUrl,
         'label' => 'Ver detalle de cita',

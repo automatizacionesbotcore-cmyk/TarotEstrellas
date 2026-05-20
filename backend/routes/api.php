@@ -82,6 +82,8 @@ Route::middleware('throttle:10,1')->post('agente/publico', [AgenteController::cl
 // Confirmacion de asistencia via email (signed URL, sin auth)
 Route::get('citas/{uuid}/confirmar-asistencia', [CitaController::class, 'confirmarAsistencia'])
     ->name('citas.confirmar-asistencia');
+Route::get('citas/{uuid}/aceptar-reprogramacion', [CitaController::class, 'aceptarReprogramacion'])
+    ->name('citas.aceptar-reprogramacion');
 
 Route::prefix('public')->group(function () {
     Route::get('tipos-consulta', [PublicTipoConsultaController::class, 'index']);
@@ -116,6 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('admin/citas/historial', [CitaController::class, 'historialAdmin']);
     Route::get('admin/citas/historial/export', [CitaController::class, 'historialAdminExport']);
     Route::post('admin/citas/{uuid}/no-show', [CitaController::class, 'marcarNoShow']);
+    Route::post('admin/citas/{uuid}/reprogramar', [CitaController::class, 'reprogramarAdmin']);
     Route::get('me/export', [MeController::class, 'export']);
     Route::get('me/datos-personales', [MeController::class, 'datosPersonales']);
     Route::get('me/consultas', [MeController::class, 'consultas']);

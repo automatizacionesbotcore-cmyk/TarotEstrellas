@@ -71,6 +71,9 @@ export function AdminCitasPage() {
   const [data, setData] = useState<Historial | null>(null);
   const [loading, setLoading] = useState(false);
   const [targetUuid, setTargetUuid] = useState<string | null>(null);
+  const [reprogramarTarget, setReprogramarTarget] = useState<Cita | null>(null);
+  const [nuevoInicio, setNuevoInicio] = useState('');
+  const [motivoReprogramacion, setMotivoReprogramacion] = useState('');
   const [exporting, setExporting] = useState(false);
   const [transcribiendo, setTranscribiendo] = useState<string | null>(null);
 
@@ -107,6 +110,23 @@ export function AdminCitasPage() {
       setTargetUuid(null);
       queryClient.invalidateQueries({ queryKey: ['admin', 'citas'] });
       // Re-fetch manual
+      api.get<Historial>('/admin/citas/historial', {
+        params: { ...filters, q: debouncedQ || undefined, page, per_page: 25, sort_by: sortBy, sort_dir: sortDir },
+      }).then((res) => setData(res.data));
+    },
+  });
+
+  const reprogramar = useMutation({
+    mutationFn: (payload: { uuid: string; inicio_local: string; motivo?: string }) =>
+      api.post(`/admin/citas/${payload.uuid}/reprogramar`, {
+        inicio_local: payload.inicio_local,
+        zona_horaria: ADMIN_TIMEZONE,
+        motivo: payload.motivo || undefined,
+      }),
+    onSuccess: () => {
+      setReprogramarTarget(null);
+      setNuevoInicio('');
+      setMotivoReprogramacion('');
       api.get<Historial>('/admin/citas/historial', {
         params: { ...filters, q: debouncedQ || undefined, page, per_page: 25, sort_by: sortBy, sort_dir: sortDir },
       }).then((res) => setData(res.data));
@@ -199,6 +219,18 @@ export function AdminCitasPage() {
               No-show
             </button>
           )}
+          {(r.estado === 'reservada' || r.estado === 'confirmada') && (
+            <button
+              className="btn-secondary"
+              style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+              onClick={() => {
+                setReprogramarTarget(r);
+                setNuevoInicio(toDatetimeLocal(r.inicio_utc));
+              }}
+            >
+              Reprogramar
+            </button>
+          )}
           <button
             className="btn-secondary"
             style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
@@ -261,8 +293,80 @@ export function AdminCitasPage() {
         onConfirm={() => targetUuid && noShow.mutate(targetUuid)}
         onCancel={()  => setTargetUuid(null)}
       />
+
+      {reprogramarTarget ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="reprogramar-title">
+            <header className="admin-modal-header">
+              <h2 id="reprogramar-title">Reprogramar cita</h2>
+              <button className="admin-modal-close" type="button" onClick={() => setReprogramarTarget(null)}>×</button>
+            </header>
+            <div className="admin-modal-body">
+              <p className="text-muted">
+                Se notificará al cliente por correo para que acepte la nueva fecha o elija otra disponible.
+              </p>
+              <label>
+                Nueva fecha y hora (Chile)
+                <input
+                  className="input-field"
+                  type="datetime-local"
+                  value={nuevoInicio}
+                  onChange={(e) => setNuevoInicio(e.target.value)}
+                />
+              </label>
+              <label>
+                Motivo visible para el cliente
+                <textarea
+                  className="input-field"
+                  rows={3}
+                  value={motivoReprogramacion}
+                  onChange={(e) => setMotivoReprogramacion(e.target.value)}
+                  placeholder="Ej: ajuste extraordinario de agenda"
+                />
+              </label>
+              {reprogramar.isError ? <p className="form-error">No se pudo reprogramar la cita. Revisa la disponibilidad.</p> : null}
+            </div>
+            <div className="admin-modal-footer">
+              <button className="btn-secondary" type="button" onClick={() => setReprogramarTarget(null)}>
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                type="button"
+                disabled={!nuevoInicio || reprogramar.isPending}
+                onClick={() => reprogramar.mutate({
+                  uuid: reprogramarTarget.uuid,
+                  inicio_local: toBackendLocalDateTime(nuevoInicio),
+                  motivo: motivoReprogramacion,
+                })}
+              >
+                {reprogramar.isPending ? 'Enviando...' : 'Reprogramar y notificar'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
+}
+
+function toDatetimeLocal(iso: string): string {
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: ADMIN_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
+
+function toBackendLocalDateTime(value: string): string {
+  return value ? `${value.replace('T', ' ')}:00` : '';
 }
 
 function useDebounce<T>(value: T, delay: number): T {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\ValidarComprobanteJob;
 use App\Mail\CitaCanceladaMail;
+use App\Mail\CitaReprogramadaMail;
 use App\Mail\NuevoComprobanteRecibidoMail;
 use App\Models\Cita;
 use App\Models\ComprobanteTransferencia;
@@ -1255,6 +1256,108 @@ class CitaController extends Controller
 
         $frontend = config('app.frontend_url') ?: rtrim(config('app.url'), '/');
         return redirect()->away($frontend . '/app/citas/' . $cita->uuid . '?asistencia_confirmada=1');
+    }
+
+    public function aceptarReprogramacion(Request $request, string $uuid)
+    {
+        if (! $request->hasValidSignature()) {
+            return response()->view('emails.confirmacion-link-invalido', [], 403);
+        }
+
+        $cita = Cita::query()->where('uuid', $uuid)->first();
+        if (! $cita) {
+            return response()->view('emails.confirmacion-link-invalido', [], 404);
+        }
+
+        if (! in_array($cita->estado, ['reservada', 'confirmada'], true)) {
+            return response()->view('emails.confirmacion-resultado', [
+                'titulo' => 'No pudimos confirmar la nueva fecha',
+                'mensaje' => 'Esta cita ya no está activa (estado: ' . $cita->estado . ').',
+            ]);
+        }
+
+        $cita->forceFill(['cliente_confirmo_at' => now()])->save();
+
+        $frontend = config('app.frontend_url') ?: rtrim(config('app.url'), '/');
+        return redirect()->away($frontend . '/app/citas/' . $cita->uuid . '?reprogramacion_aceptada=1');
+    }
+
+    public function reprogramarAdmin(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'inicio_utc' => ['nullable', 'date'],
+            'inicio_local' => ['required_without:inicio_utc', 'date_format:Y-m-d H:i:s'],
+            'zona_horaria' => ['nullable', 'timezone'],
+            'motivo' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos'])
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $roles = $user->roles->pluck('nombre')->all();
+        $isSuperAdmin = in_array('super_admin', $roles, true);
+        $isEspecialista = in_array('admin_especialista', $roles, true) && (int) $cita->especialista_id === (int) $user->id;
+
+        if (! $isSuperAdmin && ! $isEspecialista) {
+            return response()->json(['message' => 'No autorizado para reprogramar esta cita.'], 403);
+        }
+
+        if (! in_array($cita->estado, ['reservada', 'confirmada'], true)) {
+            return response()->json(['message' => 'La cita no se puede reprogramar en su estado actual.'], 422);
+        }
+
+        $timezone = (string) ($validated['zona_horaria'] ?? 'America/Santiago');
+        $startUtc = ! empty($validated['inicio_utc'])
+            ? CarbonImmutable::parse($validated['inicio_utc'])->setTimezone('UTC')
+            : CarbonImmutable::parse($validated['inicio_local'], $timezone)->setTimezone('UTC');
+        $endUtc = $startUtc->addMinutes((int) $cita->duracion_minutos);
+
+        if ($startUtc->lte(CarbonImmutable::now('UTC'))) {
+            throw ValidationException::withMessages([
+                'inicio_local' => 'La nueva fecha debe ser futura.',
+            ]);
+        }
+
+        $collision = Cita::query()
+            ->where('id', '!=', $cita->id)
+            ->whereIn('estado', ['pendiente_abono', 'reservada', 'confirmada', 'en_curso'])
+            ->where('inicio_utc', '<', $endUtc->addMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
+            ->where('fin_utc', '>', $startUtc->subMinutes(self::SERVICE_BUFFER_MINUTES)->toDateTimeString())
+            ->exists();
+
+        if ($collision) {
+            throw ValidationException::withMessages([
+                'inicio_local' => 'El horario seleccionado ya no se encuentra disponible.',
+            ]);
+        }
+
+        $inicioAnterior = optional($cita->inicio_utc)->toIso8601String();
+
+        $cita->forceFill([
+            'inicio_utc' => $startUtc->toDateTimeString(),
+            'fin_utc' => $endUtc->toDateTimeString(),
+            'daily_room_url' => null,
+            'daily_room_name' => null,
+            'cliente_confirmo_at' => null,
+        ])->save();
+
+        if ($cita->cliente?->email) {
+            Mail::to($cita->cliente->email)->send(new CitaReprogramadaMail($cita->fresh(['cliente.profile', 'tipoConsulta']), $inicioAnterior, $validated['motivo'] ?? null));
+        }
+
+        return response()->json([
+            'message' => 'Cita reprogramada y notificada correctamente.',
+            'data' => [
+                'uuid' => $cita->uuid,
+                'inicio_utc' => $cita->fresh()->inicio_utc?->toIso8601String(),
+                'fin_utc' => $cita->fresh()->fin_utc?->toIso8601String(),
+            ],
+        ]);
     }
 
     public function marcarNoShow(Request $request, string $uuid): JsonResponse
