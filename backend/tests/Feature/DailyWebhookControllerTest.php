@@ -109,6 +109,116 @@ class DailyWebhookControllerTest extends TestCase
         Queue::assertPushed(ProcesarTranscripcionJob::class, 1);
     }
 
+    public function test_daily_webhook_accepts_official_daily_signature_header(): void
+    {
+        config(['services.daily.webhook_secret' => 'daily_test_secret']);
+        Queue::fake();
+
+        $payload = json_encode([
+            'id' => 'evt_daily_official_header',
+            'type' => 'recording.started',
+            'payload' => [
+                'room' => 'room_official_header',
+                'recording_id' => 'rec_official_header',
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        $signature = hash_hmac('sha256', $payload, 'daily_test_secret');
+
+        $this->call('POST', '/api/webhooks/daily', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_WEBHOOK_SIGNATURE' => $signature,
+        ], $payload)
+            ->assertOk()
+            ->assertJsonPath('received', true)
+            ->assertJsonPath('event_type', 'recording.started');
+
+        $this->assertDatabaseHas('daily_webhook_events', [
+            'event_id' => 'evt_daily_official_header',
+            'event_type' => 'recording.started',
+        ]);
+
+        $this->assertDatabaseHas('grabaciones', [
+            'daily_recording_id' => 'rec_official_header',
+            'daily_room_name' => 'room_official_header',
+            'estado' => 'grabando',
+        ]);
+    }
+
+    public function test_daily_webhook_accepts_signed_verification_payload(): void
+    {
+        config(['services.daily.webhook_secret' => 'daily_test_secret']);
+
+        $payload = json_encode([
+            'test' => true,
+            'message' => 'Daily webhook verification',
+        ], JSON_THROW_ON_ERROR);
+
+        $signature = hash_hmac('sha256', $payload, 'daily_test_secret');
+
+        $this->call('POST', '/api/webhooks/daily', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_WEBHOOK_SIGNATURE' => $signature,
+        ], $payload)
+            ->assertOk()
+            ->assertJsonPath('received', true)
+            ->assertJsonPath('verification', true);
+
+        $this->assertDatabaseCount('daily_webhook_events', 0);
+    }
+
+    public function test_daily_webhook_accepts_base64_encoded_hmac_secret(): void
+    {
+        $rawSecret = 'daily_test_secret';
+        config(['services.daily.webhook_secret' => base64_encode($rawSecret)]);
+
+        $payload = json_encode([
+            'test' => true,
+            'message' => 'Daily webhook verification',
+        ], JSON_THROW_ON_ERROR);
+
+        $signature = hash_hmac('sha256', $payload, $rawSecret);
+
+        $this->call('POST', '/api/webhooks/daily', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_WEBHOOK_SIGNATURE' => $signature,
+        ], $payload)
+            ->assertOk()
+            ->assertJsonPath('received', true)
+            ->assertJsonPath('verification', true);
+    }
+
+    public function test_daily_webhook_accepts_unsigned_verification_payload_without_event_fields(): void
+    {
+        config(['services.daily.webhook_secret' => 'daily_test_secret']);
+
+        $payload = json_encode([
+            'test' => true,
+            'message' => 'Daily webhook verification',
+        ], JSON_THROW_ON_ERROR);
+
+        $this->call('POST', '/api/webhooks/daily', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload)
+            ->assertOk()
+            ->assertJsonPath('received', true)
+            ->assertJsonPath('verification', true);
+    }
+
+    public function test_daily_webhook_rejects_unsigned_real_event(): void
+    {
+        config(['services.daily.webhook_secret' => 'daily_test_secret']);
+
+        $payload = json_encode([
+            'id' => 'evt_daily_unsigned_real',
+            'type' => 'recording.started',
+        ], JSON_THROW_ON_ERROR);
+
+        $this->call('POST', '/api/webhooks/daily', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload)->assertStatus(400);
+    }
+
     public function test_daily_webhook_recording_error_updates_grabacion_state_without_dispatching_transcription(): void
     {
         config(['services.daily.webhook_secret' => 'daily_test_secret']);

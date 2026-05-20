@@ -16,10 +16,22 @@ class DailyWebhookController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $payload = $request->getContent();
-        $signature = (string) ($request->header('X-Daily-Signature')
+        $signature = (string) ($request->header('X-Webhook-Signature')
+            ?? $request->header('X-Daily-Signature')
             ?? $request->header('Daily-Signature')
             ?? '');
         $secret = (string) config('services.daily.webhook_secret', '');
+        /** @var array<string, mixed> $event */
+        $event = json_decode($payload, true) ?? [];
+        $eventId = (string) Arr::get($event, 'id', Arr::get($event, 'event_id', ''));
+        $eventType = (string) Arr::get($event, 'type', Arr::get($event, 'event', ''));
+
+        if ($signature === '' && $eventId === '' && $eventType === '') {
+            return response()->json([
+                'received' => true,
+                'verification' => true,
+            ]);
+        }
 
         if ($secret === '' || ! $this->isValidSignature($payload, $signature, $secret)) {
             return response()->json([
@@ -27,15 +39,11 @@ class DailyWebhookController extends Controller
             ], 400);
         }
 
-        /** @var array<string, mixed> $event */
-        $event = json_decode($payload, true) ?? [];
-        $eventId = (string) Arr::get($event, 'id', Arr::get($event, 'event_id', ''));
-        $eventType = (string) Arr::get($event, 'type', Arr::get($event, 'event', ''));
-
         if ($eventId === '') {
             return response()->json([
-                'message' => 'Invalid Daily event id.',
-            ], 400);
+                'received' => true,
+                'verification' => true,
+            ]);
         }
 
         $storedEvent = DailyWebhookEvent::query()->firstOrCreate(
@@ -85,7 +93,7 @@ class DailyWebhookController extends Controller
      */
     private function handleRecordingReady(DailyWebhookEvent $storedEvent, array $event): void
     {
-        $data = (array) Arr::get($event, 'data', []);
+        $data = (array) Arr::get($event, 'data', Arr::get($event, 'payload', []));
 
         $citaUuid = (string) Arr::get(
             $event,
@@ -192,7 +200,7 @@ class DailyWebhookController extends Controller
      */
     private function handleMeetingEvent(DailyWebhookEvent $storedEvent, array $event, string $estado): void
     {
-        $data = (array) Arr::get($event, 'data', []);
+        $data = (array) Arr::get($event, 'data', Arr::get($event, 'payload', []));
 
         $citaUuid = (string) Arr::get(
             $event,
@@ -252,7 +260,7 @@ class DailyWebhookController extends Controller
      */
     private function extractRecordingContext(array $event): array
     {
-        $data = (array) Arr::get($event, 'data', []);
+        $data = (array) Arr::get($event, 'data', Arr::get($event, 'payload', []));
 
         $citaUuid = (string) Arr::get(
             $event,
@@ -272,13 +280,21 @@ class DailyWebhookController extends Controller
             return false;
         }
 
-        $expected = hash_hmac('sha256', $payload, $secret);
         $header = trim($signatureHeader);
 
         if (str_starts_with($header, 'sha256=')) {
             $header = substr($header, 7);
         }
 
-        return hash_equals($expected, $header);
+        if (hash_equals(hash_hmac('sha256', $payload, $secret), $header)) {
+            return true;
+        }
+
+        $decodedSecret = base64_decode($secret, true);
+        if ($decodedSecret === false || $decodedSecret === '') {
+            return false;
+        }
+
+        return hash_equals(hash_hmac('sha256', $payload, $decodedSecret), $header);
     }
 }
