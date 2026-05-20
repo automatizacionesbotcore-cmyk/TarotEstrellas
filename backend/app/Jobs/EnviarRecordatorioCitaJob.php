@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\RecordatorioCitaMail;
 use App\Models\Cita;
+use App\Models\NotificacionEnviada;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -28,11 +29,15 @@ class EnviarRecordatorioCitaJob implements ShouldQueue
         $hasta = $target->copy()->addMinutes(30);
 
         Cita::query()
-            ->where('estado', 'confirmada')
+            ->whereIn('estado', ['reservada', 'confirmada'])
             ->whereBetween('inicio_utc', [$desde, $hasta])
             ->with(['cliente:id,email,telefono', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos'])
             ->each(function (Cita $cita) {
                 if (! $cita->cliente?->email) {
+                    return;
+                }
+
+                if ($this->alreadySent($cita)) {
                     return;
                 }
 
@@ -63,5 +68,14 @@ class EnviarRecordatorioCitaJob implements ShouldQueue
                 Mail::to($cita->cliente->email)->send(new RecordatorioCitaMail($cita, $this->minutosAntes));
             });
     }
-}
 
+    private function alreadySent(Cita $cita): bool
+    {
+        return NotificacionEnviada::query()
+            ->where('canal', $this->canal)
+            ->where('tipo', 'recordatorio_cita')
+            ->where('metadata->cita_id', (string) $cita->id)
+            ->where('metadata->minutos_antes', (string) $this->minutosAntes)
+            ->exists();
+    }
+}

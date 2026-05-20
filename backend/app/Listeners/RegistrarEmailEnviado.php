@@ -39,6 +39,7 @@ class RegistrarEmailEnviado
                 'metadata'     => [
                     'cita_id'    => $h('X-Notif-Cita-Id'),
                     'plantilla'  => $h('X-Notif-Plantilla'),
+                    'minutos_antes' => $h('X-Notif-Minutos-Antes'),
                     'message_id' => $h('Message-ID'),
                 ],
                 'enviado_en'   => now(),

@@ -33,6 +33,7 @@ class RecordatorioCitaMail extends Mailable
                     $message->getHeaders()->addTextHeader('X-Notif-User-Id', (string) $this->cita->cliente_id);
                 }
                 $message->getHeaders()->addTextHeader('X-Notif-Cita-Id', (string) $this->cita->id);
+                $message->getHeaders()->addTextHeader('X-Notif-Minutos-Antes', (string) $this->minutosAntes);
             })
             ->view('emails.recordatorio-cita', [
                 'cita' => $this->cita,
