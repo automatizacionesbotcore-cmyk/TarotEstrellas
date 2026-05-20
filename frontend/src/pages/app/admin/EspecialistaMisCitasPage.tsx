@@ -103,7 +103,7 @@ export function EspecialistaMisCitasPage() {
       )}
 
       <div style={{ marginTop: '1.5rem' }}>
-        <Link className="btn-secondary" to="/app/dashboard">← Volver al dashboard</Link>
+        <Link className="btn-secondary" to="/app/admin">← Volver al dashboard</Link>
       </div>
     </main>
   );
