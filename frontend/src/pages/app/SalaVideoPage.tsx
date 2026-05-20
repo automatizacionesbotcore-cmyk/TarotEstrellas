@@ -10,10 +10,15 @@ const ConstellationPortal = lazy(() => import('../../components/3d/Constellation
 // ── Types ─────────────────────────────────────────────────────────────────────
 type SalaInfo = {
   url: string;
+  room_url?: string;
   token: string;
+  is_owner?: boolean;
   sala_creada: boolean;
   pago_completado: boolean;
   en_horario: boolean;
+  recording_enabled?: boolean;
+  requires_recording_consent?: boolean;
+  grabacion_habilitada?: boolean;
   cita: {
     uuid: string;
     inicio_utc: string;
@@ -32,10 +37,19 @@ type Phase =
 
 // ── API ───────────────────────────────────────────────────────────────────────
 const fetchSala = (uuid: string) =>
-  api.get(`/citas/${uuid}/sala`).then((r) => (r.data as { data: SalaInfo }).data);
+  api.get(`/me/citas/${uuid}/sala-video`).then((r) => (r.data as { data: SalaInfo }).data);
 
 const postConsentimiento = (uuid: string) =>
-  api.post(`/citas/${uuid}/sala/consentimiento`);
+  api.post(`/citas/${uuid}/sala/consentimiento`, {
+    acepta_grabacion: true,
+    version_documento: 'v1',
+  });
+
+const postIniciarGrabacion = (uuid: string) =>
+  api.post(`/me/citas/${uuid}/sala-video/grabacion/iniciar`);
+
+const postDetenerGrabacion = (uuid: string) =>
+  api.post(`/me/citas/${uuid}/sala-video/grabacion/detener`);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDuration(s: number) {
@@ -188,6 +202,7 @@ function CallRoom({
     getRemainingSeconds(sala.cita.fin_utc),
   );
   const [error, setError] = useState('');
+  const [recordingLoading, setRecordingLoading] = useState(false);
 
   // Tick
   useEffect(() => {
@@ -222,13 +237,13 @@ function CallRoom({
       .on('left-meeting', onLeave);
 
     call
-      .join({ url: sala.url, token: sala.token })
+      .join({ url: sala.url || sala.room_url, token: sala.token })
       .catch(() => setError('No se pudo unir a la sala. Intenta recargar la página.'));
 
     return () => {
       call.destroy();
     };
-  }, [sala.url, sala.token, onLeave]);
+  }, [sala.url, sala.room_url, sala.token, onLeave]);
 
   const toggleMic = () => {
     callRef.current?.setLocalAudio(muted);
@@ -242,6 +257,24 @@ function CallRoom({
 
   const leave = () => {
     callRef.current?.leave();
+  };
+
+  const toggleRecording = async () => {
+    setRecordingLoading(true);
+    setError('');
+    try {
+      if (recording) {
+        await postDetenerGrabacion(sala.cita.uuid);
+        setRecording(false);
+      } else {
+        await postIniciarGrabacion(sala.cita.uuid);
+        setRecording(true);
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'No se pudo actualizar la grabación.');
+    } finally {
+      setRecordingLoading(false);
+    }
   };
 
   return (
@@ -289,6 +322,19 @@ function CallRoom({
           {camOff ? '📷' : '🎥'}
           <span>{camOff ? 'Activar cam' : 'Apagar cam'}</span>
         </button>
+
+        {sala.is_owner && (sala.recording_enabled || sala.grabacion_habilitada) ? (
+          <button
+            type="button"
+            className={`ctrl-btn ${recording ? 'ctrl-off' : ''}`}
+            onClick={toggleRecording}
+            disabled={recordingLoading}
+            aria-label={recording ? 'Detener grabación' : 'Iniciar grabación'}
+          >
+            {recording ? '■' : '●'}
+            <span>{recordingLoading ? 'Procesando' : recording ? 'Detener grab.' : 'Grabar'}</span>
+          </button>
+        ) : null}
 
         <button
           type="button"
@@ -366,8 +412,10 @@ export function SalaVideoPage() {
     } else if (!sala.en_horario) {
       setPreCheckReason('La sala solo está disponible durante el horario de tu consulta.');
       setPhase('pre-check-failed');
-    } else {
+    } else if (sala.requires_recording_consent) {
       setPhase('consent');
+    } else {
+      setPhase('pre-sala');
     }
   }, [sala]);
 

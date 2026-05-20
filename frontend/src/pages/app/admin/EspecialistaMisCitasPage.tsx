@@ -116,6 +116,15 @@ export function EspecialistaMisCitasPage() {
           >
             Reprogramar
           </button>
+          {c.estado === 'confirmada' || c.estado === 'en_curso' ? (
+            <Link
+              className="btn-primary"
+              style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+              to={`/app/sala/${c.uuid}`}
+            >
+              Entrar sala
+            </Link>
+          ) : null}
         </div>
       ),
     },
