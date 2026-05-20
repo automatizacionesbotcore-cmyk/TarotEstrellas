@@ -72,6 +72,10 @@ export function AdminCitasPage() {
   const [loading, setLoading] = useState(false);
   const [targetUuid, setTargetUuid] = useState<string | null>(null);
   const [reprogramarTarget, setReprogramarTarget] = useState<Cita | null>(null);
+  const [saldoTarget, setSaldoTarget] = useState<Cita | null>(null);
+  const [saldoReferencia, setSaldoReferencia] = useState('');
+  const [saldoCanal, setSaldoCanal] = useState('whatsapp');
+  const [saldoNota, setSaldoNota] = useState('');
   const [nuevoInicio, setNuevoInicio] = useState('');
   const [motivoReprogramacion, setMotivoReprogramacion] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -127,6 +131,24 @@ export function AdminCitasPage() {
       setReprogramarTarget(null);
       setNuevoInicio('');
       setMotivoReprogramacion('');
+      api.get<Historial>('/admin/citas/historial', {
+        params: { ...filters, q: debouncedQ || undefined, page, per_page: 25, sort_by: sortBy, sort_dir: sortDir },
+      }).then((res) => setData(res.data));
+    },
+  });
+
+  const marcarSaldo = useMutation({
+    mutationFn: (payload: { uuid: string; referencia?: string; canal_origen: string; nota?: string }) =>
+      api.post(`/admin/citas/${payload.uuid}/marcar-saldo-pagado`, {
+        referencia: payload.referencia || undefined,
+        canal_origen: payload.canal_origen,
+        nota: payload.nota || undefined,
+      }),
+    onSuccess: () => {
+      setSaldoTarget(null);
+      setSaldoReferencia('');
+      setSaldoCanal('whatsapp');
+      setSaldoNota('');
       api.get<Historial>('/admin/citas/historial', {
         params: { ...filters, q: debouncedQ || undefined, page, per_page: 25, sort_by: sortBy, sort_dir: sortDir },
       }).then((res) => setData(res.data));
@@ -217,6 +239,15 @@ export function AdminCitasPage() {
           {(r.estado === 'reservada' || r.estado === 'confirmada') && (
             <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={() => setTargetUuid(r.uuid)}>
               No-show
+            </button>
+          )}
+          {r.estado === 'reservada' && (
+            <button
+              className="btn-primary"
+              style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+              onClick={() => setSaldoTarget(r)}
+            >
+              Marcar saldo pagado
             </button>
           )}
           {(r.estado === 'reservada' || r.estado === 'confirmada') && (
@@ -341,6 +372,57 @@ export function AdminCitasPage() {
                 })}
               >
                 {reprogramar.isPending ? 'Enviando...' : 'Reprogramar y notificar'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {saldoTarget ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="saldo-manual-title">
+            <header className="admin-modal-header">
+              <h2 id="saldo-manual-title">Marcar saldo pagado</h2>
+              <button className="admin-modal-close" type="button" onClick={() => setSaldoTarget(null)}>×</button>
+            </header>
+            <div className="admin-modal-body">
+              <p className="text-muted">
+                Usa esta opción si el cliente pagó la diferencia por WhatsApp, correo u otro canal externo.
+                La cita quedará confirmada y ya no aparecerá el botón de pagar diferencia en recordatorios.
+              </p>
+              <label>
+                Canal de pago
+                <select className="input-field" value={saldoCanal} onChange={(e) => setSaldoCanal(e.target.value)}>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Correo</option>
+                  <option value="telefono">Teléfono</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
+              <label>
+                Referencia del pago
+                <input className="input-field" value={saldoReferencia} onChange={(e) => setSaldoReferencia(e.target.value)} placeholder="Ej: transferencia, comprobante, mensaje interno" />
+              </label>
+              <label>
+                Nota interna
+                <textarea className="input-field" rows={3} value={saldoNota} onChange={(e) => setSaldoNota(e.target.value)} />
+              </label>
+              {marcarSaldo.isError ? <p className="form-error">No se pudo marcar el saldo como pagado.</p> : null}
+            </div>
+            <div className="admin-modal-footer">
+              <button className="btn-secondary" type="button" onClick={() => setSaldoTarget(null)}>Cancelar</button>
+              <button
+                className="btn-primary"
+                type="button"
+                disabled={marcarSaldo.isPending}
+                onClick={() => marcarSaldo.mutate({
+                  uuid: saldoTarget.uuid,
+                  referencia: saldoReferencia,
+                  canal_origen: saldoCanal,
+                  nota: saldoNota,
+                })}
+              >
+                {marcarSaldo.isPending ? 'Guardando...' : 'Confirmar saldo pagado'}
               </button>
             </div>
           </section>

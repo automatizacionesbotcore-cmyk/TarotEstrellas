@@ -1360,6 +1360,102 @@ class CitaController extends Controller
         ]);
     }
 
+    public function marcarSaldoPagadoManual(Request $request, string $uuid): JsonResponse
+    {
+        $validated = $request->validate([
+            'referencia' => ['nullable', 'string', 'max:120'],
+            'nota' => ['nullable', 'string', 'max:500'],
+            'canal_origen' => ['nullable', 'in:whatsapp,email,telefono,otro'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $cita = Cita::query()
+            ->with(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos', 'pagos'])
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        $roles = $user->roles->pluck('nombre')->all();
+        $isSuperAdmin = in_array('super_admin', $roles, true);
+        $isEspecialista = in_array('admin_especialista', $roles, true) && (int) $cita->especialista_id === (int) $user->id;
+
+        if (! $isSuperAdmin && ! $isEspecialista) {
+            return response()->json(['message' => 'No autorizado para marcar este pago.'], 403);
+        }
+
+        if ($cita->estado === 'confirmada') {
+            return response()->json([
+                'message' => 'La cita ya estaba confirmada.',
+                'data' => ['uuid' => $cita->uuid, 'estado' => $cita->estado],
+            ]);
+        }
+
+        if ($cita->estado !== 'reservada') {
+            return response()->json(['message' => 'Solo se puede marcar saldo pagado en citas reservadas.'], 422);
+        }
+
+        $saldoExistente = $cita->pagos()
+            ->where('tipo', 'saldo_80')
+            ->where('estado', 'completado')
+            ->first();
+
+        if ($saldoExistente) {
+            $cita->forceFill(['estado' => 'confirmada', 'confirmada_en' => now()])->save();
+
+            return response()->json([
+                'message' => 'La cita ya tenía el saldo registrado; se confirmó la cita.',
+                'data' => ['uuid' => $cita->uuid, 'estado' => 'confirmada', 'pago_uuid' => $saldoExistente->uuid],
+            ]);
+        }
+
+        $pagado = (int) $cita->pagos()
+            ->where('estado', 'completado')
+            ->sum('monto_centavos');
+        $montoSaldo = max(0, (int) $cita->precio_final_centavos - $pagado);
+
+        $pago = DB::transaction(function () use ($cita, $validated, $user, $montoSaldo) {
+            $pago = $cita->pagos()->create([
+                'uuid' => (string) Str::uuid(),
+                'tipo' => 'saldo_80',
+                'canal' => 'manual_externo',
+                'monto_centavos' => $montoSaldo,
+                'moneda' => $cita->moneda,
+                'estado' => 'completado',
+                'referencia_externa' => $validated['referencia'] ?? null,
+                'pagado_en' => now(),
+                'metadata' => [
+                    'marcado_por_user_id' => $user->id,
+                    'canal_origen' => $validated['canal_origen'] ?? 'otro',
+                    'nota' => $validated['nota'] ?? null,
+                    'origen' => 'admin_manual_external_balance',
+                ],
+            ]);
+
+            $cita->forceFill([
+                'estado' => 'confirmada',
+                'confirmada_en' => now(),
+            ])->save();
+
+            return $pago;
+        });
+
+        $cita->refresh()->load(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos']);
+        if ($cita->cliente?->email) {
+            Mail::to($cita->cliente->email)->send(new \App\Mail\CitaConfirmadaMail($cita));
+        }
+
+        return response()->json([
+            'message' => 'Saldo marcado como pagado y cita confirmada.',
+            'data' => [
+                'uuid' => $cita->uuid,
+                'estado' => $cita->estado,
+                'pago_uuid' => $pago->uuid,
+                'monto_centavos' => $pago->monto_centavos,
+            ],
+        ]);
+    }
+
     public function marcarNoShow(Request $request, string $uuid): JsonResponse
     {
         $validated = $request->validate([
