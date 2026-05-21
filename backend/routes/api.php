@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AgenteController;
 use App\Http\Controllers\Api\AdminClientesController;
 use App\Http\Controllers\Api\AdminCuponController;
 use App\Http\Controllers\Api\AdminResenaController;
+use App\Http\Controllers\Api\AdminSesionRapidaController;
 use App\Http\Controllers\Api\ConsentimientoController;
 use App\Http\Controllers\Api\CreditoClienteController;
 use App\Http\Controllers\Api\TwoFactorAuthController;
@@ -120,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('admin/citas/{uuid}/no-show', [CitaController::class, 'marcarNoShow']);
     Route::post('admin/citas/{uuid}/reprogramar', [CitaController::class, 'reprogramarAdmin']);
     Route::post('admin/citas/{uuid}/marcar-saldo-pagado', [CitaController::class, 'marcarSaldoPagadoManual']);
+    Route::post('admin/sesiones-rapidas', [AdminSesionRapidaController::class, 'store'])->middleware('admin');
     Route::get('me/export', [MeController::class, 'export']);
     Route::get('me/datos-personales', [MeController::class, 'datosPersonales']);
     Route::get('me/consultas', [MeController::class, 'consultas']);

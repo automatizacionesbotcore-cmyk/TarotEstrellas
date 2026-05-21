@@ -47,6 +47,7 @@ const AdminDisponibilidadPage   = lazy(() => import('./pages/app/admin/AdminDisp
 const AdminEspecialistasPage    = lazy(() => import('./pages/app/admin/AdminEspecialistasPage').then((m) => ({ default: m.AdminEspecialistasPage })));
 const AdminReportesPage         = lazy(() => import('./pages/app/admin/AdminReportesPage').then((m) => ({ default: m.AdminReportesPage })));
 const EspecialistaMisCitasPage  = lazy(() => import('./pages/app/admin/EspecialistaMisCitasPage').then((m) => ({ default: m.EspecialistaMisCitasPage })));
+const AdminSalaRapidaPage       = lazy(() => import('./pages/app/admin/AdminSalaRapidaPage').then((m) => ({ default: m.AdminSalaRapidaPage })));
 const AdminAsistenteIAPage      = lazy(() => import('./pages/app/admin/AdminAsistenteIAPage').then((m) => ({ default: m.AdminAsistenteIAPage })));
 const AdminAgenteMetricsPage    = lazy(() => import('./pages/app/admin/AdminAgenteMetricsPage').then((m) => ({ default: m.AdminAgenteMetricsPage })));
 const AdminApiUsagePage         = lazy(() => import('./pages/app/admin/AdminApiUsagePage').then((m) => ({ default: m.AdminApiUsagePage })));
@@ -170,6 +171,7 @@ export function App() {
           <Route path="especialistas"        element={<Suspense fallback={<PageLoader />}><AdminEspecialistasPage    /></Suspense>} />
           <Route path="reportes"             element={<Suspense fallback={<PageLoader />}><AdminReportesPage         /></Suspense>} />
           <Route path="mis-citas"            element={<Suspense fallback={<PageLoader />}><EspecialistaMisCitasPage  /></Suspense>} />
+          <Route path="sala-rapida"          element={<Suspense fallback={<PageLoader />}><AdminSalaRapidaPage       /></Suspense>} />
           <Route path="settings"             element={<Suspense fallback={<PageLoader />}><AdminSettingsPage         /></Suspense>} />
           <Route path="asistente-ia"         element={<Suspense fallback={<PageLoader />}><AdminAsistenteIAPage      /></Suspense>} />
           <Route path="agente/metrics"       element={<Suspense fallback={<PageLoader />}><AdminAgenteMetricsPage    /></Suspense>} />

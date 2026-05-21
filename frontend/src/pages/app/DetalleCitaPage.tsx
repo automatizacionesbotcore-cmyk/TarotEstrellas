@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../lib/api';
+import { toast } from '../../stores/toastStore';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CitaDetalle = {
@@ -429,6 +430,7 @@ const TABS: { key: Tab; label: string }[] = [
 export function DetalleCitaPage() {
   const { id = '' } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>('info');
+  const reprogramacionAceptada = new URLSearchParams(window.location.search).get('reprogramacion_aceptada') === '1';
 
   const { data: cita, isLoading, isError } = useQuery({
     queryKey: ['cita', id],
@@ -441,6 +443,12 @@ export function DetalleCitaPage() {
       ? `${cita.tipo_consulta?.nombre ?? 'Consulta'} | TarotEstrellas`
       : 'Detalle de consulta | TarotEstrellas';
   }, [cita]);
+
+  useEffect(() => {
+    if (reprogramacionAceptada) {
+      toast.success('Nueva fecha aceptada correctamente. Tu consulta quedó confirmada.');
+    }
+  }, [reprogramacionAceptada]);
 
   if (isLoading) return <main className="page-content"><Processing label="Cargando consulta…" /></main>;
   if (isError || !cita) return (
@@ -462,6 +470,12 @@ export function DetalleCitaPage() {
         <h1 className="dash-title">{cita.tipo_consulta?.nombre ?? 'Consulta'}</h1>
         <p className="dash-subtitle">{fmtDate(cita.inicio_utc, citaTimezone(cita))}</p>
       </motion.div>
+
+      {reprogramacionAceptada ? (
+        <div className="notice success" role="status" style={{ marginTop: '1rem' }}>
+          Nueva fecha aceptada correctamente. Te esperamos en la fecha propuesta.
+        </div>
+      ) : null}
 
       {/* Tabs */}
       <div className="detalle-tabs" role="tablist">

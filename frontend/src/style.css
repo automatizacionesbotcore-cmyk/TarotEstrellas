@@ -729,6 +729,20 @@ a {
 	grid-column: span 2;
 }
 
+.auth-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	color: var(--text);
+	font-weight: 600;
+}
+
+.auth-checkbox input {
+	width: 1.05rem;
+	height: 1.05rem;
+	accent-color: var(--accent);
+}
+
 .auth-phone-field input {
 	max-width: 280px;
 }
@@ -963,6 +977,19 @@ a {
 :root[data-theme='light'] .form-error   { color: #b82020; }
 :root[data-theme='light'] .form-success { color: #1a7a40; }
 .form-warning { margin: 0; color: #ffe39d;  font-size: 0.9rem; }
+
+.notice {
+	padding: 0.85rem 1rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--surface) 90%, transparent);
+	color: var(--text);
+}
+
+.notice.success {
+	border-color: color-mix(in srgb, #d9b24c 60%, var(--border-subtle));
+	background: color-mix(in srgb, #d9b24c 12%, var(--surface));
+}
 
 /* ── BOOKING WIZARD ─────────────────────────────────────────────────────── */
 .booking-panel {
@@ -4420,6 +4447,12 @@ p               { text-wrap: pretty; }
 	display: grid;
 	gap: 1rem;
 	max-width: 560px;
+	padding: 1rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: 8px;
+	background: var(--card);
+}
+.admin-card {
 	padding: 1rem;
 	border: 1px solid var(--border-subtle);
 	border-radius: 8px;

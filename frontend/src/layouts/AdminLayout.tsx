@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 const BASE_ITEMS = [
   { to: '/app/admin',                label: 'Resumen',        end: true,  superAdminOnly: false, especialistaOnly: false, info: 'Vista general con métricas clave del negocio: citas próximas, ingresos del mes, reseñas pendientes y alertas operativas.' },
   { to: '/app/admin/mis-citas',      label: 'Mi agenda',      end: false, superAdminOnly: false, especialistaOnly: true,  info: 'Calendario propio del especialista con sus consultas asignadas, sala de videollamada y notas de cada cita.' },
+  { to: '/app/admin/sala-rapida',    label: 'Sala rápida',    end: false, superAdminOnly: false, especialistaOnly: false, info: 'Abre una sala privada inmediata para un cliente, selecciona el servicio y envía la notificación por correo.' },
   { to: '/app/admin/reembolsos',     label: 'Reembolsos',     end: false, superAdminOnly: false, especialistaOnly: false, info: 'Solicitudes de devolución de pagos. Aprueba, rechaza o gestiona reembolsos parciales/totales con motivo registrado.' },
   { to: '/app/admin/comprobantes',   label: 'Comprobantes',   end: false, superAdminOnly: false, especialistaOnly: false, info: 'Comprobantes de pago por transferencia subidos por clientes. Verifica el monto y aprueba o rechaza para liberar la cita.' },
   { to: '/app/admin/cuentas-bancarias', label: 'Cuentas bancarias', end: false, superAdminOnly: false, especialistaOnly: false, info: 'Gestiona las cuentas bancarias visibles a clientes para pagos por transferencia (banco, titular, número, RUT).' },
