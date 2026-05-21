@@ -1,6 +1,8 @@
 @php
     $clienteNombre = trim((string) ($cita->cliente?->profile?->nombre ?? $cita->cliente?->name ?? ''));
+    $zonaCliente = $cita->zona_horaria_cliente ?: 'America/Santiago';
     $fechaNueva = $cita->inicio_utc?->copy()?->setTimezone('America/Santiago')?->format('d/m/Y H:i');
+    $fechaNuevaCliente = $cita->inicio_utc?->copy()?->setTimezone($zonaCliente)?->format('d/m/Y H:i');
     $fechaAnterior = $inicioAnterior ? \Carbon\CarbonImmutable::parse($inicioAnterior)->setTimezone('America/Santiago')->format('d/m/Y H:i') : null;
 @endphp
 
@@ -32,6 +34,7 @@
             'Servicio' => e($cita->tipoConsulta?->nombre ?? 'Consulta'),
             'Fecha anterior' => e(($fechaAnterior ?? 'No registrada') . ' (hora Chile)'),
             'Nueva fecha' => e(($fechaNueva ?? 'Por confirmar') . ' (hora Chile)'),
+            'Tu horario local' => e(($fechaNuevaCliente ?? 'Por confirmar') . ' (' . $zonaCliente . ')'),
             'Duración' => e(($cita->tipoConsulta?->duracion_minutos ?? $cita->duracion_minutos ?? '-') . ' minutos'),
             'Referencia' => e($cita->codigo_referencia ?? $cita->uuid),
         ],

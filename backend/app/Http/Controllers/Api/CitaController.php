@@ -456,8 +456,8 @@ class CitaController extends Controller
             'cliente_id' => $user->id,
             'especialista_id' => $validated['especialista_id'] ?? null,
             'tipo_consulta_id' => $tipo->id,
-            'inicio_utc' => $startUtc->toDateTimeString(),
-            'fin_utc' => $endUtc->toDateTimeString(),
+            'inicio_utc' => $startUtc,
+            'fin_utc' => $endUtc,
             'duracion_minutos' => (int) $tipo->duracion_minutos,
             'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
             'estado' => 'pendiente_abono',
@@ -1071,8 +1071,8 @@ class CitaController extends Controller
                 'cliente_id' => $cita->cliente_id,
                 'especialista_id' => $cita->especialista_id,
                 'tipo_consulta_id' => $cita->tipo_consulta_id,
-                'inicio_utc' => $startUtc->toDateTimeString(),
-                'fin_utc' => $endUtc->toDateTimeString(),
+                'inicio_utc' => $startUtc,
+                'fin_utc' => $endUtc,
                 'duracion_minutos' => $cita->duracion_minutos,
                 'zona_horaria_cliente' => $validated['zona_horaria_cliente'],
                 'estado' => $cita->estado,
@@ -1295,7 +1295,7 @@ class CitaController extends Controller
         $user = $request->user();
 
         $cita = Cita::query()
-            ->with(['cliente:id,email', 'cliente.profile:user_id,nombre', 'tipoConsulta:id,nombre,duracion_minutos'])
+            ->with(['cliente:id,email', 'cliente.profile:user_id,nombre,zona_horaria', 'tipoConsulta:id,nombre,duracion_minutos'])
             ->where('uuid', $uuid)
             ->firstOrFail();
 
@@ -1339,8 +1339,8 @@ class CitaController extends Controller
         $inicioAnterior = optional($cita->inicio_utc)->toIso8601String();
 
         $cita->forceFill([
-            'inicio_utc' => $startUtc->toDateTimeString(),
-            'fin_utc' => $endUtc->toDateTimeString(),
+            'inicio_utc' => $startUtc,
+            'fin_utc' => $endUtc,
             'daily_room_url' => null,
             'daily_room_name' => null,
             'cliente_confirmo_at' => null,
@@ -1354,8 +1354,8 @@ class CitaController extends Controller
             'message' => 'Cita reprogramada y notificada correctamente.',
             'data' => [
                 'uuid' => $cita->uuid,
-                'inicio_utc' => $cita->fresh()->inicio_utc?->toIso8601String(),
-                'fin_utc' => $cita->fresh()->fin_utc?->toIso8601String(),
+                'inicio_utc' => $startUtc->toIso8601String(),
+                'fin_utc' => $endUtc->toIso8601String(),
             ],
         ]);
     }

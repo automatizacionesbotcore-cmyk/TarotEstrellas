@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 
 class Cita extends Model
 {
@@ -101,6 +103,39 @@ class Cita extends Model
             'grabacion_extra_centavos' => 'integer',
             'deleted_at' => 'datetime',
         ];
+    }
+
+    public function getInicioUtcAttribute($value): ?CarbonImmutable
+    {
+        return $value ? CarbonImmutable::parse($value, 'UTC') : null;
+    }
+
+    public function setInicioUtcAttribute($value): void
+    {
+        $this->attributes['inicio_utc'] = $this->dateToUtcStorage($value);
+    }
+
+    public function getFinUtcAttribute($value): ?CarbonImmutable
+    {
+        return $value ? CarbonImmutable::parse($value, 'UTC') : null;
+    }
+
+    public function setFinUtcAttribute($value): void
+    {
+        $this->attributes['fin_utc'] = $this->dateToUtcStorage($value);
+    }
+
+    private function dateToUtcStorage(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        $date = $value instanceof DateTimeInterface
+            ? CarbonImmutable::createFromInterface($value)
+            : CarbonImmutable::parse($value);
+
+        return $date->setTimezone('UTC')->format('Y-m-d H:i:s');
     }
 
     public function cliente(): BelongsTo
