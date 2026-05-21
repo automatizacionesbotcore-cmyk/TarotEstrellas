@@ -149,6 +149,15 @@ a {
 	flex-wrap: wrap;
 }
 
+.page-shell--sala-focus {
+	max-width: none;
+	padding: 0;
+}
+
+.main-header--sala-focus {
+	display: none;
+}
+
 .nav-link {
 	color: var(--text-muted);
 	text-decoration: none;
@@ -3395,8 +3404,17 @@ p               { text-wrap: pretty; }
 .immersive-comet.one { top: 22%; left: -14%; }
 .immersive-comet.two { top: 68%; left: -18%; animation-delay: 3.8s; transform: scaleX(0.7); }
 
-.presala-motion-toggle {
-	justify-self: end;
+.presala-top-actions {
+	width: 100%;
+	display: grid;
+	grid-template-columns: max-content max-content;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.presala-motion-toggle,
+.presala-theme-toggle {
 	min-height: 44px;
 	border: 1px solid var(--border-active);
 	border-radius: 999px;
@@ -3407,6 +3425,9 @@ p               { text-wrap: pretty; }
 	font-weight: 700;
 	cursor: pointer;
 }
+
+.presala-motion-toggle { justify-self: start; }
+.presala-theme-toggle { justify-self: end; }
 
 .presala-brand {
 	display: inline-flex;
@@ -3808,9 +3829,20 @@ p               { text-wrap: pretty; }
 		border-radius: 18px;
 		justify-content: center;
 	}
-	.presala-motion-toggle {
-		justify-self: stretch;
+	.presala-top-actions {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 0.45rem;
+	}
+	.presala-motion-toggle,
+	.presala-theme-toggle {
 		width: 100%;
+		min-height: 38px;
+		padding: 0 0.55rem;
+		font-size: clamp(0.62rem, 2.4vw, 0.78rem);
+		line-height: 1.05;
+		white-space: normal;
+		text-align: center;
+		justify-content: center;
 	}
 	.presala-deck-scene { height: 188px; }
 	.presala-deck-card.left { transform: translate3d(-62px, 18px, -44px) rotateY(22deg) rotateZ(-8deg); }

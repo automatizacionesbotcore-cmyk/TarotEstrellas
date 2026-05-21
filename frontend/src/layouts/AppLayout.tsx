@@ -22,6 +22,7 @@ export function AppLayout() {
   const [loggingOut,  setLoggingOut]  = useState(false);
   const [resending,   setResending]   = useState(false);
   const isPaymentFocus = /^\/app\/citas\/[^/]+\/pagar(?:-saldo)?$/.test(location.pathname);
+  const isSalaFocus = /^\/app\/sala\//.test(location.pathname);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -48,8 +49,8 @@ export function AppLayout() {
   };
 
   return (
-    <div className={isPaymentFocus ? 'page-shell page-shell--payment-focus' : 'page-shell'}>
-      <header className={isPaymentFocus ? 'main-header main-header--payment-focus' : 'main-header'} role="banner">
+    <div className={isPaymentFocus ? 'page-shell page-shell--payment-focus' : isSalaFocus ? 'page-shell page-shell--sala-focus' : 'page-shell'}>
+      <header className={isPaymentFocus ? 'main-header main-header--payment-focus' : isSalaFocus ? 'main-header main-header--sala-focus' : 'main-header'} role="banner">
         <Link to="/app" className="logo-link" aria-label="TarotEstrellas — inicio">
           <Logo />
         </Link>

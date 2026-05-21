@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import { api } from '../../lib/api';
+import { useThemeStore } from '../../stores/themeStore';
 
 const ConstellationPortal = lazy(() => import('../../components/3d/ConstellationPortal'));
 
@@ -127,6 +128,8 @@ function PreSala({
   const [camOk, setCamOk] = useState<boolean | null>(null);
   const [micOk, setMicOk] = useState<boolean | null>(null);
   const [motionPaused, setMotionPaused] = useState(false);
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const streamRef = useRef<MediaStream | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -187,14 +190,24 @@ function PreSala({
         <span className="immersive-comet two" />
       </div>
 
-      <button
-        type="button"
-        className="presala-motion-toggle"
-        aria-pressed={motionPaused}
-        onClick={() => setMotionPaused((value) => !value)}
-      >
-        {motionPaused ? 'Reanudar movimiento' : 'Pausar movimiento'}
-      </button>
+      <div className="presala-top-actions">
+        <button
+          type="button"
+          className="presala-motion-toggle"
+          aria-pressed={motionPaused}
+          onClick={() => setMotionPaused((value) => !value)}
+        >
+          {motionPaused ? 'Reanudar movimiento' : 'Pausar movimiento'}
+        </button>
+        <button
+          type="button"
+          className="presala-theme-toggle"
+          aria-pressed={theme === 'light'}
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        </button>
+      </div>
 
       <p className="sr-only" aria-live="polite">
         Sala lista. {waitingText}. Cámara {camOk ? 'lista' : camOk === false ? 'sin permiso' : 'verificándose'}.
