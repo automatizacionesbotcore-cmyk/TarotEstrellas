@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense, type PointerEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -117,14 +117,19 @@ function ConsentModal({ onAccept, loading }: { onAccept: () => void; loading: bo
 function PreSala({
   onEnter,
   servicioNombre,
+  isOwner,
 }: {
   onEnter: () => void;
   servicioNombre: string;
+  isOwner?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [camOk, setCamOk] = useState<boolean | null>(null);
   const [micOk, setMicOk] = useState<boolean | null>(null);
+  const [motionPaused, setMotionPaused] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const deckRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     navigator.mediaDevices
@@ -145,23 +150,95 @@ function PreSala({
     };
   }, []);
 
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const stage = stageRef.current;
+    const deck = deckRef.current;
+    if (!stage) return;
+
+    const rect = stage.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+    stage.style.setProperty('--mx', `${Math.round(x)}%`);
+    stage.style.setProperty('--my', `${Math.round(y)}%`);
+
+    if (deck && !motionPaused) {
+      const tiltX = ((x / 100) - 0.5) * 10;
+      const tiltY = ((y / 100) - 0.5) * -8;
+      deck.style.setProperty('--tilt-x', `${tiltX.toFixed(2)}deg`);
+      deck.style.setProperty('--tilt-y', `${tiltY.toFixed(2)}deg`);
+    }
+  };
+
+  const waitingText = isOwner ? 'Esperando al cliente' : 'Esperando a la especialista';
+
   return (
     <motion.div
-      className="sala-presala"
+      className={`sala-presala immersive-presala ${motionPaused ? 'motion-paused' : ''}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      ref={stageRef}
+      onPointerMove={handlePointerMove}
     >
-      <p className="dash-eyebrow">✦ Verificación de dispositivos</p>
-      <h2 className="sala-presala-title">{servicioNombre}</h2>
+      <div className="immersive-presala-bg" aria-hidden="true">
+        <span className="immersive-constellation" />
+        <span className="immersive-orbit" />
+        <span className="immersive-orbit small" />
+        <span className="immersive-comet one" />
+        <span className="immersive-comet two" />
+      </div>
+
+      <button
+        type="button"
+        className="presala-motion-toggle"
+        aria-pressed={motionPaused}
+        onClick={() => setMotionPaused((value) => !value)}
+      >
+        {motionPaused ? 'Reanudar movimiento' : 'Pausar movimiento'}
+      </button>
+
+      <p className="sr-only" aria-live="polite">
+        Sala lista. {waitingText}. Cámara {camOk ? 'lista' : camOk === false ? 'sin permiso' : 'verificándose'}.
+        Micrófono {micOk ? 'listo' : micOk === false ? 'sin permiso' : 'verificándose'}.
+      </p>
+
+      <div className="presala-brand" aria-label="TarotEstrellas">
+        <span className="presala-brand-mark" aria-hidden="true">✦</span>
+        <span>TarotEstrellas</span>
+      </div>
+
+      <div className="presala-deck-scene" ref={deckRef} aria-hidden="true">
+        <div className="presala-portal" />
+        <div className="presala-deck-card left" data-glyph="☽" />
+        <div className="presala-deck-card right" data-glyph="☉" />
+        <div className="presala-tarot-card">
+          <div className="presala-rune-ring" />
+          <div className="presala-star">✦</div>
+          <div className="presala-frame-symbol">☽</div>
+          <div className="presala-frame-symbol">♄</div>
+          <div className="presala-frame-symbol">✧</div>
+          <div className="presala-frame-symbol">☉</div>
+        </div>
+      </div>
+
+      <div className="presala-copy">
+        <p className="dash-eyebrow">✦ Verificación de dispositivos</p>
+        <h2 className="sala-presala-title">Tu sala está lista</h2>
+        <p className="sala-gate-body">
+          {servicioNombre}. La consulta comenzará en cuanto ambos participantes estén presentes.
+        </p>
+      </div>
 
       <div className="presala-preview">
         <video ref={videoRef} autoPlay muted playsInline className="presala-video" />
         <div className="presala-checks">
           <div className={`presala-check ${camOk === null ? '' : camOk ? 'ok' : 'fail'}`}>
-            {camOk === null ? '⏳' : camOk ? '✅' : '❌'} Cámara
+            <span className="presala-dot" aria-hidden="true" /> Cámara
           </div>
           <div className={`presala-check ${micOk === null ? '' : micOk ? 'ok' : 'fail'}`}>
-            {micOk === null ? '⏳' : micOk ? '✅' : '❌'} Micrófono
+            <span className="presala-dot" aria-hidden="true" /> Micrófono
+          </div>
+          <div className="presala-check pending">
+            <span className="presala-dot" aria-hidden="true" /> {waitingText}
           </div>
         </div>
       </div>
@@ -178,7 +255,7 @@ function PreSala({
         onClick={onEnter}
         disabled={camOk === null}
       >
-        Entrar a la sala →
+        Entrar a la sala
       </button>
     </motion.div>
   );
@@ -459,6 +536,7 @@ export function SalaVideoPage() {
           <motion.div key="presala" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <PreSala
               servicioNombre={sala.cita.tipo_consulta?.nombre ?? 'Consulta'}
+              isOwner={sala.is_owner}
               onEnter={() => setPhase('in-call')}
             />
           </motion.div>

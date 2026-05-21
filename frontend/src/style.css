@@ -103,6 +103,18 @@ a {
 	color: inherit;
 }
 
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 /* ── LAYOUT ─────────────────────────────────────────────────────────────── */
 .page-shell {
 	max-width: 1120px;
@@ -3268,58 +3280,405 @@ p               { text-wrap: pretty; }
 
 /* Pre-sala */
 .sala-presala {
-	max-width: 560px;
-	margin: 2rem auto;
-	padding: 2rem;
-	background: var(--card);
-	border: 1px solid var(--border);
-	border-radius: 20px;
-	display: flex;
-	flex-direction: column;
-	gap: 1.2rem;
+	--presala-portal-a: color-mix(in srgb, var(--accent) 22%, transparent);
+	--presala-portal-b: color-mix(in srgb, var(--secondary) 18%, transparent);
+	--presala-card-a: color-mix(in srgb, var(--accent) 18%, transparent);
+	--presala-card-b: color-mix(in srgb, var(--accent) 9%, var(--secondary) 12%);
+	position: relative;
+	isolation: isolate;
+	width: min(100%, 840px);
+	max-width: 840px;
+	min-height: min(860px, calc(100vh - 2rem));
+	margin: 1rem auto;
+	padding: clamp(1.1rem, 3vw, 2rem);
+	background:
+		radial-gradient(circle at var(--mx, 50%) var(--my, 45%), color-mix(in srgb, var(--accent-light) 16%, transparent), transparent 18rem),
+		linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--bg) 52%, transparent));
+	border: 1px solid var(--border-active);
+	border-radius: 24px;
+	box-shadow: 0 24px 90px rgba(0,0,0,0.28), 0 0 80px var(--glow);
+	backdrop-filter: blur(18px);
+	overflow: hidden;
+	display: grid;
+	justify-items: center;
+	gap: 1rem;
+	text-align: center;
+	perspective: 1100px;
 }
 
 .sala-presala-title {
 	font-family: 'Cormorant Garamond', serif;
-	font-size: 1.4rem;
-	color: var(--accent);
+	font-size: clamp(2rem, 5vw, 3.4rem);
+	line-height: 0.98;
+	color: var(--text);
 	margin: 0;
+}
+
+.immersive-presala-bg,
+.immersive-presala-bg::before,
+.immersive-presala-bg::after {
+	position: absolute;
+	inset: -12%;
+	content: "";
+	z-index: -2;
+	pointer-events: none;
+}
+
+.immersive-presala-bg {
+	background:
+		radial-gradient(circle at 18% 24%, color-mix(in srgb, var(--secondary) 32%, transparent), transparent 28rem),
+		radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 26rem);
+}
+
+.immersive-presala-bg::before {
+	background-image:
+		radial-gradient(circle, color-mix(in srgb, var(--accent-light) 82%, transparent) 0 1px, transparent 1.6px),
+		radial-gradient(circle, color-mix(in srgb, var(--text) 42%, transparent) 0 1px, transparent 1.5px);
+	background-size: 116px 112px, 178px 168px;
+	opacity: 0.42;
+	animation: presalaDrift 26s linear infinite;
+}
+
+.immersive-presala-bg::after {
+	background-image:
+		linear-gradient(115deg, transparent 0 46%, var(--border-active) 46% 47%, transparent 47%),
+		linear-gradient(24deg, transparent 0 52%, var(--border-active) 52% 53%, transparent 53%);
+	background-size: 420px 320px, 520px 380px;
+	opacity: 0.22;
+	animation: presalaDrift 42s linear infinite reverse;
+}
+
+.immersive-presala::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	background:
+		conic-gradient(from 0deg at 50% 50%, transparent, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%),
+		linear-gradient(120deg, transparent 0 35%, color-mix(in srgb, var(--bg) 34%, transparent) 42%, transparent 54% 100%);
+	mix-blend-mode: screen;
+	opacity: 0.42;
+	animation: presalaAuraSweep 12s ease-in-out infinite;
+	pointer-events: none;
+}
+
+.immersive-orbit {
+	position: absolute;
+	inset: 50% auto auto 50%;
+	width: min(72vw, 720px);
+	aspect-ratio: 1;
+	border: 1px solid var(--border-active);
+	border-radius: 50%;
+	translate: -50% -50%;
+	opacity: 0.34;
+	animation: presalaRotate 46s linear infinite;
+}
+
+.immersive-orbit.small {
+	width: min(45vw, 430px);
+	animation-duration: 32s;
+	animation-direction: reverse;
+}
+
+.immersive-comet {
+	position: absolute;
+	z-index: -1;
+	width: 180px;
+	height: 2px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, transparent, var(--accent), transparent);
+	filter: drop-shadow(0 0 12px var(--accent));
+	opacity: 0;
+	animation: presalaComet 7.5s ease-in-out infinite;
+}
+
+.immersive-comet.one { top: 22%; left: -14%; }
+.immersive-comet.two { top: 68%; left: -18%; animation-delay: 3.8s; transform: scaleX(0.7); }
+
+.presala-motion-toggle {
+	justify-self: end;
+	min-height: 44px;
+	border: 1px solid var(--border-active);
+	border-radius: 999px;
+	padding: 0 0.9rem;
+	background: color-mix(in srgb, var(--card) 88%, transparent);
+	color: var(--text);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.presala-brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	font-family: 'Italiana', serif;
+	font-size: clamp(1.45rem, 4vw, 2.15rem);
+	color: var(--accent-light);
+}
+
+.presala-brand-mark {
+	width: 42px;
+	height: 42px;
+	border-radius: 12px;
+	border: 1px solid var(--border-active);
+	display: grid;
+	place-items: center;
+	color: var(--accent);
+	background: color-mix(in srgb, var(--card) 88%, transparent);
+	box-shadow: 0 0 24px var(--glow);
+}
+
+.presala-deck-scene {
+	position: relative;
+	width: min(100%, 360px);
+	height: clamp(170px, 31vw, 230px);
+	display: grid;
+	place-items: center;
+	transform-style: preserve-3d;
+	transform: rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg));
+	transition: transform 260ms ease-out;
+}
+
+.presala-portal {
+	position: absolute;
+	z-index: -1;
+	width: min(70vw, 520px);
+	aspect-ratio: 1;
+	border-radius: 50%;
+	transform: translateZ(-80px) rotateX(68deg);
+	background:
+		radial-gradient(circle, transparent 0 34%, var(--presala-portal-a) 35% 36%, transparent 37% 48%, var(--presala-portal-b) 49% 50%, transparent 51%),
+		conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--accent) 18%, transparent), transparent 22%, color-mix(in srgb, var(--accent-light) 34%, transparent), transparent 38%);
+	filter: blur(0.2px) drop-shadow(0 0 38px var(--glow));
+	opacity: 0.64;
+	animation: presalaRotate 24s linear infinite;
+	pointer-events: none;
+}
+
+.presala-deck-card {
+	position: absolute;
+	width: clamp(92px, 18vw, 126px);
+	aspect-ratio: 0.68;
+	border-radius: 16px;
+	border: 1px solid var(--border-active);
+	background:
+		linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02)),
+		radial-gradient(circle at 50% 36%, var(--presala-card-a), transparent 48%);
+	box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+	opacity: 0.78;
+	transform-style: preserve-3d;
+	animation: presalaDeckFloat 6s ease-in-out infinite;
+}
+
+.presala-deck-card::before {
+	content: attr(data-glyph);
+	position: absolute;
+	inset: 12px;
+	display: grid;
+	place-items: center;
+	border: 1px solid var(--border-active);
+	border-radius: 12px;
+	color: var(--accent);
+	font-family: 'Cormorant Garamond', serif;
+	font-size: 2rem;
+}
+
+.presala-deck-card.left {
+	transform: translate3d(-92px, 16px, -54px) rotateY(24deg) rotateZ(-9deg);
+	animation-delay: -1.6s;
+}
+
+.presala-deck-card.right {
+	transform: translate3d(92px, 16px, -54px) rotateY(-24deg) rotateZ(9deg);
+	animation-delay: -3.2s;
+}
+
+.presala-tarot-card {
+	position: relative;
+	width: clamp(138px, 25vw, 190px);
+	aspect-ratio: 0.68;
+	border-radius: 18px;
+	border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+	background:
+		radial-gradient(circle at 50% 34%, var(--presala-card-a), transparent 42%),
+		radial-gradient(circle at 50% 70%, var(--presala-card-b), transparent 36%),
+		linear-gradient(155deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));
+	box-shadow: 0 18px 70px rgba(0,0,0,0.26), 0 0 50px var(--glow);
+	display: grid;
+	place-items: center;
+	animation: presalaBreathe 4.5s ease-in-out infinite;
+	transform-style: preserve-3d;
+}
+
+.presala-tarot-card::before,
+.presala-tarot-card::after {
+	content: "";
+	position: absolute;
+	inset: 16px;
+	border: 1px solid var(--border-active);
+	border-radius: 14px;
+}
+
+.presala-tarot-card::after {
+	inset: 50% auto auto 50%;
+	width: 74px;
+	height: 74px;
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
+	box-shadow: 0 0 0 28px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.presala-rune-ring {
+	position: absolute;
+	width: 126%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	border: 1px dashed var(--border-active);
+	animation: presalaRotate 18s linear infinite;
+	opacity: 0.64;
+}
+
+.presala-star {
+	position: relative;
+	z-index: 1;
+	color: var(--accent);
+	font-size: clamp(3rem, 9vw, 5.4rem);
+	text-shadow: 0 0 34px var(--glow);
+	animation: presalaPulse 2.8s ease-in-out infinite;
+}
+
+.presala-frame-symbol {
+	position: absolute;
+	z-index: 1;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--accent);
+	font-family: 'Cormorant Garamond', serif;
+	font-size: clamp(1.7rem, 6vw, 3.2rem);
+	opacity: 0;
+	transform: scale(0.82) rotate(-6deg);
+	animation: presalaSymbolFrames 12s steps(1, end) infinite;
+}
+
+.presala-frame-symbol:nth-child(3) { animation-delay: 3s; }
+.presala-frame-symbol:nth-child(4) { animation-delay: 6s; }
+.presala-frame-symbol:nth-child(5) { animation-delay: 9s; }
+
+.presala-copy {
+	display: grid;
+	gap: 0.45rem;
+	max-width: 42rem;
 }
 
 .presala-preview {
 	display: grid;
-	grid-template-columns: 1fr auto;
+	grid-template-columns: minmax(0, 1fr) minmax(180px, 0.42fr);
 	gap: 1rem;
-	align-items: center;
+	align-items: stretch;
+	width: min(100%, 690px);
 }
 
 .presala-video {
 	width: 100%;
 	aspect-ratio: 16/9;
-	border-radius: 10px;
+	border-radius: 14px;
 	background: #000;
 	object-fit: cover;
+	border: 1px solid var(--border-active);
+	box-shadow: 0 16px 44px rgba(0,0,0,0.22);
 }
 
 .presala-checks {
 	display: flex;
 	flex-direction: column;
 	gap: 0.6rem;
+	justify-content: center;
 }
 
 .presala-check {
-	padding: 0.4rem 0.8rem;
-	border-radius: 8px;
-	font-size: 0.85rem;
-	background: var(--surface);
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding: 0.55rem 0.8rem;
+	border-radius: 999px;
+	font-size: 0.88rem;
+	font-weight: 700;
+	background: color-mix(in srgb, var(--card) 88%, transparent);
 	border: 1px solid var(--border);
-	white-space: nowrap;
+	color: var(--text);
 }
 
-.presala-check.ok  { border-color: #4caf6e; color: #4caf6e; }
-.presala-check.fail { border-color: #e05555; color: #e05555; }
+.presala-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--accent);
+	box-shadow: 0 0 18px var(--accent);
+	animation: presalaBlink 1.6s ease-in-out infinite;
+}
+
+.presala-check.ok  { border-color: #4caf6e; color: color-mix(in srgb, #4caf6e 82%, var(--text)); }
+.presala-check.ok .presala-dot { background: #4caf6e; box-shadow: 0 0 18px #4caf6e; }
+.presala-check.fail { border-color: #e05555; color: #ffb3b3; }
+.presala-check.fail .presala-dot { background: #e05555; box-shadow: 0 0 18px #e05555; }
+.presala-check.pending { border-color: var(--border-active); }
 
 .presala-enter { width: 100%; justify-content: center; }
+
+.immersive-presala.motion-paused *,
+.immersive-presala.motion-paused *::before,
+.immersive-presala.motion-paused *::after {
+	animation-play-state: paused !important;
+}
+
+@keyframes presalaDrift {
+	from { transform: translate3d(0, 0, 0); }
+	to { transform: translate3d(80px, 54px, 0); }
+}
+
+@keyframes presalaRotate {
+	to { rotate: 360deg; }
+}
+
+@keyframes presalaBreathe {
+	0%, 100% { transform: translateY(0) rotate(-1deg); }
+	50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes presalaPulse {
+	0%, 100% { transform: scale(1); opacity: 0.9; }
+	50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes presalaBlink {
+	0%, 100% { opacity: 0.35; }
+	50% { opacity: 1; }
+}
+
+@keyframes presalaAuraSweep {
+	0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.28; }
+	50% { transform: rotate(18deg) scale(1.08); opacity: 0.52; }
+}
+
+@keyframes presalaComet {
+	0%, 14% { transform: translate3d(0, 0, 0) rotate(-18deg); opacity: 0; }
+	24% { opacity: 0.88; }
+	42% { transform: translate3d(132vw, 34vh, 0) rotate(-18deg); opacity: 0; }
+	100% { opacity: 0; }
+}
+
+@keyframes presalaDeckFloat {
+	0%, 100% { translate: 0 0; filter: brightness(1); }
+	50% { translate: 0 -10px; filter: brightness(1.12); }
+}
+
+@keyframes presalaSymbolFrames {
+	0%, 24% { opacity: 1; transform: scale(1) rotate(0deg); }
+	25%, 100% { opacity: 0; transform: scale(0.82) rotate(8deg); }
+}
 
 /* Call room */
 .call-wrapper {
@@ -3442,10 +3801,38 @@ p               { text-wrap: pretty; }
 }
 
 @media (max-width: 640px) {
+	.sala-presala {
+		width: calc(100% - 1rem);
+		min-height: calc(100vh - 1rem);
+		margin: 0.5rem auto;
+		border-radius: 18px;
+		justify-content: center;
+	}
+	.presala-motion-toggle {
+		justify-self: stretch;
+		width: 100%;
+	}
+	.presala-deck-scene { height: 188px; }
+	.presala-deck-card.left { transform: translate3d(-62px, 18px, -44px) rotateY(22deg) rotateZ(-8deg); }
+	.presala-deck-card.right { transform: translate3d(62px, 18px, -44px) rotateY(-22deg) rotateZ(8deg); }
 	.presala-preview { grid-template-columns: 1fr; }
-	.presala-checks { flex-direction: row; }
+	.presala-checks {
+		display: grid;
+		grid-template-columns: 1fr;
+		width: 100%;
+	}
 	.call-statusbar { padding: 0.4rem 0.8rem; font-size: 0.78rem; }
 	.ctrl-btn { padding: 0.5rem 0.8rem; min-width: 58px; font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.immersive-presala *,
+	.immersive-presala *::before,
+	.immersive-presala *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
 }
 
 /* ── DETALLE CITA ────────────────────────────────────────────────────────── */
