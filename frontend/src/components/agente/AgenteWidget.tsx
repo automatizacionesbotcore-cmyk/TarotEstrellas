@@ -8,6 +8,7 @@ import {
   listConversacionesAdmin,
   listConversacionesSelf,
 } from '../../lib/agenteApi';
+import { storageGet, storageSet } from '../../lib/safeStorage';
 import type { AgenteConversacion, AgenteListResponse } from '../../lib/agenteApi';
 import { useAuthStore } from '../../stores/authStore';
 import { toast } from '../../stores/toastStore';
@@ -92,7 +93,7 @@ export function AgenteWidget() {
   const [expanded, setExpanded] = useState(false);
   const [teaserVisible, setTeaserVisible] = useState(false);
   const [teaserDismissed, setTeaserDismissed] = useState(() => {
-    return sessionStorage.getItem('astrea-teaser-dismissed') === '1';
+    return storageGet('session', 'astrea-teaser-dismissed') === '1';
   });
   const [pregunta, setPregunta] = useState('');
   const [mensajes, setMensajes] = useState<Msg[]>([]);
@@ -233,7 +234,7 @@ export function AgenteWidget() {
   function dismissTeaser() {
     setTeaserVisible(false);
     setTeaserDismissed(true);
-    sessionStorage.setItem('astrea-teaser-dismissed', '1');
+    storageSet('session', 'astrea-teaser-dismissed', '1');
   }
 
   if (shouldHideOnRoute(location.pathname)) return null;

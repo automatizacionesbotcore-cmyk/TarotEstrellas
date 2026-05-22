@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
+import { storageGet, storageRemove, storageSet } from '../lib/safeStorage';
 
 export type User = {
   uuid?: string;
@@ -45,7 +46,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
 }
 
 function readStoredUser(): User | null {
-  const raw = localStorage.getItem(USER_KEY);
+  const raw = storageGet('local', USER_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as User;
@@ -55,20 +56,20 @@ function readStoredUser(): User | null {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  token: localStorage.getItem(TOKEN_KEY),
+  token: storageGet('local', TOKEN_KEY),
   user: readStoredUser(),
-  isAuthenticated: Boolean(localStorage.getItem(TOKEN_KEY)),
+  isAuthenticated: Boolean(storageGet('local', TOKEN_KEY)),
 
   setSession: (token, rawUser) => {
     const user = normalizeUser(rawUser as unknown as Record<string, unknown>);
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    storageSet('local', TOKEN_KEY, token);
+    storageSet('local', USER_KEY, JSON.stringify(user));
     set({ token, user, isAuthenticated: true });
   },
 
   clearSession: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    storageRemove('local', TOKEN_KEY);
+    storageRemove('local', USER_KEY);
     set({ token: null, user: null, isAuthenticated: false });
   },
 
@@ -78,7 +79,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await api.get('/user');
       const user = normalizeUser(response.data as Record<string, unknown>);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      storageSet('local', USER_KEY, JSON.stringify(user));
       set({ user });
     } catch {
       // si el token está caducado el interceptor 401 hará clearSession + redirect
