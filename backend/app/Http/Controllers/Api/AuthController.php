@@ -269,8 +269,14 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
+        /** @var User|null $user */
+        $user = User::query()->find($request->route('id'));
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'No encontramos la cuenta asociada a este enlace.',
+            ], 404);
+        }
 
         if ((int) $request->route('id') !== $user->getKey()) {
             return response()->json([

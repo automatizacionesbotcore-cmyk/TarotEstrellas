@@ -10,6 +10,7 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AuthControllerTest extends TestCase
@@ -189,6 +190,29 @@ class AuthControllerTest extends TestCase
             ->assertJsonPath('message', 'Correo de verificacion reenviado.');
 
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_email_verification_signed_link_does_not_require_authentication(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'verify-public@example.com',
+            'email_verified_at' => null,
+        ]);
+
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
+
+        $this->getJson($url)
+            ->assertOk()
+            ->assertJsonPath('message', 'Correo verificado correctamente.');
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
     }
 
     public function test_resend_verification_returns_422_for_verified_user(): void
