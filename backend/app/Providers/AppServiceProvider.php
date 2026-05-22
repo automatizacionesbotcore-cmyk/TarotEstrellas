@@ -25,12 +25,13 @@ class AppServiceProvider extends ServiceProvider
             $appName = config('app.name', 'TarotEstrellas');
             $nombre = trim((string) ($notifiable->profile?->nombre ?? $notifiable->name ?? ''));
             $saludo = $nombre !== '' ? 'Hola, ' . $nombre : 'Hola';
+            $verificationUrl = $this->frontendVerificationUrl($url);
 
             return (new MailMessage)
                 ->subject('Verifica tu correo · ' . $appName)
                 ->view('emails.verify-email', [
                     'saludo' => $saludo,
-                    'verificationUrl' => $url,
+                    'verificationUrl' => $verificationUrl,
                 ]);
         });
 
@@ -61,5 +62,28 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\BloqueoAgenda::observe($observer);
         \App\Models\UserRole::observe($observer);
         \App\Models\PerfilEspecialista::observe($observer);
+    }
+
+    private function frontendVerificationUrl(string $signedUrl): string
+    {
+        $frontendUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
+        $path = (string) parse_url($signedUrl, PHP_URL_PATH);
+        $query = (string) parse_url($signedUrl, PHP_URL_QUERY);
+        $parts = explode('/', trim($path, '/'));
+        $verifyIndex = array_search('verify', $parts, true);
+
+        parse_str($query, $queryParams);
+
+        $params = [
+            'id' => $verifyIndex !== false ? ($parts[$verifyIndex + 1] ?? '') : '',
+            'hash' => $verifyIndex !== false ? ($parts[$verifyIndex + 2] ?? '') : '',
+            'expires' => $queryParams['expires'] ?? null,
+            'signature' => $queryParams['signature'] ?? null,
+        ];
+
+        return $frontendUrl . '/auth/verify-email?' . http_build_query(array_filter(
+            $params,
+            static fn ($value) => $value !== null && $value !== ''
+        ));
     }
 }

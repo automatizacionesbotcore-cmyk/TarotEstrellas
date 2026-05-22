@@ -267,40 +267,53 @@ class AuthController extends Controller
         ]);
     }
 
-    public function verifyEmail(Request $request): JsonResponse
+    public function verifyEmail(Request $request): JsonResponse|\Illuminate\Http\Response
     {
         /** @var User|null $user */
         $user = User::query()->find($request->route('id'));
 
         if (! $user) {
-            return response()->json([
-                'message' => 'No encontramos la cuenta asociada a este enlace.',
-            ], 404);
+            return $this->emailVerificationResponse(
+                $request,
+                'No encontramos la cuenta asociada a este enlace.',
+                false,
+                404
+            );
         }
 
         if ((int) $request->route('id') !== $user->getKey()) {
-            return response()->json([
-                'message' => 'No autorizado para verificar este correo.',
-            ], 403);
+            return $this->emailVerificationResponse(
+                $request,
+                'No autorizado para verificar este correo.',
+                false,
+                403
+            );
         }
 
         if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
-            return response()->json([
-                'message' => 'Firma de verificacion invalida.',
-            ], 403);
+            return $this->emailVerificationResponse(
+                $request,
+                'Firma de verificación inválida.',
+                false,
+                403
+            );
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'El correo ya estaba verificado.',
-            ]);
+            return $this->emailVerificationResponse(
+                $request,
+                'El correo ya estaba verificado.',
+                true
+            );
         }
 
         $user->markEmailAsVerified();
 
-        return response()->json([
-            'message' => 'Correo verificado correctamente.',
-        ]);
+        return $this->emailVerificationResponse(
+            $request,
+            'Correo verificado correctamente.',
+            true
+        );
     }
 
     public function googleRedirect(): RedirectResponse
@@ -399,5 +412,23 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Correo de verificacion reenviado.',
         ]);
+    }
+
+    private function emailVerificationResponse(
+        Request $request,
+        string $message,
+        bool $success,
+        int $status = 200
+    ): JsonResponse|\Illuminate\Http\Response {
+        if ($request->expectsJson() || str_contains((string) $request->header('accept'), 'application/json')) {
+            return response()->json([
+                'message' => $message,
+            ], $status);
+        }
+
+        return response()->view('auth.email-verification-result', [
+            'success' => $success,
+            'message' => $message,
+        ], $status);
     }
 }

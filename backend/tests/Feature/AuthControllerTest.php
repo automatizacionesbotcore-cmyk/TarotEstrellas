@@ -215,6 +215,28 @@ class AuthControllerTest extends TestCase
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
 
+    public function test_email_verification_direct_browser_link_returns_html(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'verify-html@example.com',
+            'email_verified_at' => null,
+        ]);
+
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
+
+        $this->withHeaders(['Accept' => 'text/html'])
+            ->get($url)
+            ->assertOk()
+            ->assertSee('Correo verificado');
+    }
+
     public function test_resend_verification_returns_422_for_verified_user(): void
     {
         Notification::fake();
