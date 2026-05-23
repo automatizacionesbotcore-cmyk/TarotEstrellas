@@ -66,7 +66,7 @@ class ProcesarTranscripcionJob implements ShouldQueue
             $model = (string) config('services.openai.whisper_model', 'whisper-1');
             $response = Http::timeout(300)
                 ->withToken($apiKey)
-                ->attach('file', file_get_contents($tempFile) ?: '', basename($tempFile))
+                ->attach('file', file_get_contents($tempFile) ?: '', 'recording.mp4')
                 ->post('https://api.openai.com/v1/audio/transcriptions', [
                     'model' => $model,
                     'response_format' => 'json',
@@ -74,7 +74,14 @@ class ProcesarTranscripcionJob implements ShouldQueue
                 ]);
 
             if (! $response->successful()) {
-                $this->markAsError($grabacion, 'OpenAI Whisper devolvio un error al procesar la transcripcion.');
+                $this->markAsError(
+                    $grabacion,
+                    'OpenAI Whisper devolvio un error al procesar la transcripcion.',
+                    [
+                        'status' => $response->status(),
+                        'body' => mb_substr($response->body(), 0, 1200),
+                    ]
+                );
                 return;
             }
 
@@ -117,7 +124,10 @@ class ProcesarTranscripcionJob implements ShouldQueue
         }
     }
 
-    private function markAsError(Grabacion $grabacion, string $message): void
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function markAsError(Grabacion $grabacion, string $message, array $context = []): void
     {
         $grabacion->forceFill([
             'estado' => 'error_transcripcion',
@@ -125,6 +135,7 @@ class ProcesarTranscripcionJob implements ShouldQueue
                 'transcripcion' => [
                     'status' => 'error',
                     'message' => $message,
+                    'context' => $context,
                     'processed_at' => now()->toIso8601String(),
                 ],
             ]),
