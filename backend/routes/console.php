@@ -33,3 +33,16 @@ Schedule::job(new ExpirarMembresiasJob())->dailyAt('02:30')->withoutOverlapping(
 Schedule::job(new AvisarVencimientoMembresiasJob(7))->dailyAt('09:00')->withoutOverlapping();
 Schedule::job(new \App\Jobs\VerificarConsumoApisJob())->hourly()->withoutOverlapping();
 Schedule::job(new DetectarNoShowAutomaticoJob(15))->everyFifteenMinutes()->withoutOverlapping();
+
+Artisan::command('daily:sync-recordings {--limit=25} {--process-now}', function () {
+    $stats = app(\App\Services\DailyRecordingSyncService::class)->sync(
+        limit: (int) $this->option('limit'),
+        processNow: (bool) $this->option('process-now'),
+    );
+
+    $this->info('Daily recordings sync: '.json_encode($stats));
+})->purpose('Importa grabaciones terminadas desde Daily y dispara transcripcion.');
+
+Schedule::command('daily:sync-recordings --limit=25 --process-now')
+    ->everyTenMinutes()
+    ->withoutOverlapping();

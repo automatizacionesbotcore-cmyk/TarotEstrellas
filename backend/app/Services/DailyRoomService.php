@@ -188,4 +188,48 @@ class DailyRoomService
 
         return $response->successful();
     }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function listarGrabaciones(int $limit = 25): array
+    {
+        if ($this->isMockMode()) {
+            return [];
+        }
+
+        $response = Http::timeout(20)
+            ->withToken($this->key())
+            ->acceptJson()
+            ->get($this->url() . '/recordings', [
+                'limit' => $limit,
+            ]);
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Daily.listarGrabaciones fallo: ' . $response->status() . ' ' . $response->body());
+        }
+
+        return (array) $response->json('data', []);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function obtenerAccessLinkGrabacion(string $recordingId): array
+    {
+        if ($this->isMockMode() || $recordingId === '') {
+            return [];
+        }
+
+        $response = Http::timeout(20)
+            ->withToken($this->key())
+            ->acceptJson()
+            ->get($this->url() . '/recordings/' . $recordingId . '/access-link');
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Daily.obtenerAccessLinkGrabacion fallo: ' . $response->status() . ' ' . $response->body());
+        }
+
+        return (array) $response->json();
+    }
 }
