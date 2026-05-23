@@ -62,7 +62,7 @@ class DailyRoomService
             'enable_screenshare' => true,
             'enable_chat' => true,
             'eject_at_room_exp' => true,
-            'enable_recording' => $cita->grabacion_solicitada ? 'cloud' : 'off',
+            'enable_recording' => $cita->grabacion_solicitada ? 'cloud-audio-only' : 'off',
             'enable_transcription_storage' => (bool) config('services.daily.enable_transcription', true),
         ];
 
@@ -130,7 +130,7 @@ class DailyRoomService
                     'user_id' => (string) $user->id,
                     'is_owner' => $isOwner,
                     'exp' => $exp,
-                    'enable_recording' => $cita->grabacion_solicitada ? 'cloud' : 'off',
+                    'enable_recording' => $cita->grabacion_solicitada ? 'cloud-audio-only' : 'off',
                 ],
             ]);
 
