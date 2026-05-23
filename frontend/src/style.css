@@ -3297,7 +3297,7 @@ p               { text-wrap: pretty; }
 	isolation: isolate;
 	width: min(100%, 840px);
 	max-width: 840px;
-	min-height: min(860px, calc(100vh - 2rem));
+	min-height: min(760px, calc(100vh - 2rem));
 	margin: 1rem auto;
 	padding: clamp(1.1rem, 3vw, 2rem);
 	background:
@@ -3310,7 +3310,7 @@ p               { text-wrap: pretty; }
 	overflow: hidden;
 	display: grid;
 	justify-items: center;
-	gap: 1rem;
+	gap: clamp(0.75rem, 2vw, 1rem);
 	text-align: center;
 	perspective: 1100px;
 }
@@ -3593,12 +3593,20 @@ p               { text-wrap: pretty; }
 	max-width: 42rem;
 }
 
+.presala-main-panel {
+	display: grid;
+	grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.2fr);
+	gap: clamp(0.75rem, 2.2vw, 1.15rem);
+	align-items: center;
+	width: min(100%, 760px);
+}
+
 .presala-preview {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(180px, 0.42fr);
-	gap: 1rem;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.75rem;
 	align-items: stretch;
-	width: min(100%, 690px);
+	width: 100%;
 }
 
 .presala-video {
@@ -3612,20 +3620,20 @@ p               { text-wrap: pretty; }
 }
 
 .presala-checks {
-	display: flex;
-	flex-direction: column;
-	gap: 0.6rem;
-	justify-content: center;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.45rem;
+	justify-content: stretch;
 }
 
 .presala-check {
-	min-height: 44px;
+	min-height: 38px;
 	display: flex;
 	align-items: center;
 	gap: 0.55rem;
-	padding: 0.55rem 0.8rem;
+	padding: 0.48rem 0.65rem;
 	border-radius: 999px;
-	font-size: 0.88rem;
+	font-size: 0.78rem;
 	font-weight: 700;
 	background: color-mix(in srgb, var(--card) 88%, transparent);
 	border: 1px solid var(--border);
@@ -3647,7 +3655,10 @@ p               { text-wrap: pretty; }
 .presala-check.fail .presala-dot { background: #e05555; box-shadow: 0 0 18px #e05555; }
 .presala-check.pending { border-color: var(--border-active); }
 
-.presala-enter { width: 100%; justify-content: center; }
+.presala-enter {
+	width: min(100%, 420px);
+	justify-content: center;
+}
 
 .immersive-presala.motion-paused *,
 .immersive-presala.motion-paused *::before,
@@ -3709,6 +3720,7 @@ p               { text-wrap: pretty; }
 	flex-direction: column;
 	background: #060412;
 	z-index: 100;
+	min-height: 100dvh;
 }
 
 .call-room {
@@ -3764,7 +3776,11 @@ p               { text-wrap: pretty; }
 
 .call-remaining.urgent { color: #ffb347; font-weight: 600; }
 
-.call-frame { flex: 1; overflow: hidden; }
+.call-frame {
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+}
 
 .call-error {
 	background: rgba(224,85,85,0.15);
@@ -3824,10 +3840,12 @@ p               { text-wrap: pretty; }
 @media (max-width: 640px) {
 	.sala-presala {
 		width: calc(100% - 1rem);
-		min-height: calc(100vh - 1rem);
+		min-height: calc(100dvh - 1rem);
 		margin: 0.5rem auto;
 		border-radius: 18px;
-		justify-content: center;
+		justify-content: start;
+		padding: 0.75rem;
+		gap: 0.55rem;
 	}
 	.presala-top-actions {
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -3844,17 +3862,176 @@ p               { text-wrap: pretty; }
 		text-align: center;
 		justify-content: center;
 	}
-	.presala-deck-scene { height: 188px; }
-	.presala-deck-card.left { transform: translate3d(-62px, 18px, -44px) rotateY(22deg) rotateZ(-8deg); }
-	.presala-deck-card.right { transform: translate3d(62px, 18px, -44px) rotateY(-22deg) rotateZ(8deg); }
-	.presala-preview { grid-template-columns: 1fr; }
+	.presala-brand {
+		font-size: 1rem;
+		gap: 0.5rem;
+	}
+	.presala-brand-mark {
+		width: 30px;
+		height: 30px;
+		border-radius: 9px;
+	}
+	.sala-presala-title {
+		font-size: clamp(1.55rem, 7vw, 2.05rem);
+		line-height: 1.05;
+	}
+	.presala-copy {
+		gap: 0.2rem;
+	}
+	.presala-copy .dash-eyebrow {
+		font-size: 0.68rem;
+	}
+	.presala-copy .sala-gate-body {
+		font-size: 0.76rem;
+		line-height: 1.35;
+	}
+	.presala-main-panel {
+		grid-template-columns: minmax(96px, 0.45fr) minmax(0, 1fr);
+		gap: 0.55rem;
+		align-items: stretch;
+	}
+	.presala-deck-scene {
+		width: 100%;
+		height: auto;
+		min-height: 156px;
+	}
+	.presala-deck-card {
+		width: clamp(52px, 15vw, 72px);
+		border-radius: 10px;
+	}
+	.presala-deck-card::before {
+		inset: 7px;
+		border-radius: 8px;
+		font-size: 1.25rem;
+	}
+	.presala-deck-card.left { transform: translate3d(-32px, 12px, -34px) rotateY(22deg) rotateZ(-8deg); }
+	.presala-deck-card.right { transform: translate3d(32px, 12px, -34px) rotateY(-22deg) rotateZ(8deg); }
+	.presala-tarot-card {
+		width: clamp(82px, 25vw, 116px);
+		border-radius: 12px;
+	}
+	.presala-tarot-card::before,
+	.presala-tarot-card::after {
+		inset: 10px;
+		border-radius: 9px;
+	}
+	.presala-tarot-card::after {
+		inset: 50% auto auto 50%;
+		width: 44px;
+		height: 44px;
+		box-shadow: 0 0 0 16px color-mix(in srgb, var(--accent) 8%, transparent);
+	}
+	.presala-rune-ring { width: 116%; }
+	.presala-preview {
+		grid-template-columns: 1fr;
+		align-content: center;
+	}
+	.presala-video {
+		aspect-ratio: 4/5;
+		min-height: 0;
+		border-radius: 12px;
+	}
 	.presala-checks {
 		display: grid;
 		grid-template-columns: 1fr;
 		width: 100%;
+		gap: 0.32rem;
 	}
-	.call-statusbar { padding: 0.4rem 0.8rem; font-size: 0.78rem; }
-	.ctrl-btn { padding: 0.5rem 0.8rem; min-width: 58px; font-size: 1.2rem; }
+	.presala-check {
+		min-height: 30px;
+		padding: 0.28rem 0.45rem;
+		font-size: 0.64rem;
+		gap: 0.35rem;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.presala-dot {
+		width: 6px;
+		height: 6px;
+		flex: 0 0 auto;
+	}
+	.presala-enter {
+		min-height: 44px;
+		width: 100%;
+	}
+	.call-room {
+		position: relative;
+		height: 100dvh;
+		overflow: hidden;
+	}
+	.call-statusbar {
+		position: absolute;
+		top: max(0.45rem, env(safe-area-inset-top));
+		left: 0.45rem;
+		right: 0.45rem;
+		z-index: 2;
+		padding: 0.35rem 0.55rem;
+		font-size: 0.72rem;
+		border: 1px solid rgba(201,168,76,0.18);
+		border-radius: 14px;
+		background: rgba(6,4,18,0.76);
+		backdrop-filter: blur(12px);
+	}
+	.call-service {
+		max-width: 42vw;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.call-frame {
+		position: absolute;
+		inset: 0;
+		height: 100dvh;
+	}
+	.call-controls {
+		position: absolute;
+		left: 0.55rem;
+		right: 0.55rem;
+		bottom: max(0.55rem, env(safe-area-inset-bottom));
+		z-index: 2;
+		padding: 0.5rem;
+		gap: 0.45rem;
+		border: 1px solid rgba(201,168,76,0.15);
+		border-radius: 18px;
+		background: rgba(6,4,18,0.78);
+		backdrop-filter: blur(14px);
+	}
+	.ctrl-btn {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 0.5rem 0.35rem;
+		font-size: 1.05rem;
+		border-radius: 12px;
+	}
+	.ctrl-btn span {
+		font-size: 0.58rem;
+		white-space: nowrap;
+	}
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+	.sala-presala {
+		width: calc(100% - 2rem);
+		min-height: min(720px, calc(100dvh - 2rem));
+	}
+	.presala-main-panel {
+		grid-template-columns: minmax(210px, 0.75fr) minmax(360px, 1.25fr);
+		width: min(100%, 820px);
+	}
+	.presala-video {
+		aspect-ratio: 16/10;
+	}
+	.call-statusbar {
+		padding: 0.5rem 0.9rem;
+	}
+	.call-controls {
+		padding: 0.65rem 0.9rem;
+		gap: 0.7rem;
+	}
+	.ctrl-btn {
+		padding: 0.55rem 0.8rem;
+		min-width: 66px;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

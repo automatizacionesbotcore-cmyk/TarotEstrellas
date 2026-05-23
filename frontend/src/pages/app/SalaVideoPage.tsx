@@ -219,39 +219,41 @@ function PreSala({
         <span>TarotEstrellas</span>
       </div>
 
-      <div className="presala-deck-scene" ref={deckRef} aria-hidden="true">
-        <div className="presala-portal" />
-        <div className="presala-deck-card left" data-glyph="☽" />
-        <div className="presala-deck-card right" data-glyph="☉" />
-        <div className="presala-tarot-card">
-          <div className="presala-rune-ring" />
-          <div className="presala-star">✦</div>
-          <div className="presala-frame-symbol">☽</div>
-          <div className="presala-frame-symbol">♄</div>
-          <div className="presala-frame-symbol">✧</div>
-          <div className="presala-frame-symbol">☉</div>
-        </div>
-      </div>
-
       <div className="presala-copy">
         <p className="dash-eyebrow">✦ Verificación de dispositivos</p>
         <h2 className="sala-presala-title">Tu sala está lista</h2>
         <p className="sala-gate-body">
-          {servicioNombre}. La consulta comenzará en cuanto ambos participantes estén presentes.
+          {servicioNombre}. La consulta comenzará cuando ambos participantes estén presentes.
         </p>
       </div>
 
-      <div className="presala-preview">
-        <video ref={videoRef} autoPlay muted playsInline className="presala-video" />
-        <div className="presala-checks">
-          <div className={`presala-check ${camOk === null ? '' : camOk ? 'ok' : 'fail'}`}>
-            <span className="presala-dot" aria-hidden="true" /> Cámara
+      <div className="presala-main-panel">
+        <div className="presala-deck-scene" ref={deckRef} aria-hidden="true">
+          <div className="presala-portal" />
+          <div className="presala-deck-card left" data-glyph="☽" />
+          <div className="presala-deck-card right" data-glyph="☉" />
+          <div className="presala-tarot-card">
+            <div className="presala-rune-ring" />
+            <div className="presala-star">✦</div>
+            <div className="presala-frame-symbol">☽</div>
+            <div className="presala-frame-symbol">♄</div>
+            <div className="presala-frame-symbol">✧</div>
+            <div className="presala-frame-symbol">☉</div>
           </div>
-          <div className={`presala-check ${micOk === null ? '' : micOk ? 'ok' : 'fail'}`}>
-            <span className="presala-dot" aria-hidden="true" /> Micrófono
-          </div>
-          <div className="presala-check pending">
-            <span className="presala-dot" aria-hidden="true" /> {waitingText}
+        </div>
+
+        <div className="presala-preview">
+          <video ref={videoRef} autoPlay muted playsInline className="presala-video" />
+          <div className="presala-checks">
+            <div className={`presala-check ${camOk === null ? '' : camOk ? 'ok' : 'fail'}`}>
+              <span className="presala-dot" aria-hidden="true" /> Cámara lista
+            </div>
+            <div className={`presala-check ${micOk === null ? '' : micOk ? 'ok' : 'fail'}`}>
+              <span className="presala-dot" aria-hidden="true" /> Micrófono listo
+            </div>
+            <div className="presala-check pending">
+              <span className="presala-dot" aria-hidden="true" /> {waitingText}
+            </div>
           </div>
         </div>
       </div>
