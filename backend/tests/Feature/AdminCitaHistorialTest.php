@@ -56,7 +56,24 @@ class AdminCitaHistorialTest extends TestCase
             ->assertOk()
             ->assertJsonPath('total', 1)
             ->assertJsonPath('data.0.codigo_referencia', 'TE-ADM-HIST1')
-            ->assertJsonPath('data.0.cliente.email', 'clientea@test.com');
+            ->assertJsonPath('data.0.cliente.email', 'clientea@test.com')
+            ->assertJsonPath('data.0.tiene_transcripcion', true)
+            ->assertJsonPath('data.0.total_transcripciones', 1);
+    }
+
+    public function test_admin_cita_historial_marks_rows_without_transcription(): void
+    {
+        $admin = $this->makeUserWithRole('admin_especialista');
+        $cliente = $this->makeUserWithRole('cliente', 'cliente-sin-transcripcion@test.com');
+        $this->createCitaForClient($cliente, 'TE-ADM-NOTX', 'confirmada');
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/admin/citas/historial?q=TE-ADM-NOTX&per_page=10')
+            ->assertOk()
+            ->assertJsonPath('data.0.codigo_referencia', 'TE-ADM-NOTX')
+            ->assertJsonPath('data.0.tiene_transcripcion', false)
+            ->assertJsonPath('data.0.total_transcripciones', 0);
     }
 
     public function test_admin_can_export_cita_historial_csv_with_filters(): void

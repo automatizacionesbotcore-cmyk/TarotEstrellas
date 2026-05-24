@@ -318,7 +318,23 @@ class CitaController extends Controller
 
         $perPage = (int) ($validated['per_page'] ?? 15);
 
-        return response()->json($query->paginate($perPage));
+        $paginator = $query->paginate($perPage);
+        $paginator->getCollection()->transform(function (Cita $cita) {
+            $totalGrabaciones = $cita->grabaciones->count();
+            $totalTranscripciones = $cita->grabaciones->filter(fn ($g) => $g->transcripcion !== null)->count();
+            $totalResumenes = $cita->grabaciones->filter(function ($g) {
+                return $g->transcripcion && $g->transcripcion->resumen !== null;
+            })->count();
+
+            $cita->setAttribute('total_grabaciones', $totalGrabaciones);
+            $cita->setAttribute('total_transcripciones', $totalTranscripciones);
+            $cita->setAttribute('total_resumenes', $totalResumenes);
+            $cita->setAttribute('tiene_transcripcion', $totalTranscripciones > 0);
+
+            return $cita;
+        });
+
+        return response()->json($paginator);
     }
 
     public function historialAdminExport(Request $request)

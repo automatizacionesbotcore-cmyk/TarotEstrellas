@@ -11,6 +11,8 @@ type Cita = {
   codigo_referencia?: string;
   inicio_utc:     string;
   zona_horaria_cliente?: string | null;
+  tiene_transcripcion?: boolean;
+  total_transcripciones?: number;
   cliente_email?: string | null;
   cliente?:       { email: string; name?: string } | null;
   tipo_consulta?: { nombre: string } | null;
@@ -190,6 +192,9 @@ export function AdminCitasPage() {
     }
   };
 
+  const tieneTranscripcion = (cita: Cita) =>
+    cita.tiene_transcripcion === true || Number(cita.total_transcripciones ?? 0) > 0;
+
   const toggleSort = (field: SortField) => {
     if (sortBy === field) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -264,9 +269,9 @@ export function AdminCitasPage() {
             className="btn-secondary admin-action-btn"
             title="Descargar transcripción cruda (admin)"
             onClick={() => descargarTranscripcion(r.uuid)}
-            disabled={transcribiendo === r.uuid}
+            disabled={transcribiendo === r.uuid || !tieneTranscripcion(r)}
           >
-            {transcribiendo === r.uuid ? 'Descargando…' : 'Transcrip.'}
+            {transcribiendo === r.uuid ? 'Descargando…' : tieneTranscripcion(r) ? 'Transcrip.' : 'Sin transcrip.'}
           </button>
         </div>
       ),
