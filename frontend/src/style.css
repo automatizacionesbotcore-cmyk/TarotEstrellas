@@ -4765,6 +4765,24 @@ p               { text-wrap: pretty; }
 .admin-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; }
 .admin-table th, .admin-table td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
 .admin-table th { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.admin-table--wide,
+.admin-table--has-actions {
+	min-width: 980px;
+}
+.admin-table--has-actions .admin-table-cell--actions {
+	position: sticky;
+	right: 0;
+	z-index: 2;
+	width: 210px;
+	min-width: 210px;
+	max-width: 260px;
+	background: var(--card);
+	box-shadow: -10px 0 18px color-mix(in srgb, #000 14%, transparent);
+}
+.admin-table--has-actions th.admin-table-cell--actions {
+	z-index: 3;
+	background: var(--table-header-bg);
+}
 .admin-table-sort {
   display: inline-flex;
   align-items: center;
@@ -7419,6 +7437,17 @@ cursor: pointer;
   }
   .admin-data-table .admin-table td:last-child {
     border-bottom: 0;
+  }
+  .admin-table--wide,
+  .admin-table--has-actions {
+    min-width: 0;
+  }
+  .admin-table--has-actions .admin-table-cell--actions {
+    position: static;
+    width: 100%;
+    max-width: none;
+    background: transparent;
+    box-shadow: none;
   }
   .admin-citas-page .admin-table {
     min-width: 0;

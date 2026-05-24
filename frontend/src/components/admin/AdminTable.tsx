@@ -76,6 +76,14 @@ export function AdminTable<T>({
   const visibleRows = pagination
     ? filteredRows
     : filteredRows.slice((currentPage - 1) * localPageSize, currentPage * localPageSize);
+  const isActionColumn = (column: Column<T>) =>
+    column.key === 'acciones' || column.label.trim().toLowerCase() === 'acciones';
+  const hasActions = columns.some(isActionColumn);
+  const tableClassName = [
+    'admin-table',
+    hasActions ? 'admin-table--has-actions' : '',
+    columns.length >= 6 ? 'admin-table--wide' : '',
+  ].filter(Boolean).join(' ');
 
   useEffect(() => {
     setLocalPage(1);
@@ -115,13 +123,13 @@ export function AdminTable<T>({
       )}
 
       <div className="admin-table-scroll">
-        <table className="admin-table">
+        <table className={tableClassName}>
           <thead>
             <tr>
               {columns.map((c) => {
                 const isSorted = sort?.sortBy === c.key;
                 return (
-                  <th key={c.key}>
+                  <th key={c.key} className={isActionColumn(c) ? 'admin-table-cell--actions' : undefined}>
                     {c.sortable && sort ? (
                       <button
                         type="button"
@@ -160,7 +168,11 @@ export function AdminTable<T>({
                 className={onRowClick ? 'is-clickable' : ''}
               >
                 {columns.map((c) => (
-                  <td key={c.key} data-label={c.label || 'Acciones'}>
+                  <td
+                    key={c.key}
+                    className={isActionColumn(c) ? 'admin-table-cell--actions' : undefined}
+                    data-label={c.label || 'Acciones'}
+                  >
                     {c.render ? c.render(row) : (row as Record<string, React.ReactNode>)[c.key]}
                   </td>
                 ))}
