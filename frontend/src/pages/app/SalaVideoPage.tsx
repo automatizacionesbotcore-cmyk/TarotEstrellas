@@ -325,15 +325,54 @@ function CallRoom({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const callRef = useRef<DailyCall | null>(null);
+  const intentionalLeaveRef = useRef(false);
+  const reconnectingRef = useRef(false);
+  const reconnectTimeoutRef = useRef<number | null>(null);
   const [muted, setMuted] = useState(false);
   const [camOff, setCamOff] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'joining' | 'connected' | 'reconnecting'>('joining');
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(() =>
     getRemainingSeconds(sala.cita.fin_utc),
   );
   const [error, setError] = useState('');
   const [recordingLoading, setRecordingLoading] = useState(false);
+  const roomUrl = sala.url || sala.room_url;
+
+  const reconnect = useCallback((delay = 1200) => {
+    const call = callRef.current;
+    if (!call || !roomUrl || reconnectingRef.current || intentionalLeaveRef.current) return;
+
+    const state = call.meetingState();
+    if (state === 'joined-meeting' || state === 'joining-meeting') return;
+
+    if (reconnectTimeoutRef.current) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    setConnectionStatus('reconnecting');
+    setError('La conexión se pausó o se perdió. Intentando reconectar automáticamente...');
+
+    reconnectTimeoutRef.current = window.setTimeout(async () => {
+      const activeCall = callRef.current;
+      if (!activeCall || intentionalLeaveRef.current) return;
+
+      const currentState = activeCall.meetingState();
+      if (currentState === 'joined-meeting' || currentState === 'joining-meeting') return;
+
+      reconnectingRef.current = true;
+      try {
+        await activeCall.join({ url: roomUrl, token: sala.token });
+        setConnectionStatus('connected');
+        setError('');
+      } catch {
+        setError('No se pudo reconectar todavía. Mantén esta pestaña abierta; volveremos a intentarlo.');
+      } finally {
+        reconnectingRef.current = false;
+      }
+    }, delay);
+  }, [roomUrl, sala.token]);
 
   // Tick
   useEffect(() => {
@@ -378,20 +417,48 @@ function CallRoom({
 
     callRef.current = call;
 
+    const handleLeftMeeting = () => {
+      if (intentionalLeaveRef.current || getRemainingSeconds(sala.cita.fin_utc) <= 0) {
+        onLeave();
+        return;
+      }
+
+      reconnect();
+    };
+
     call
+      .on('joined-meeting', () => {
+        setConnectionStatus('connected');
+        setError('');
+      })
       .on('recording-started', () => setRecording(true))
       .on('recording-stopped', () => setRecording(false))
-      .on('error', (e) => setError(e?.errorMsg ?? 'Error en la videollamada.'))
-      .on('left-meeting', onLeave);
+      .on('error', (e) => {
+        if (intentionalLeaveRef.current) return;
+        setError(e?.errorMsg ?? 'Error en la videollamada. Intentaremos mantener la conexión.');
+      })
+      .on('left-meeting', handleLeftMeeting);
 
     call
-      .join({ url: sala.url || sala.room_url, token: sala.token })
+      .join({ url: roomUrl, token: sala.token })
       .catch(() => setError('No se pudo unir a la sala. Intenta recargar la página.'));
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        reconnect(300);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       call.destroy();
     };
-  }, [sala.url, sala.room_url, sala.token, onLeave]);
+  }, [roomUrl, sala.token, sala.cita.fin_utc, onLeave, reconnect]);
 
   const toggleMic = () => {
     callRef.current?.setLocalAudio(muted);
@@ -404,7 +471,8 @@ function CallRoom({
   };
 
   const leave = () => {
-    callRef.current?.leave();
+    intentionalLeaveRef.current = true;
+    callRef.current?.leave().catch(() => onLeave());
   };
 
   const toggleRecording = async () => {
@@ -447,7 +515,12 @@ function CallRoom({
       {/* Daily iframe container */}
       <div ref={containerRef} className="call-frame" />
 
-      {error && <p className="call-error">{error}</p>}
+      {connectionStatus === 'reconnecting' && (
+        <p className="call-error">
+          Reconectando la sala. Mantén esta pestaña abierta mientras recuperamos la llamada.
+        </p>
+      )}
+      {connectionStatus !== 'reconnecting' && error && <p className="call-error">{error}</p>}
 
       {/* Controls */}
       <div className="call-controls">
