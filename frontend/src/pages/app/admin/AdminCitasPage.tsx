@@ -235,41 +235,38 @@ export function AdminCitasPage() {
       key: 'acciones',
       label: 'Acciones',
       render: (r) => (
-        <div className="admin-row-actions">
+        <div className="admin-row-actions admin-citas-actions">
           {(r.estado === 'reservada' || r.estado === 'confirmada') && (
-            <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={() => setTargetUuid(r.uuid)}>
+            <button className="btn-secondary admin-action-btn" onClick={() => setTargetUuid(r.uuid)}>
               No-show
             </button>
           )}
           {r.estado === 'reservada' && (
             <button
-              className="btn-primary"
-              style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+              className="btn-primary admin-action-btn"
               onClick={() => setSaldoTarget(r)}
             >
-              Marcar saldo pagado
+              Saldo pagado
             </button>
           )}
           {(r.estado === 'reservada' || r.estado === 'confirmada') && (
             <button
-              className="btn-secondary"
-              style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+              className="btn-secondary admin-action-btn"
               onClick={() => {
                 setReprogramarTarget(r);
                 setNuevoInicio(toDatetimeLocal(r.inicio_utc));
               }}
             >
-              Reprogramar
+              Reprog.
             </button>
           )}
           <button
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }}
+            className="btn-secondary admin-action-btn"
             title="Descargar transcripción cruda (admin)"
             onClick={() => descargarTranscripcion(r.uuid)}
             disabled={transcribiendo === r.uuid}
           >
-            {transcribiendo === r.uuid ? 'Descargando…' : 'Transcripción'}
+            {transcribiendo === r.uuid ? 'Descargando…' : 'Transcrip.'}
           </button>
         </div>
       ),
@@ -277,7 +274,7 @@ export function AdminCitasPage() {
   ];
 
   return (
-    <main className="page-content">
+    <main className="page-content admin-citas-page">
       <header className="admin-page-header">
         <h1>Historial de citas</h1>
         <button className="btn-secondary" onClick={exportCsv} disabled={exporting}>
@@ -293,7 +290,7 @@ export function AdminCitasPage() {
           placeholder="Buscar por UUID, código, email o nombre de cliente…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          style={{ width: '100%', maxWidth: '500px' }}
+          style={{ width: '100%' }}
         />
       </div>
 

@@ -4797,10 +4797,64 @@ p               { text-wrap: pretty; }
 	gap: 0.4rem;
 	flex-wrap: wrap;
 }
+.admin-action-btn {
+	min-height: 34px;
+	padding: 0.32rem 0.62rem;
+	font-size: 0.78rem;
+	line-height: 1.15;
+	white-space: nowrap;
+}
 .admin-row-actions .btn-secondary,
 .admin-row-actions .btn-danger {
 	padding: 0.35rem 0.7rem;
 	font-size: 0.8rem;
+}
+
+.admin-citas-page {
+	overflow-x: hidden;
+}
+.admin-citas-page .admin-data-table {
+	width: 100%;
+	max-width: 100%;
+}
+.admin-citas-page .admin-table-scroll {
+	overflow-x: auto;
+}
+.admin-citas-page .admin-table {
+	table-layout: fixed;
+	min-width: 920px;
+}
+.admin-citas-page .admin-table th,
+.admin-citas-page .admin-table td {
+	padding: 0.7rem 0.78rem;
+	vertical-align: middle;
+	overflow-wrap: anywhere;
+}
+.admin-citas-page .admin-table th:nth-child(1),
+.admin-citas-page .admin-table td:nth-child(1) { width: 12%; }
+.admin-citas-page .admin-table th:nth-child(2),
+.admin-citas-page .admin-table td:nth-child(2) { width: 14%; }
+.admin-citas-page .admin-table th:nth-child(3),
+.admin-citas-page .admin-table td:nth-child(3) { width: 15%; }
+.admin-citas-page .admin-table th:nth-child(4),
+.admin-citas-page .admin-table td:nth-child(4) { width: 18%; }
+.admin-citas-page .admin-table th:nth-child(5),
+.admin-citas-page .admin-table td:nth-child(5) { width: 23%; }
+.admin-citas-page .admin-table th:nth-child(6),
+.admin-citas-page .admin-table td:nth-child(6) {
+	width: 18%;
+	min-width: 164px;
+}
+.admin-citas-actions {
+	align-items: stretch;
+	gap: 0.32rem;
+}
+.admin-citas-actions .admin-action-btn {
+	flex: 1 1 calc(50% - 0.32rem);
+	justify-content: center;
+	min-width: 76px;
+	padding: 0.32rem 0.55rem;
+	font-size: 0.76rem;
 }
 
 /* ========== Timeline ========== */
@@ -7351,6 +7405,23 @@ cursor: pointer;
   }
   .admin-data-table .admin-table td:last-child {
     border-bottom: 0;
+  }
+  .admin-citas-page .admin-table {
+    min-width: 0;
+  }
+  .admin-citas-page .admin-table th,
+  .admin-citas-page .admin-table td {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .admin-citas-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .admin-citas-actions .admin-action-btn {
+    width: 100%;
+    min-width: 0;
   }
   .admin-data-table .admin-table-empty {
     display: block;
