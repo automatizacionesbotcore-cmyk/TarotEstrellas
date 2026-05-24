@@ -28,6 +28,11 @@ type SalaInfo = {
   };
 };
 
+type SalaPresence = {
+  other_participant_present: boolean;
+  target_role: 'cliente' | 'especialista';
+};
+
 type Phase =
   | 'loading'
   | 'pre-check-failed'
@@ -51,6 +56,9 @@ const postIniciarGrabacion = (uuid: string) =>
 
 const postDetenerGrabacion = (uuid: string) =>
   api.post(`/me/citas/${uuid}/sala-video/grabacion/detener`);
+
+const fetchSalaPresence = (uuid: string) =>
+  api.get(`/me/citas/${uuid}/sala-video/presencia`).then((r) => (r.data as { data: SalaPresence }).data);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDuration(s: number) {
@@ -119,14 +127,17 @@ function PreSala({
   onEnter,
   servicioNombre,
   isOwner,
+  citaUuid,
 }: {
   onEnter: () => void;
   servicioNombre: string;
   isOwner?: boolean;
+  citaUuid: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [camOk, setCamOk] = useState<boolean | null>(null);
   const [micOk, setMicOk] = useState<boolean | null>(null);
+  const [otherPresent, setOtherPresent] = useState<boolean | null>(null);
   const [motionPaused, setMotionPaused] = useState(false);
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
@@ -153,6 +164,27 @@ function PreSala({
     };
   }, []);
 
+  useEffect(() => {
+    let canceled = false;
+
+    const loadPresence = async () => {
+      try {
+        const presence = await fetchSalaPresence(citaUuid);
+        if (!canceled) setOtherPresent(presence.other_participant_present);
+      } catch {
+        if (!canceled) setOtherPresent(false);
+      }
+    };
+
+    loadPresence();
+    const id = window.setInterval(loadPresence, 8000);
+
+    return () => {
+      canceled = true;
+      window.clearInterval(id);
+    };
+  }, [citaUuid]);
+
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const stage = stageRef.current;
     const deck = deckRef.current;
@@ -172,7 +204,14 @@ function PreSala({
     }
   };
 
-  const waitingText = isOwner ? 'Esperando al cliente' : 'Esperando a la especialista';
+  const waitingText = otherPresent
+    ? isOwner ? 'El cliente ya está en la sala' : 'La especialista ya está en la sala'
+    : otherPresent === null
+      ? 'Verificando presencia en la sala'
+      : isOwner ? 'Esperando al cliente' : 'Esperando a la especialista';
+  const helperText = otherPresent
+    ? 'La otra persona ya está conectada. Puedes entrar cuando estés listo.'
+    : 'La consulta comenzará cuando ambos participantes estén presentes.';
 
   return (
     <motion.div
@@ -223,7 +262,7 @@ function PreSala({
         <p className="dash-eyebrow">✦ Verificación de dispositivos</p>
         <h2 className="sala-presala-title">Tu sala está lista</h2>
         <p className="sala-gate-body">
-          {servicioNombre}. La consulta comenzará cuando ambos participantes estén presentes.
+          {servicioNombre}. {helperText}
         </p>
       </div>
 
@@ -251,7 +290,7 @@ function PreSala({
             <div className={`presala-check ${micOk === null ? '' : micOk ? 'ok' : 'fail'}`}>
               <span className="presala-dot" aria-hidden="true" /> Micrófono listo
             </div>
-            <div className="presala-check pending">
+            <div className={`presala-check ${otherPresent ? 'ok' : 'pending'}`}>
               <span className="presala-dot" aria-hidden="true" /> {waitingText}
             </div>
           </div>
@@ -569,6 +608,7 @@ export function SalaVideoPage() {
             <PreSala
               servicioNombre={sala.cita.tipo_consulta?.nombre ?? 'Consulta'}
               isOwner={sala.is_owner}
+              citaUuid={sala.cita.uuid}
               onEnter={() => setPhase('in-call')}
             />
           </motion.div>

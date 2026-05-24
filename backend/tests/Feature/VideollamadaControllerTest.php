@@ -111,6 +111,21 @@ class VideollamadaControllerTest extends TestCase
             ->assertJsonPath('ok', true);
     }
 
+    public function test_cliente_puede_consultar_presencia_de_la_sala(): void
+    {
+        $cliente = User::factory()->create(['email_verified_at' => now()]);
+        $especialista = User::factory()->create(['email_verified_at' => now()]);
+        $cita = $this->makeCita($cliente, inicio: now()->addMinutes(5), fin: now()->addMinutes(65), especialista: $especialista);
+        $cita->forceFill(['daily_room_name' => 'cita-test'])->save();
+
+        Sanctum::actingAs($cliente);
+
+        $this->getJson('/api/me/citas/'.$cita->uuid.'/sala-video/presencia')
+            ->assertOk()
+            ->assertJsonPath('data.target_role', 'especialista')
+            ->assertJsonPath('data.other_participant_present', false);
+    }
+
     private function makeCita(User $cliente, $inicio, $fin, ?User $especialista = null, bool $grabacion = true): Cita
     {
         $tipo = TipoConsulta::query()->where('slug', 'tarot')->firstOrFail();

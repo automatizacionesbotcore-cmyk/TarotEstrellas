@@ -191,6 +191,33 @@ class DailyRoomService
         return $response->successful();
     }
 
+    public function usuarioPresente(string $roomName, int|string|null $userId): bool
+    {
+        if ($this->isMockMode() || $roomName === '' || $userId === null || $userId === '') {
+            return false;
+        }
+
+        $response = Http::timeout(10)
+            ->withToken($this->key())
+            ->acceptJson()
+            ->get($this->url() . '/rooms/' . rawurlencode($roomName) . '/presence', [
+                'limit' => 1,
+                'userId' => (string) $userId,
+            ]);
+
+        if (! $response->successful()) {
+            Log::warning('Daily.usuarioPresente fallo', [
+                'room' => $roomName,
+                'user_id' => (string) $userId,
+                'status' => $response->status(),
+            ]);
+            return false;
+        }
+
+        $data = $response->json('data', []);
+        return is_array($data) && count($data) > 0;
+    }
+
     /**
      * @return array<int, array<string, mixed>>
      */

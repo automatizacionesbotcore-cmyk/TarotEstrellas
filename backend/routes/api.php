@@ -150,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Daily.co videollamadas
     Route::get('me/citas/{uuid}/sala-video', [VideollamadaController::class, 'entrar']);
+    Route::get('me/citas/{uuid}/sala-video/presencia', [VideollamadaController::class, 'presencia']);
     Route::post('me/citas/{uuid}/sala-video/grabacion/iniciar', [VideollamadaController::class, 'iniciarGrabacion']);
     Route::post('me/citas/{uuid}/sala-video/grabacion/detener', [VideollamadaController::class, 'detenerGrabacion']);
 

@@ -129,6 +129,45 @@ class VideollamadaController extends Controller
         return response()->json(['ok' => $ok]);
     }
 
+    public function presencia(Request $request, string $uuid): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $cita = Cita::query()
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (! $cita) {
+            return response()->json(['message' => 'Cita no encontrada.'], 404);
+        }
+
+        $isCliente = (int) $cita->cliente_id === (int) $user->id;
+        $isEspecialista = $cita->especialista_id !== null && (int) $cita->especialista_id === (int) $user->id;
+        $isAdmin = method_exists($user, 'isAdmin') ? $user->isAdmin() : false;
+
+        if (! $isCliente && ! $isEspecialista && ! $isAdmin) {
+            return response()->json(['message' => 'No autorizado para consultar esta sala.'], 403);
+        }
+
+        if (! $cita->daily_room_name) {
+            return response()->json([
+                'data' => [
+                    'other_participant_present' => false,
+                    'target_role' => $isCliente ? 'especialista' : 'cliente',
+                ],
+            ]);
+        }
+
+        $targetUserId = $isCliente ? $cita->especialista_id : $cita->cliente_id;
+
+        return response()->json([
+            'data' => [
+                'other_participant_present' => $this->daily->usuarioPresente($cita->daily_room_name, $targetUserId),
+                'target_role' => $isCliente ? 'especialista' : 'cliente',
+            ],
+        ]);
+    }
+
     public function detenerGrabacion(Request $request, string $uuid): JsonResponse
     {
         /** @var User $user */
