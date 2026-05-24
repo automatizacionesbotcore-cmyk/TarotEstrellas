@@ -122,6 +122,10 @@ a {
 	padding: 1rem;
 }
 
+.page-shell--admin {
+	max-width: min(1440px, 100vw);
+}
+
 /* ── HEADER ─────────────────────────────────────────────────────────────── */
 .main-header {
 	position: sticky;
@@ -4819,10 +4823,11 @@ p               { text-wrap: pretty; }
 }
 .admin-citas-page .admin-table-scroll {
 	overflow-x: auto;
+	overflow-y: visible;
 }
 .admin-citas-page .admin-table {
 	table-layout: fixed;
-	min-width: 920px;
+	min-width: 1120px;
 }
 .admin-citas-page .admin-table th,
 .admin-citas-page .admin-table td {
@@ -4835,15 +4840,24 @@ p               { text-wrap: pretty; }
 .admin-citas-page .admin-table th:nth-child(2),
 .admin-citas-page .admin-table td:nth-child(2) { width: 14%; }
 .admin-citas-page .admin-table th:nth-child(3),
-.admin-citas-page .admin-table td:nth-child(3) { width: 15%; }
+.admin-citas-page .admin-table td:nth-child(3) { width: 14%; }
 .admin-citas-page .admin-table th:nth-child(4),
-.admin-citas-page .admin-table td:nth-child(4) { width: 18%; }
+.admin-citas-page .admin-table td:nth-child(4) { width: 17%; }
 .admin-citas-page .admin-table th:nth-child(5),
-.admin-citas-page .admin-table td:nth-child(5) { width: 23%; }
+.admin-citas-page .admin-table td:nth-child(5) { width: 25%; }
 .admin-citas-page .admin-table th:nth-child(6),
 .admin-citas-page .admin-table td:nth-child(6) {
+	position: sticky;
+	right: 0;
+	z-index: 2;
 	width: 18%;
-	min-width: 164px;
+	min-width: 220px;
+	background: var(--card);
+	box-shadow: -10px 0 18px color-mix(in srgb, #000 14%, transparent);
+}
+.admin-citas-page .admin-table th:nth-child(6) {
+	z-index: 3;
+	background: var(--table-header-bg);
 }
 .admin-citas-actions {
 	align-items: stretch;
