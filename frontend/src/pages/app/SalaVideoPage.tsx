@@ -316,8 +316,25 @@ function CallRoom({
         border: 'none',
         borderRadius: '0',
       },
+      inputSettings: {
+        audio: {
+          processor: { type: 'none' },
+        },
+        video: {
+          processor: { type: 'none' },
+          settings: {
+            width: { ideal: 1280, max: 1280 },
+            height: { ideal: 720, max: 720 },
+            frameRate: { ideal: 24, max: 24 },
+          },
+        },
+      },
+      sendSettings: {
+        video: 'bandwidth-and-quality-balanced',
+      },
       showLeaveButton: false,
       showFullscreenButton: false,
+      showLocalVideo: true,
     });
 
     callRef.current = call;

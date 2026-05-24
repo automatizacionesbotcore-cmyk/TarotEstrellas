@@ -61,6 +61,8 @@ class DailyRoomService
             'enable_prejoin_ui' => true,
             'enable_screenshare' => true,
             'enable_chat' => true,
+            'enable_noise_cancellation_ui' => false,
+            'enable_video_processing_ui' => false,
             'eject_at_room_exp' => true,
             'enable_recording' => $cita->grabacion_solicitada ? 'cloud-audio-only' : 'off',
             'enable_transcription_storage' => (bool) config('services.daily.enable_transcription', true),
