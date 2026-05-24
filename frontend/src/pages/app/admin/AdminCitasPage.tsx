@@ -184,7 +184,7 @@ export function AdminCitasPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert('No hay transcripción disponible para esta cita.');
+      alert('No se pudo descargar la transcripción. Verifica que la cita tenga transcripción y que tengas permiso para verla.');
     } finally {
       setTranscribiendo(null);
     }

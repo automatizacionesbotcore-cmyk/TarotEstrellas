@@ -77,14 +77,27 @@ class AdminTranscripcionController extends Controller
     /**
      * GET /api/admin/citas/{uuid}/transcripcion/descargar?formato=txt
      * Descarga TXT de la transcripción.
-     * Solo super_admin puede descargar. admin_especialista NO tiene acceso de descarga.
+     * Permisos iguales a show:
+     *   super_admin       → cualquier cita.
+     *   admin_especialista → solo sus propias citas.
      */
     public function descargar(Request $request, string $uuid): StreamedResponse
     {
-        abort_unless($request->user()?->hasRole('super_admin'), 403, 'Solo el super administrador puede descargar transcripciones.');
+        $user = $request->user();
+        $isSuperAdmin = (bool) $user?->hasRole('super_admin');
+        $isEspecialista = (bool) $user?->hasRole('admin_especialista');
+
+        abort_unless($isSuperAdmin || $isEspecialista, 403, 'Solo administradores pueden descargar transcripciones.');
 
         $formato = strtolower((string) $request->query('formato', 'txt'));
-        $cita = Cita::query()->with('cliente:id,email')->where('uuid', $uuid)->firstOrFail();
+        $query = Cita::query()->with('cliente:id,email')->where('uuid', $uuid);
+
+        if ($isEspecialista && ! $isSuperAdmin) {
+            $query->where('especialista_id', $user->id);
+        }
+
+        $cita = $query->first();
+        abort_unless($cita, 403, 'No tienes acceso a esta cita.');
         $transcripcion = $cita->transcripciones()->latest('id')->first();
 
         abort_unless($transcripcion, 404, 'No hay transcripcion para esta cita.');

@@ -19,7 +19,7 @@ use Tests\TestCase;
  * | Rol              | Ver cruda         | Descargar TXT | Ver resumen IA |
  * |------------------|-------------------|---------------|----------------|
  * | cliente          | ❌                | ❌            | ✅ solo el suyo|
- * | admin_especialista| ✅ solo sus citas | ❌            | ✅             |
+ * | admin_especialista| ✅ solo sus citas | ✅ solo sus citas | ✅          |
  * | super_admin      | ✅ todas          | ✅            | ✅             |
  */
 class AdminTranscripcionControllerTest extends TestCase
@@ -111,13 +111,28 @@ class AdminTranscripcionControllerTest extends TestCase
         $this->getJson('/api/admin/citas/'.$cita->uuid.'/transcripcion')->assertForbidden();
     }
 
-    public function test_especialista_no_puede_descargar_transcripcion(): void
+    public function test_especialista_descarga_transcripcion_de_su_propia_cita(): void
     {
         $cliente      = $this->makeClient();
         $especialista = $this->makeEspecialista();
         $cita         = $this->makeCitaConTranscripcion($cliente, $especialista);
 
         Sanctum::actingAs($especialista);
+
+        $response = $this->get('/api/admin/citas/'.$cita->uuid.'/transcripcion/descargar');
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'text/plain; charset=UTF-8');
+        $this->assertStringContainsString('Texto crudo de la sesion.', $response->streamedContent());
+    }
+
+    public function test_especialista_no_puede_descargar_transcripcion_de_cita_ajena(): void
+    {
+        $cliente          = $this->makeClient();
+        $otroEspecialista = $this->makeEspecialista();
+        $cita             = $this->makeCitaConTranscripcion($cliente);
+
+        Sanctum::actingAs($otroEspecialista);
 
         $this->getJson('/api/admin/citas/'.$cita->uuid.'/transcripcion/descargar')->assertForbidden();
     }
