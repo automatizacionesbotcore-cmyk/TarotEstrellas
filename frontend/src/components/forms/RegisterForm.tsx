@@ -258,6 +258,9 @@ export function RegisterForm({ onSuccess, onSwitchMode }: Props) {
         <button className="btn-primary" type="submit" disabled={!canSubmit} aria-disabled={!canSubmit}>
           {submitting ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
+        <Link to="/soporte" className="auth-link-inline">
+          ¿Problemas para registrarte o usar la plataforma?
+        </Link>
       </form>
 
       <p className="auth-footer-action">

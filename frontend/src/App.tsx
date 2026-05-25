@@ -16,12 +16,14 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
+import { SupportPage } from './pages/public/SupportPage';
 import { GoogleCallbackPage } from './pages/auth/GoogleCallbackPage';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { MiCuentaPage } from './pages/app/MiCuentaPage';
 import { MisConsultasPage } from './pages/app/MisConsultasPage';
 import { MembresiaPage } from './pages/app/MembresiaPage';
 import { AsistenteIAPage } from './pages/app/AsistenteIAPage';
+import { SoportePage } from './pages/app/SoportePage';
 import { CompletarPerfilPage } from './pages/app/CompletarPerfilPage';
 import { ProfileCompleteGuard } from './components/guards/ProfileCompleteGuard';
 import { useAuthStore } from './stores/authStore';
@@ -60,6 +62,7 @@ const AdminPlantillasPage       = lazy(() => import('./pages/app/admin/AdminPlan
 const AdminNotificacionesPage   = lazy(() => import('./pages/app/admin/AdminNotificacionesPage').then((m) => ({ default: m.AdminNotificacionesPage })));
 const AdminAuditPage            = lazy(() => import('./pages/app/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
 const AdminCuentasBancariasPage = lazy(() => import('./pages/app/admin/AdminCuentasBancariasPage').then((m) => ({ default: m.AdminCuentasBancariasPage })));
+const AdminSoportePage          = lazy(() => import('./pages/app/admin/AdminSoportePage').then((m) => ({ default: m.AdminSoportePage })));
 
 function PageLoader() {
   return (
@@ -94,6 +97,7 @@ export function App() {
         <Route path="/servicios" element={<ServiciosPage />} />
         <Route path="/servicios/:slug" element={<ServicioDetallePage />} />
         <Route path="/especialistas/:slug" element={<EspecialistaDetallePage />} />
+        <Route path="/soporte" element={<SupportPage />} />
         <Route
           path="/legal/:slug"
           element={
@@ -144,6 +148,7 @@ export function App() {
         />
         <Route path="membresia" element={<MembresiaPage />} />
         <Route path="asistente-ia" element={<AsistenteIAPage />} />
+        <Route path="soporte" element={<SoportePage />} />
         <Route
           path="sala/:uuid"
           element={<Suspense fallback={<PageLoader />}><SalaVideoPage /></Suspense>}
@@ -185,6 +190,7 @@ export function App() {
           <Route path="notificaciones"       element={<Suspense fallback={<PageLoader />}><AdminNotificacionesPage   /></Suspense>} />
           <Route path="audit-log"            element={<Suspense fallback={<PageLoader />}><AdminAuditPage            /></Suspense>} />
           <Route path="cuentas-bancarias"    element={<Suspense fallback={<PageLoader />}><AdminCuentasBancariasPage /></Suspense>} />
+          <Route path="soporte"              element={<Suspense fallback={<PageLoader />}><AdminSoportePage          /></Suspense>} />
         </Route>
         </Route>
       </Route>

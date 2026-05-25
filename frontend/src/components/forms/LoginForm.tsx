@@ -119,6 +119,9 @@ export function LoginForm({ onSuccess, onSwitchMode, onForgotPassword }: Props) 
             Olvidé mi contraseña
           </Link>
         )}
+        <Link to="/soporte" className="auth-link-inline">
+          ¿Problemas con tu cuenta o con la plataforma?
+        </Link>
       </form>
 
       <p className="auth-footer-action">

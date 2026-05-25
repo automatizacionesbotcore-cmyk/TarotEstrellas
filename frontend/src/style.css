@@ -7552,6 +7552,116 @@ cursor: pointer;
 .btn-danger:hover:not(:disabled) { background: #a93226; }
 .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 
+/* Soporte de plataforma */
+.support-page {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+.support-public-card {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+.support-form {
+  display: grid;
+  gap: 1rem;
+}
+.support-form label,
+.support-reply-box label,
+.support-admin-editor label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text);
+  font-weight: 700;
+}
+.support-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 1rem;
+  align-items: start;
+}
+.support-ticket-list {
+  display: grid;
+  gap: 0.65rem;
+}
+.support-ticket-item {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.support-ticket-item.is-active,
+.support-ticket-item:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.support-ticket-item small {
+  color: var(--accent);
+  font-weight: 800;
+}
+.support-detail-card {
+  margin-top: 1rem;
+}
+.support-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.support-thread {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+.support-message {
+  width: min(760px, 100%);
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.support-message-admin {
+  margin-left: auto;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+}
+.support-message p {
+  margin: 0.35rem 0;
+  white-space: pre-wrap;
+}
+.support-message small {
+  color: var(--text-muted);
+}
+.support-reply-box,
+.support-admin-editor {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+.support-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 8px;
+}
+
+@media (max-width: 880px) {
+  .support-layout {
+    grid-template-columns: 1fr;
+  }
+  .support-detail-header {
+    flex-direction: column;
+  }
+}
+
 /* Inputs/selects ocupan ancho completo en móvil para mejor tap */
 @media (max-width: 480px) {
   input, select, textarea, button { font-size: 16px !important; }

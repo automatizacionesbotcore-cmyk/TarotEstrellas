@@ -35,7 +35,9 @@ use App\Http\Controllers\Api\AdminNotificacionController;
 use App\Http\Controllers\Api\AdminPaqueteController;
 use App\Http\Controllers\Api\AdminPlantillaController;
 use App\Http\Controllers\Api\AdminReportesController;
+use App\Http\Controllers\Api\AdminSupportTicketController;
 use App\Http\Controllers\Api\MonedaController;
+use App\Http\Controllers\Api\SupportTicketController;
 use App\Http\Controllers\Api\CuponController;
 use App\Http\Controllers\Api\MembresiaController;
 use App\Http\Controllers\Api\SeoController;
@@ -79,6 +81,7 @@ Route::prefix('auth')->group(function () {
 
 // Agente IA publico (sin auth, throttle estricto contra abuso)
 Route::middleware('throttle:10,1')->post('agente/publico', [AgenteController::class, 'consultarPublico']);
+Route::middleware('throttle:6,1')->post('soporte', [SupportTicketController::class, 'storePublic']);
 
 // Confirmacion de asistencia via email (signed URL, sin auth)
 Route::get('citas/{uuid}/confirmar-asistencia', [CitaController::class, 'confirmarAsistencia'])
@@ -187,6 +190,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('preferencias-notificacion', [AccountController::class, 'getNotificationPrefs']);
     Route::put('preferencias-notificacion', [AccountController::class, 'updateNotificationPrefs']);
     Route::post('account/password', [AccountController::class, 'changePassword']);
+    Route::get('me/soporte', [SupportTicketController::class, 'mine']);
+    Route::post('me/soporte', [SupportTicketController::class, 'storeAuthenticated']);
+    Route::get('me/soporte/{uuid}', [SupportTicketController::class, 'showMine']);
+    Route::post('me/soporte/{uuid}/responder', [SupportTicketController::class, 'replyMine']);
 
     Route::get('admin/metricas', [AdminMetricasController::class, 'index'])->middleware('admin');
 
@@ -222,6 +229,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('admin/api-usage/check',   [\App\Http\Controllers\Api\AdminApiUsageController::class, 'check']);
         // Audit log unificado — solo super_admin puede verlo
         Route::get('admin/audit-logs', [AdminAuditLogController::class, 'unified']);
+        Route::get('admin/soporte', [AdminSupportTicketController::class, 'index']);
+        Route::get('admin/soporte/{uuid}', [AdminSupportTicketController::class, 'show']);
+        Route::patch('admin/soporte/{uuid}', [AdminSupportTicketController::class, 'update']);
+        Route::get('admin/soporte/{uuid}/adjuntos/{attachmentId}', [AdminSupportTicketController::class, 'attachment']);
     });
 
     Route::middleware('admin')->prefix('admin/tipos-consulta')->group(function () {
