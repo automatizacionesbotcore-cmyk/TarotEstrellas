@@ -291,3 +291,18 @@ https://tarotestrellas.com/api/webhooks/whatsapp
 ```
 
 No activar recordatorios WhatsApp en produccion hasta confirmar plantillas y firma.
+
+## cfg-16: Deploy Hostinger con caches de Laravel
+
+Leccion 2026-05-25: si `php artisan` falla en PROD con `Class "Laravel\Pail\PailServiceProvider" not found`, limpiar caches de bootstrap antes de migrar.
+
+Comando remoto seguro:
+
+```bash
+cd /home/u402745362/domains/tarotestrellas.com/public_html/backend
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php bootstrap/cache/routes-v7.php bootstrap/cache/events.php
+php artisan migrate --force
+php artisan optimize:clear
+```
+
+Motivo: cache generado en entorno dev puede referenciar providers no instalados en vendor de produccion.
